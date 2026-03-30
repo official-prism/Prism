@@ -129,8 +129,7 @@ impl MoveGen {
         king_square: Square,
     ) -> u32 {
         let move_mask = Attacks::get_king_attacks(king_square) & !attack_map;
-        (move_mask & board.occupancy_for_side(Side::from(COLOR).flipped())).pop_count()
-            + (move_mask & !board.occupancy()).pop_count()
+        (move_mask & !board.occupancy_for_side(Side::from(COLOR))).pop_count()
     }
 
     pub fn count_castle_moves<const COLOR: u8>(

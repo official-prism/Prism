@@ -173,6 +173,8 @@ impl MoveGen {
 
         let not_pinned_pieces = pieces & !pinned_pieces;
 
+        let target_map = capture_map | push_map;
+
         not_pinned_pieces.map(|piece_square| {
             let attacks = match PIECE_TYPE {
                 KNIGHT => Attacks::get_knight_attacks(piece_square),
@@ -181,8 +183,7 @@ impl MoveGen {
                 _ => unreachable!(),
             };
 
-            result += (attacks & capture_map).pop_count();
-            result += (attacks & push_map).pop_count();
+            result += (attacks & target_map).pop_count();
         });
 
         pinned_pieces.map(|piece_square| {
@@ -195,8 +196,7 @@ impl MoveGen {
                 _ => unreachable!(),
             };
 
-            result += (attacks & capture_map).pop_count();
-            result += (attacks & push_map).pop_count();
+            result += (attacks & target_map).pop_count();
         });
 
         result
