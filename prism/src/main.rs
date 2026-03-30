@@ -30,7 +30,20 @@ use prism_chess::FEN;
 
 fn main() {
     let board = prism_chess::ChessBoard::from(&FEN::start_position());
-    let (result, duration) = prism_chess::perft::<true, true, false>(&board, Some(7));
-    println!("Result: {}", result);
-    println!("Duration: {:?} ms", duration.as_millis());
+    const RUNS: u32 = 5;
+
+    let mut bulk_total = 0u128;
+    for _ in 0..RUNS {
+        let (_, duration) = prism_chess::perft::<true, false, false>(&board, Some(7));
+        bulk_total += duration.as_millis();
+    }
+
+    let mut nobulk_total = 0u128;
+    for _ in 0..RUNS {
+        let (_, duration) = prism_chess::perft::<false, false, false>(&board, Some(6));
+        nobulk_total += duration.as_millis();
+    }
+
+    println!("Bulk   perft(7) avg: {} ms", bulk_total / RUNS as u128);
+    println!("NoBulk perft(6) avg: {} ms", nobulk_total / RUNS as u128);
 }
