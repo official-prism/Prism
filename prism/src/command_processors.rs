@@ -26,28 +26,5 @@
     permission to convey the resulting work.
 */
 
-mod command_processors;
-mod input_wrapper;
-
-use std::sync::atomic::{AtomicBool, Ordering};
-
-use command_processors::misc_processor::MiscProcessor;
-use command_processors::uci_processor::UciProcessor;
-use input_wrapper::InputWrapper;
-
-fn main() {
-    let shutdown_token = AtomicBool::new(false);
-    let mut input_wrapper = InputWrapper::new();
-
-    while !shutdown_token.load(Ordering::SeqCst) {
-        let cmd = match input_wrapper.get_input() {
-            Some(cmd) => cmd,
-            None => break,
-        };
-
-        let cmd = cmd.trim();
-
-        MiscProcessor::execute(cmd);
-        UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper);
-    }
-}
+pub mod misc_processor;
+pub mod uci_processor;

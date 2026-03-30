@@ -26,28 +26,25 @@
     permission to convey the resulting work.
 */
 
-mod command_processors;
-mod input_wrapper;
-
-use std::sync::atomic::{AtomicBool, Ordering};
-
-use command_processors::misc_processor::MiscProcessor;
-use command_processors::uci_processor::UciProcessor;
-use input_wrapper::InputWrapper;
-
+#[cfg(not(feature = "release"))]
 fn main() {
-    let shutdown_token = AtomicBool::new(false);
-    let mut input_wrapper = InputWrapper::new();
+    use std::process::Command;
 
-    while !shutdown_token.load(Ordering::SeqCst) {
-        let cmd = match input_wrapper.get_input() {
-            Some(cmd) => cmd,
-            None => break,
-        };
+    //Monty yoink
+    let git_commit_hash = Command::new("git")
+        .args(["rev-parse", "--short=8", "HEAD"])
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim().to_owned())
+        .unwrap_or_else(|| "nogit000".to_owned());
 
-        let cmd = cmd.trim();
+    let current_date = chrono::Utc::now().format("%Y%m%d").to_string();
 
-        MiscProcessor::execute(cmd);
-        UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper);
-    }
+    let formatted_name = format!("Prism-dev-{current_date}-{git_commit_hash}");
+
+    println!("cargo:rustc-env=ENGINE_NAME={formatted_name}");
+
+    println!("cargo:rerun-if-changed=build.rs");
 }

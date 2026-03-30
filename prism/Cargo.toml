@@ -16,5 +16,9 @@ path = "src/main.rs"
 prism_engine = { workspace = true }
 prism_chess = { workspace = true }
 
+[build-dependencies]
+chrono = "0.4"
+
 [features]
 tunable = ["prism_engine/tunable"]
+release = []

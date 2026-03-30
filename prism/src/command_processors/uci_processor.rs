@@ -26,28 +26,23 @@
     permission to convey the resulting work.
 */
 
-mod command_processors;
-mod input_wrapper;
-
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use command_processors::misc_processor::MiscProcessor;
-use command_processors::uci_processor::UciProcessor;
-use input_wrapper::InputWrapper;
+use crate::input_wrapper::InputWrapper;
 
-fn main() {
-    let shutdown_token = AtomicBool::new(false);
-    let mut input_wrapper = InputWrapper::new();
+pub struct UciProcessor;
+impl UciProcessor {
+    pub fn execute(cmd: &str, shutdown_token: &AtomicBool, _input_wrapper: &mut InputWrapper) {
+        match cmd {
+            "uci" => {
+                println!("id name {}", env!("ENGINE_NAME"));
+                println!("id author {}", env!("CARGO_PKG_AUTHORS"));
 
-    while !shutdown_token.load(Ordering::SeqCst) {
-        let cmd = match input_wrapper.get_input() {
-            Some(cmd) => cmd,
-            None => break,
-        };
-
-        let cmd = cmd.trim();
-
-        MiscProcessor::execute(cmd);
-        UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper);
+                println!("uciok");
+            }
+            "isready" => println!("readyok"),
+            "quit" => shutdown_token.store(true, Ordering::SeqCst),
+            _ => {}
+        }
     }
 }

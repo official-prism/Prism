@@ -3,7 +3,7 @@
 <img
   width="200"
   alt="Prism Logo"
-  src=".readme/logo/prism_logo.png">
+  src=".readme/logo/prism_logo_small.png">
  
 <h3>Prism</h3>
 <b>GPU MCTS chess engine</b>
