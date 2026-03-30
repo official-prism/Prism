@@ -45,7 +45,7 @@ fn standard() {
         let target = line[line.len() - 2]
             .split_whitespace()
             .collect::<Vec<&str>>();
-        let expected_result = target[1].parse::<u128>().unwrap();
+        let expected_result = target[1].parse::<u64>().unwrap();
         let depth = target[0].chars().collect::<Vec<char>>()[1] as u8 - b'0';
         println!("{fen}");
         let (result, _) = perft::<true, false, false>(&ChessBoard::from(&fen), Some(depth));
@@ -65,7 +65,7 @@ fn frc() {
         let target = line[line.len() - 3]
             .split_whitespace()
             .collect::<Vec<&str>>();
-        let expected_result = target[1].parse::<u128>().unwrap();
+        let expected_result = target[1].parse::<u64>().unwrap();
         let depth = target[0].chars().collect::<Vec<char>>()[1] as u8 - b'0';
         println!("{fen}");
         let (result, _) = perft::<true, false, true>(&ChessBoard::from(&fen), Some(depth));

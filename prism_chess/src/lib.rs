@@ -52,10 +52,10 @@ pub const DEFAULT_PERFT_DEPTH: u8 = 5;
 pub fn perft<const BULK: bool, const SPLIT: bool, const CHESS_960: bool>(
     board: &ChessBoard,
     depth: Option<u8>,
-) -> (u128, Duration) {
+) -> (u64, Duration) {
     let timer = Instant::now();
     let mask = board.castle_rights().get_castle_mask();
-    let result = if board.side() == Side::WHITE {
+    let result: u64 = if board.side() == Side::WHITE {
         perft_internal_white::<BULK, SPLIT, CHESS_960>(
             board,
             depth.unwrap_or(DEFAULT_PERFT_DEPTH),
@@ -77,11 +77,11 @@ fn perft_internal_white<const BULK: bool, const SPLIT: bool, const CHESS_960: bo
     board: &ChessBoard,
     depth: u8,
     mask: &[u8; 64],
-) -> u128 {
-    let mut node_count = 0u128;
+) -> u64 {
+    let mut node_count = 0u64;
 
     if BULK && depth == 1 {
-        return board.count_legal_moves::<0>() as u128;
+        return board.count_legal_moves::<0>() as u64;
     }
 
     if !BULK && depth == 0 {
@@ -106,11 +106,11 @@ fn perft_internal_black<const BULK: bool, const SPLIT: bool, const CHESS_960: bo
     board: &ChessBoard,
     depth: u8,
     mask: &[u8; 64],
-) -> u128 {
-    let mut node_count = 0u128;
+) -> u64 {
+    let mut node_count = 0u64;
 
     if BULK && depth == 1 {
-        return board.count_legal_moves::<1>() as u128;
+        return board.count_legal_moves::<1>() as u64;
     }
 
     if !BULK && depth == 0 {

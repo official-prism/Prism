@@ -163,8 +163,14 @@ impl ChessBoard {
         (attacker_pieces & self.piece_mask(Piece::KNIGHT))
             .map(|knight_square| threats |= Attacks::get_knight_attacks(knight_square));
 
-        (attacker_pieces & self.piece_mask(Piece::PAWN))
-            .map(|pawn_square| threats |= Attacks::get_pawn_attacks(pawn_square, attacker_side));
+        let attacker_pawns = attacker_pieces & self.piece_mask(Piece::PAWN);
+        if attacker_side == Side::WHITE {
+            threats |= ((attacker_pawns << 7) & !Bitboard::FILE_H)
+                | ((attacker_pawns << 9) & !Bitboard::FILE_A);
+        } else {
+            threats |= ((attacker_pawns >> 9) & !Bitboard::FILE_H)
+                | ((attacker_pawns >> 7) & !Bitboard::FILE_A);
+        }
 
         threats
     }

@@ -372,10 +372,14 @@ fn count_pawn_captures<const COLOR: u8>(
 
     let mut result = 0;
 
-    (pawns & !bishop_pins).map(|from_square| {
-        let attacks = Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map;
-        result += attacks.pop_count();
-    });
+    let non_pinned = pawns & !bishop_pins;
+    if COLOR == WHITE {
+        result += ((non_pinned << 7) & !Bitboard::FILE_H & capture_map).pop_count();
+        result += ((non_pinned << 9) & !Bitboard::FILE_A & capture_map).pop_count();
+    } else {
+        result += ((non_pinned >> 9) & !Bitboard::FILE_H & capture_map).pop_count();
+        result += ((non_pinned >> 7) & !Bitboard::FILE_A & capture_map).pop_count();
+    }
 
     (pawns & bishop_pins).map(|from_square| {
         let attacks =
@@ -383,10 +387,14 @@ fn count_pawn_captures<const COLOR: u8>(
         result += attacks.pop_count();
     });
 
-    (promotion_pawns & !bishop_pins).map(|from_square| {
-        let attacks = Attacks::get_pawn_attacks(from_square, Side::from(COLOR)) & capture_map;
-        result += attacks.pop_count() * 4;
-    });
+    let non_pinned_promo = promotion_pawns & !bishop_pins;
+    if COLOR == WHITE {
+        result += ((non_pinned_promo << 7) & !Bitboard::FILE_H & capture_map).pop_count() * 4;
+        result += ((non_pinned_promo << 9) & !Bitboard::FILE_A & capture_map).pop_count() * 4;
+    } else {
+        result += ((non_pinned_promo >> 9) & !Bitboard::FILE_H & capture_map).pop_count() * 4;
+        result += ((non_pinned_promo >> 7) & !Bitboard::FILE_A & capture_map).pop_count() * 4;
+    }
 
     (promotion_pawns & bishop_pins).map(|from_square| {
         let attacks =

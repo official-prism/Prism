@@ -26,4 +26,11 @@
     permission to convey the resulting work.
 */
 
-fn main() {}
+use prism_chess::FEN;
+
+fn main() {
+    let board = prism_chess::ChessBoard::from(&FEN::start_position());
+    let (result, duration) = prism_chess::perft::<true, true, false>(&board, Some(7));
+    println!("Result: {}", result);
+    println!("Duration: {:?} ms", duration.as_millis());
+}
