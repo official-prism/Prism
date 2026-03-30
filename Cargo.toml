@@ -1,0 +1,28 @@
+[workspace]
+members = [
+    "prism_chess",
+    "prism_engine",
+    "prism",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "GPL-3.0"
+readme = "README.md"
+authors = ["Tomasz Jaworski"]
+repository = "https://github.com/official-prism/Prism"
+homepage = "https://github.com/official-prism/Prism"
+
+[workspace.dependencies]
+prism_chess = { path = "prism_chess" }
+prism_engine = { path = "prism_engine" }
+
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+strip = true
+opt-level = 3

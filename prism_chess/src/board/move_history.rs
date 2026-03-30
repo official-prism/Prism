@@ -1,0 +1,89 @@
+/*
+    This file is part of Prism.
+
+    Copyright (C) 2026 Tomasz Jaworski
+
+    Prism is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Prism is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Prism.  If not, see <https://www.gnu.org/licenses/>.
+
+    Additional permission under GNU GPL version 3 section 7
+
+    If you modify this Program, or any covered work, by linking or
+    combining it with the ONNX Runtime and/or NVIDIA TensorRT libraries
+    (or a modified version of those libraries), containing parts covered
+    by the terms of the respective ONNX Runtime and NVIDIA license
+    agreements, the licensors of this Program grant you additional
+    permission to convey the resulting work.
+*/
+
+use crate::base_structures::ZobristKey;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct MoveHistory([ZobristKey; 101], usize);
+impl MoveHistory {
+    pub fn new() -> Self {
+        Self([ZobristKey::default(); 101], 0)
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.1
+    }
+
+    #[inline]
+    pub fn hash(&self) -> u128 {
+        let mut result = 0u128;
+        for value in 0..self.1 {
+            let hash = (u64::from(self.0[value]) as u128) << 64 | u64::from(self.0[value]) as u128;
+            result ^= (hash >> value) << 7;
+        }
+
+        result &= !0b1111111;
+        result |= self.1 as u128 & 0b1111111;
+
+        result &= !((u64::MAX as u128) << 64);
+        result |= (u64::from(self.0[self.1 - 1]) as u128) << 64;
+
+        result
+    }
+
+    #[inline]
+    pub fn push(&mut self, key: ZobristKey) {
+        self.0[self.1] = key;
+        self.1 += 1;
+    }
+
+    #[inline]
+    pub fn reset(&mut self) {
+        self.1 = 0;
+    }
+
+    #[inline]
+    pub fn get_repetitions(&self, key: ZobristKey) -> i32 {
+        let mut repetitions = 0;
+        for value in 0..self.1 {
+            if key != self.0[value] {
+                continue;
+            }
+
+            repetitions += 1;
+        }
+        repetitions
+    }
+}
+
+impl Default for MoveHistory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
