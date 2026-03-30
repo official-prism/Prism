@@ -37,22 +37,22 @@ impl ChessBoard {
         ];
 
         let mut info = Vec::new();
-        let fen = format!("FEN: {}", FEN::from(self).to_string());
+        let fen = format!("FEN: {}", FEN::from(self));
         info.push(fen.as_str());
-        let zobrist = format!("Zobrist Key: {}", self.hash().to_string());
+        let zobrist = format!("Zobrist Key: {}", self.hash());
         info.push(zobrist.as_str());
 
-        let castle_rights = format!("Castle Rights: {}", self.castle_rights().to_string());
+        let castle_rights = format!("Castle Rights: {}", self.castle_rights());
         info.push(castle_rights.as_str());
-        let side_sign = format!("Side To Move: {}", self.side().to_string());
+        let side_sign = format!("Side To Move: {}", self.side());
         info.push(side_sign.as_str());
-        let en_passant = format!("En Passant: {}", self.en_passant_square().to_string());
+        let en_passant = format!("En Passant: {}", self.en_passant_square());
         info.push(en_passant.as_str());
-        let half_moves = format!("Half Moves: {}", self.half_moves().to_string());
+        let half_moves = format!("Half Moves: {}", self.half_moves());
         info.push(half_moves.as_str());
-        let in_check = format!("In Check: {}", self.is_in_check().to_string());
+        let in_check = format!("In Check: {}", self.is_in_check());
         info.push(in_check.as_str());
-        let phase = format!("Phase: {}", self.phase().to_string());
+        let phase = format!("Phase: {}", self.phase());
         info.push(phase.as_str());
 
         let mut result = "   -----------------\n".to_string();

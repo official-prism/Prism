@@ -27,9 +27,9 @@
 */
 
 use crate::{
-    attacks::{slider_attacks, KingAttacks, KnightAttacks, PawnsAttacks},
-    base_structures::Side,
     Bitboard, Square,
+    attacks::{KingAttacks, KnightAttacks, PawnsAttacks, slider_attacks},
+    base_structures::Side,
 };
 
 pub struct Attacks;

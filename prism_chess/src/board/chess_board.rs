@@ -27,8 +27,8 @@
 */
 
 use crate::{
-    base_structures::{CastleRights, ZobristKey},
     Bitboard, Piece, Side, Square,
+    base_structures::{CastleRights, ZobristKey},
 };
 
 const PHASE_VALUES: [u8; 6] = [0, 1, 1, 2, 4, 0];

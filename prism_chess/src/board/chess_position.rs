@@ -27,8 +27,8 @@
 */
 
 use crate::{
-    board::{chess_board::ChessBoard, move_history::MoveHistory},
     Move,
+    board::{chess_board::ChessBoard, move_history::MoveHistory},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]

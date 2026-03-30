@@ -27,8 +27,8 @@
 */
 
 use crate::{
-    move_gen::generate_moves::{MoveGen, WHITE},
     Attacks, Bitboard, ChessBoard, Move, MoveFlag, Piece, Side, Square,
+    move_gen::generate_moves::{MoveGen, WHITE},
 };
 
 impl MoveGen {

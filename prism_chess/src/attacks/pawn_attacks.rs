@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{base_structures::Side, Bitboard, Square};
+use crate::{Bitboard, Square, base_structures::Side};
 
 pub struct PawnsAttacks;
 impl PawnsAttacks {

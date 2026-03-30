@@ -27,10 +27,10 @@
 */
 
 use crate::{
+    Attacks, Bitboard, ChessBoard, Move, MoveFlag, Side, Square,
     attacks::Rays,
     base_structures::CastleRights,
     move_gen::generate_moves::{MoveGen, WHITE},
-    Attacks, Bitboard, ChessBoard, Move, MoveFlag, Side, Square,
 };
 
 impl MoveGen {

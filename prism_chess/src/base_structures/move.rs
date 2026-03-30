@@ -27,8 +27,8 @@
 */
 
 use crate::{
-    base_structures::{Piece, Side},
     Square,
+    base_structures::{Piece, Side},
 };
 
 pub struct MoveFlag;

@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{attacks::Rays, board::ChessBoard, Attacks, Bitboard, Piece, Side, Square};
+use crate::{Attacks, Bitboard, Piece, Side, Square, attacks::Rays, board::ChessBoard};
 
 impl ChessBoard {
     pub fn is_insufficient_material(&self) -> bool {

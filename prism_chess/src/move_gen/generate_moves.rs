@@ -27,9 +27,9 @@
 */
 
 use crate::{
+    Bitboard, ChessBoard, Move, Side,
     attacks::Rays,
     move_gen::piece_moves::{BISHOP, KNIGHT, ROOK},
-    Bitboard, ChessBoard, Move, Side,
 };
 
 pub(super) const WHITE: u8 = 0;

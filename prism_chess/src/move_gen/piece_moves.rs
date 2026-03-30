@@ -27,7 +27,7 @@
 */
 
 use crate::{
-    move_gen::generate_moves::MoveGen, Attacks, Bitboard, ChessBoard, Move, MoveFlag, Piece, Side,
+    Attacks, Bitboard, ChessBoard, Move, MoveFlag, Piece, Side, move_gen::generate_moves::MoveGen,
 };
 
 pub(super) const KNIGHT: u8 = 0;

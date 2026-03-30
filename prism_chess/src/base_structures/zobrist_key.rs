@@ -28,7 +28,7 @@
 
 use std::fmt::{Display, Formatter, Result};
 
-use crate::{base_structures::CastleRights, Piece, Side, Square};
+use crate::{Piece, Side, Square, base_structures::CastleRights};
 
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct ZobristKey(u64);

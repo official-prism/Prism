@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{base_structures::CastleRights, board::ChessBoard, Piece, Side, Square, FEN};
+use crate::{FEN, Piece, Side, Square, base_structures::CastleRights, board::ChessBoard};
 
 impl From<&FEN> for ChessBoard {
     fn from(value: &FEN) -> Self {
