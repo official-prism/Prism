@@ -4,8 +4,6 @@
 /data
 /.vs
 
-Cargo.lock
-
 **/*.rs.bk
 
 *.pdb

@@ -11,6 +11,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.92"
 license = "GPL-3.0"
+description = "GPU MCTS chess engine"
 readme = "README.md"
 authors = ["Tomasz Jaworski"]
 repository = "https://github.com/official-prism/Prism"
