@@ -26,27 +26,35 @@
     permission to convey the resulting work.
 */
 
-use std::sync::atomic::{AtomicBool, Ordering};
+// use std::sync::atomic::AtomicBool;
 
-use prism_engine::Engine;
+// use prism_chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::input_wrapper::InputWrapper;
+pub use crate::engine::params::EngineParams;
 
-pub struct UciProcessor;
-impl UciProcessor {
-    pub fn execute(cmd: &str, shutdown_token: &AtomicBool, _input_wrapper: &mut InputWrapper, engine: &mut Engine) {
-        match cmd {
-            "uci" => {
-                println!("id name {}", env!("ENGINE_NAME"));
-                println!("id author {}", env!("CARGO_PKG_AUTHORS"));
+mod params;
 
-                engine.options().print_options();
+#[derive(Debug)]
+pub struct Engine {
+    params: EngineParams,
+    // position: ChessPosition,
+    // interruption_token: AtomicBool,
+}
 
-                println!("uciok");
-            }
-            "isready" => println!("readyok"),
-            "quit" => shutdown_token.store(true, Ordering::SeqCst),
-            _ => {}
+impl Engine {
+    pub fn from_params( params: &EngineParams ) -> Self {
+        Self { 
+            params: params.clone(),
+            // position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
+            // interruption_token: AtomicBool::new(false),
         }
+    }
+
+    pub fn options(&self) -> &EngineParams {
+        &self.params
+    }
+
+    pub fn options_mut(&mut self) -> &EngineParams {
+        &self.params
     }
 }

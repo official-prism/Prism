@@ -26,9 +26,11 @@
     permission to convey the resulting work.
 */
 
+use prism_engine::Engine;
+
 pub struct MiscProcessor;
 impl MiscProcessor {
-    pub fn execute(_cmd: &str) {
+    pub fn execute(_cmd: &str, _engine: &Engine) {
         // match cmd {
         //     _ => {}
         // }

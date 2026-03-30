@@ -26,27 +26,29 @@
     permission to convey the resulting work.
 */
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use crate::create_options;
 
-use prism_engine::Engine;
+mod macros;
 
-use crate::input_wrapper::InputWrapper;
+create_options! {
+    EngineParams {
+        Options {
+            //====== General ======
+            ["Hash"]         hash:     i64   =>  1024,  1,  524288;
+            ["UCI_Chess960"] chess960: bool  =>  false;
 
-pub struct UciProcessor;
-impl UciProcessor {
-    pub fn execute(cmd: &str, shutdown_token: &AtomicBool, _input_wrapper: &mut InputWrapper, engine: &mut Engine) {
-        match cmd {
-            "uci" => {
-                println!("id name {}", env!("ENGINE_NAME"));
-                println!("id author {}", env!("CARGO_PKG_AUTHORS"));
-
-                engine.options().print_options();
-
-                println!("uciok");
-            }
-            "isready" => println!("readyok"),
-            "quit" => shutdown_token.store(true, Ordering::SeqCst),
-            _ => {}
+            //======= Debug =======
+            ["MinimalPrint"] minimal_print:  bool  =>  false;
+            ["ItersAsNodes"] iters_as_nodes: bool  =>  false;
+        }
+        Buttons {
+            "Clear",
+        }
+        Tunables {
+            root_pst: f64  =>  3.515,  0.5,  5.0,  0.30,  0.002;
+        }
+        Variables {
+            kld_min: f64  =  0.0025;
         }
     }
 }

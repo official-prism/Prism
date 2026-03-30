@@ -34,8 +34,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use command_processors::misc_processor::MiscProcessor;
 use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
+use prism_engine::{Engine, EngineParams};
 
 fn main() {
+    let params = EngineParams::new();
+    let mut engine = Engine::from_params(&params);
+
     let shutdown_token = AtomicBool::new(false);
     let mut input_wrapper = InputWrapper::new();
 
@@ -47,7 +51,7 @@ fn main() {
 
         let cmd = cmd.trim();
 
-        MiscProcessor::execute(cmd);
-        UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper);
+        MiscProcessor::execute(cmd, &engine);
+        UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper, &mut engine);
     }
 }
