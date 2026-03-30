@@ -42,7 +42,7 @@ fn standard() {
         let line = line.unwrap();
         let line = line.split(';').collect::<Vec<&str>>();
         let fen = FEN::from(line[0]);
-        let target = line[line.len() - 1]
+        let target = line[line.len() - 2]
             .split_whitespace()
             .collect::<Vec<&str>>();
         let expected_result = target[1].parse::<u64>().unwrap();
@@ -62,7 +62,7 @@ fn frc() {
         let line = line.unwrap();
         let line = line.split(';').collect::<Vec<&str>>();
         let fen = FEN::from(line[0]);
-        let target = line[line.len() - 2]
+        let target = line[line.len() - 3]
             .split_whitespace()
             .collect::<Vec<&str>>();
         let expected_result = target[1].parse::<u64>().unwrap();
