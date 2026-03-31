@@ -26,35 +26,29 @@
     permission to convey the resulting work.
 */
 
-// use std::sync::atomic::AtomicBool;
+pub mod builder;
 
-// use prism_chess::{ChessBoard, ChessPosition, FEN};
+use crate::engine::builder::{BestMoveStrategy, ExplorationStrategy};
+use std::marker::PhantomData;
 
-pub use crate::engine::params::EngineParams;
+pub trait EngineConfig {
+    type BestMove: BestMoveStrategy;
+    type Exploration: ExplorationStrategy;
+}
 
-mod params;
+pub struct GenericConfig<BMS, ES> {
+    _b: PhantomData<BMS>,
+    _e: PhantomData<ES>,
+}
+
+impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineConfig for GenericConfig<BMS, ES> {
+    type BestMove = BMS;
+    type Exploration = ES;
+}
 
 #[derive(Debug)]
-pub struct Engine {
-    params: EngineParams,
-    // position: ChessPosition,
-    // interruption_token: AtomicBool,
+pub struct Engine<C: EngineConfig> {
+    _c: PhantomData<C>,
 }
 
-impl Engine {
-    pub fn from_params( params: &EngineParams ) -> Self {
-        Self { 
-            params: params.clone(),
-            // position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
-            // interruption_token: AtomicBool::new(false),
-        }
-    }
-
-    pub fn options(&self) -> &EngineParams {
-        &self.params
-    }
-
-    pub fn options_mut(&mut self) -> &EngineParams {
-        &self.params
-    }
-}
+impl<C: EngineConfig> Engine<C> {}

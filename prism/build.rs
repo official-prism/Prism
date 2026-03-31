@@ -48,3 +48,14 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
 }
+
+#[cfg(feature = "release")]
+fn main() {
+    let current_date = chrono::Utc::now().format("%Y%m%d").to_string();
+
+    let formatted_name = format!("Prism v{}", env!("ENGINE_VERSION"));
+
+    println!("cargo:rustc-env=ENGINE_NAME={formatted_name}");
+
+    println!("cargo:rerun-if-changed=build.rs");
+}

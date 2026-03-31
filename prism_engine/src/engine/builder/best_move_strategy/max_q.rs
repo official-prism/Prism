@@ -26,30 +26,7 @@
     permission to convey the resulting work.
 */
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use crate::engine::builder::best_move_strategy::BestMoveStrategy;
 
-use prism_engine::{Engine, EngineConfig};
-
-use crate::input_wrapper::InputWrapper;
-
-pub struct UciProcessor;
-impl UciProcessor {
-    pub fn execute<C: EngineConfig>(
-        cmd: &str,
-        shutdown_token: &AtomicBool,
-        _input_wrapper: &mut InputWrapper,
-        engine: &mut Engine<C>,
-    ) {
-        match cmd {
-            "uci" => {
-                println!("id name {}", env!("ENGINE_NAME"));
-                println!("id author {}", env!("CARGO_PKG_AUTHORS"));
-
-                println!("uciok");
-            }
-            "isready" => println!("readyok"),
-            "quit" => shutdown_token.store(true, Ordering::SeqCst),
-            _ => {}
-        }
-    }
-}
+pub struct MaxQ;
+impl BestMoveStrategy for MaxQ {}

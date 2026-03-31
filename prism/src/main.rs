@@ -34,11 +34,15 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use command_processors::misc_processor::MiscProcessor;
 use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
-use prism_engine::{Engine, EngineParams};
+use prism_engine::engine::builder::{
+    EngineBuilder, best_move_strategy::MaxQ, exploration_strategy::Puct,
+};
 
 fn main() {
-    let params = EngineParams::new();
-    let mut engine = Engine::from_params(&params);
+    let mut engine = EngineBuilder::new()
+        .best_move_strategy::<MaxQ>()
+        .exploration_strategy::<Puct>()
+        .build();
 
     let shutdown_token = AtomicBool::new(false);
     let mut input_wrapper = InputWrapper::new();

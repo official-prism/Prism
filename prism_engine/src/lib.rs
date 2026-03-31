@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-mod engine;
-
+pub mod engine;
 pub use engine::Engine;
-pub use engine::EngineParams;
+pub use engine::EngineConfig;
+pub use engine::builder::{BestMoveStrategy, ExplorationStrategy};

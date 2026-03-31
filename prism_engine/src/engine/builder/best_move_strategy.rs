@@ -26,29 +26,6 @@
     permission to convey the resulting work.
 */
 
-use crate::create_options;
+register_strategy!(max_q);
 
-mod macros;
-
-create_options! {
-    EngineParams {
-        Options {
-            //====== General ======
-            ["Hash"]         hash:     i64   =>  1024,  1,  524288;
-            ["UCI_Chess960"] chess960: bool  =>  false;
-
-            //======= Debug =======
-            ["MinimalPrint"] minimal_print:  bool  =>  false;
-            ["ItersAsNodes"] iters_as_nodes: bool  =>  false;
-        }
-        Buttons {
-            "Clear",
-        }
-        Tunables {
-            root_pst: f64  =>  3.515,  0.5,  5.0,  0.30,  0.002;
-        }
-        Variables {
-            kld_min: f64  =  0.0025;
-        }
-    }
-}
+pub trait BestMoveStrategy {}
