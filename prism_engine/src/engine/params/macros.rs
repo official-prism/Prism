@@ -26,7 +26,6 @@
     permission to convey the resulting work.
 */
 
-
 #[macro_export]
 macro_rules! define_strategy_params {
     (

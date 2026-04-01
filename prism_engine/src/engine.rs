@@ -41,8 +41,8 @@ pub trait EngineConfig {
 }
 
 pub struct GenericConfig<BMS, ES> {
-    _b: PhantomData<BMS>,
-    _e: PhantomData<ES>,
+    _bms: PhantomData<BMS>,
+    _es: PhantomData<ES>,
 }
 
 impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineConfig for GenericConfig<BMS, ES> {
@@ -61,11 +61,11 @@ impl<C: EngineConfig> Engine<C> {
         self.params.set_option(name, value)
     }
 
-    pub fn print_options(&self) {
-        self.params.print_options();
+    pub fn params(&self) -> &EngineParams<C> {
+        &self.params
     }
 
-    pub fn print_tunables(&self) {
-        self.params.print_tunables();
+    pub fn params_mut(&mut self) -> &mut EngineParams<C> {
+        &mut self.params
     }
 }

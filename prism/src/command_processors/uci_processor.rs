@@ -44,9 +44,7 @@ impl UciProcessor {
             "uci" => {
                 println!("id name {}", env!("ENGINE_NAME"));
                 println!("id author {}", env!("CARGO_PKG_AUTHORS"));
-
-                engine.print_options();
-
+                engine.params().print_options();
                 println!("uciok");
             }
             "isready" => println!("readyok"),

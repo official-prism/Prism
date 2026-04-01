@@ -30,9 +30,10 @@ use prism_engine::{Engine, EngineConfig};
 
 pub struct MiscProcessor;
 impl MiscProcessor {
-    pub fn execute<C: EngineConfig>(_cmd: &str, _engine: &Engine<C>) {
-        // match cmd {
-        //     _ => {}
-        // }
+    pub fn execute<C: EngineConfig>(cmd: &str, engine: &Engine<C>) {
+        match cmd {
+            "tunables" => engine.params().print_tunables(),
+            _ => {}
+        }
     }
 }
