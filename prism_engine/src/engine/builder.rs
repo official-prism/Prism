@@ -26,6 +26,8 @@
     permission to convey the resulting work.
 */
 
+use prism_chess::{ChessBoard, ChessPosition, FEN};
+
 use super::{Engine, EngineParams, GenericConfig};
 use std::marker::PhantomData;
 
@@ -86,6 +88,7 @@ impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineBuilder<BMS, ES> {
     pub fn build(self) -> Engine<GenericConfig<BMS, ES>> {
         Engine {
             params: EngineParams::new(),
+            position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
             _c: PhantomData,
         }
     }

@@ -26,14 +26,68 @@
     permission to convey the resulting work.
 */
 
+use std::io::{self, Write};
+
+use prism_chess::DEFAULT_PERFT_DEPTH;
 use prism_engine::{Engine, EngineConfig};
+
+use crate::number_to_string::{number_to_string, time_to_string};
 
 pub struct MiscProcessor;
 impl MiscProcessor {
     pub fn execute<C: EngineConfig>(cmd: &str, engine: &Engine<C>) {
-        match cmd {
-            "tunables" => engine.params().print_tunables(),
+        let tokens: Vec<&str> = cmd.split_whitespace().collect();
+
+        match tokens[0] {
+            "draw" | "d"    => engine.position().board().draw_board(),
+            "tunables"      => engine.params().print_tunables(),
+            "perft"         => Self::perft::<_, true>(&tokens[1..], engine),
+            "perft_no_bulk" => Self::perft::<_, false>(&tokens[1..], engine),
+            "bench"         => Self::bench(&tokens[1..], engine),
+            "clear" | "cls" => {
+                print!("\x1B[2J\x1B[1;1H");
+                io::stdout().flush().unwrap_or_default()
+            }
             _ => {}
         }
+    }
+
+    fn perft<C: EngineConfig, const BULK: bool>(args: &[&str], engine: &Engine<C>) {
+        println!();
+
+        engine.position().board().draw_board();
+
+        let depth = if args.len() > 0 {
+            args[0].parse::<u8>().ok()
+        } else {
+            None
+        };
+
+        println!("-----------------------------------------------------------");
+        println!("  Running PERFT");
+        println!("  Depth: {}", depth.unwrap_or(DEFAULT_PERFT_DEPTH));
+        println!("  Bulk: {BULK}");
+        println!("  PEXT: {}", cfg!(target_feature = "bmi2"));
+        println!("-----------------------------------------------------------\n");
+
+        let (result, duration) = if true {
+            prism_chess::perft::<BULK, true, true>(engine.position().board(), depth)
+        } else {
+            prism_chess::perft::<BULK, true, false>(engine.position().board(), depth)
+        };
+            
+        let miliseconds = duration.as_millis().max(1);
+
+        println!("\n-----------------------------------------------------------");
+        println!(
+            "  Perft ended! {result} nodes, {}, {}n/s",
+            time_to_string(miliseconds),
+            number_to_string(((result * 1000) as f64 / miliseconds as f64) as u128)
+        );
+        println!("-----------------------------------------------------------\n");
+    }
+
+    fn bench<C: EngineConfig>(args: &[&str], engine: &Engine<C>) {
+
     }
 }

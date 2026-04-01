@@ -34,8 +34,8 @@ use crate::engine::builder::{BestMoveStrategy, ExplorationStrategy};
 crate::define_strategy_params! {
     GeneralParams {
         Options {
-            ["Hash"]    hash: i32 => 16, 1, 524288;
-            ["Threads"] threads: i32 => 1, 1, 1024;
+            ["Hash"] hash: i32 => 1024, 1, 524288;
+            ["UCI_Chess960"] ches960: bool => false;
         }
     }
 }

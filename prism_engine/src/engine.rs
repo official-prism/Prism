@@ -33,6 +33,7 @@ pub mod params;
 use self::builder::{BestMoveStrategy, ExplorationStrategy};
 use self::params::StrategyParams;
 pub use params::EngineParams;
+use prism_chess::ChessPosition;
 use std::marker::PhantomData;
 
 pub trait EngineConfig {
@@ -53,6 +54,7 @@ impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineConfig for GenericCon
 #[derive(Debug)]
 pub struct Engine<C: EngineConfig> {
     params: EngineParams<C>,
+    position: ChessPosition,
     _c: PhantomData<C>,
 }
 
@@ -67,5 +69,13 @@ impl<C: EngineConfig> Engine<C> {
 
     pub fn params_mut(&mut self) -> &mut EngineParams<C> {
         &mut self.params
+    }
+
+    pub fn position(&self) -> &ChessPosition {
+        &self.position
+    }
+
+    pub fn set_position(&mut self, position: &ChessPosition) {
+        self.position = *position;
     }
 }

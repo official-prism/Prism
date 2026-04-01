@@ -28,6 +28,7 @@
 
 mod command_processors;
 mod input_wrapper;
+mod number_to_string;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
