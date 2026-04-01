@@ -160,6 +160,9 @@ macro_rules! define_strategy_params {
                                         return Err(format!("Value out of range for {}", _name));
                                     }
                                 )?
+                                if self.$option == new_value {
+                                    return Err(format!("Value of {} is already {}", _name, new_value));
+                                }
                                 self.$option = new_value;
                                 return Ok(());
                             }
@@ -187,6 +190,9 @@ macro_rules! define_strategy_params {
                                     if !($tunable_min..=$tunable_max).contains(&new_value) {
                                         return Err(format!("Value out of range for {}", _name));
                                     }
+                                    if self.$tunable == new_value {
+                                        return Err(format!("Value of {} is already {}", _name, new_value));
+                                    }
                                     self.$tunable = new_value;
                                     return Ok(());
                                 }
@@ -202,6 +208,9 @@ macro_rules! define_strategy_params {
                     if _name.eq_ignore_ascii_case(stringify!($variable)) {
                         match _value.parse::<$variable_ty>() {
                             Ok(new_value) => {
+                                if self.$variable == new_value {
+                                    return Err(format!("Value of {} is already {}", _name, new_value));
+                                }
                                 self.$variable = new_value;
                                 return Ok(());
                             }
@@ -211,7 +220,7 @@ macro_rules! define_strategy_params {
                     )*
                 )?
 
-                Ok(())
+                Err(format!("Unknown option '{}'", _name))
             }
 
             fn print_options(&self) {
@@ -316,10 +325,14 @@ macro_rules! define_engine_params {
             )*
 
             pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
-                Err(format!("Unknown option '{}'", name))
+                let unknown_msg = format!("Unknown option '{}'", name);
                 $(
-                    .or_else(|_| self.$field.set_option(name, value))
+                    match self.$field.set_option(name, value) {
+                        Err(e) if e == unknown_msg => {},
+                        res => return res,
+                    }
                 )*
+                Err(unknown_msg)
             }
 
             pub fn print_options(&self) {

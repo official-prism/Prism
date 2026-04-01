@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use std::io::{self, Write};
+use std::process::Command;
 
 use prism_chess::DEFAULT_PERFT_DEPTH;
 use prism_engine::{Engine, EngineConfig};
@@ -35,7 +35,7 @@ use crate::number_to_string::{number_to_string, time_to_string};
 
 pub struct MiscProcessor;
 impl MiscProcessor {
-    pub fn execute<C: EngineConfig>(cmd: &str, engine: &Engine<C>) {
+    pub fn execute<C: EngineConfig>(cmd: &str, engine: &Engine<C>) -> bool {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
 
         match tokens[0] {
@@ -44,12 +44,11 @@ impl MiscProcessor {
             "perft" => Self::perft::<_, true>(&tokens[1..], engine),
             "perft_no_bulk" => Self::perft::<_, false>(&tokens[1..], engine),
             "bench" => Self::bench(&tokens[1..], engine),
-            "clear" | "cls" => {
-                print!("\x1B[2J\x1B[1;1H");
-                io::stdout().flush().unwrap_or_default()
-            }
-            _ => {}
+            "clear" | "cls" => Self::clear_terminal_screen(),
+            _ => return false,
         }
+
+        true
     }
 
     fn perft<C: EngineConfig, const BULK: bool>(args: &[&str], engine: &Engine<C>) {
@@ -88,4 +87,21 @@ impl MiscProcessor {
     }
 
     fn bench<C: EngineConfig>(args: &[&str], engine: &Engine<C>) {}
+
+    fn clear_terminal_screen() {
+        if cfg!(target_os = "windows") {
+            Command::new("cmd")
+                .args(["/c", "cls"])
+                .spawn()
+                .expect("cls command failed to start")
+                .wait()
+                .expect("failed to wait");
+        } else {
+            Command::new("clear")
+                .spawn()
+                .expect("clear command failed to start")
+                .wait()
+                .expect("failed to wait");
+        };
+    }
 }

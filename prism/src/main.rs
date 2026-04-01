@@ -56,7 +56,12 @@ fn main() {
 
         let cmd = cmd.trim();
 
-        MiscProcessor::execute(cmd, &engine);
-        UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper, &mut engine);
+        if MiscProcessor::execute(cmd, &engine)
+            || UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper, &mut engine)
+        {
+            continue;
+        }
+
+        println!("info string Unknown command");
     }
 }

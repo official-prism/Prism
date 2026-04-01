@@ -40,16 +40,19 @@ impl UciProcessor {
         shutdown_token: &AtomicBool,
         _input_wrapper: &mut InputWrapper,
         engine: &mut Engine<C>,
-    ) {
+    ) -> bool {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
 
         match tokens[0] {
             "uci" => Self::uci(engine),
             "isready" => println!("readyok"),
             "position" => Self::position(&tokens[1..], engine),
+            "setoption" => Self::set_option(&tokens[1..], engine),
             "quit" | "q" => shutdown_token.store(true, Ordering::SeqCst),
-            _ => {}
+            _ => return false,
         }
+
+        true
     }
 
     fn uci<C: EngineConfig>(engine: &mut Engine<C>) {
@@ -106,5 +109,43 @@ impl UciProcessor {
         engine.set_position(&chess_position);
 
         println!("info string Position set successfully");
+    }
+
+    fn set_option<C: EngineConfig>(args: &[&str], engine: &mut Engine<C>) {
+        if args.len() < 2 || args[0] != "name" {
+            println!("info string Error: setoption must start with 'name <id>'");
+            return;
+        }
+
+        let mut name = Vec::new();
+        let mut value = Vec::new();
+        let mut is_value = false;
+
+        for &token in &args[1..] {
+            if token == "value" {
+                is_value = true;
+                continue;
+            }
+
+            if is_value {
+                value.push(token);
+            } else {
+                name.push(token);
+            }
+        }
+
+        let name_str = name.join(" ");
+        let value_str = value.join(" ");
+
+        if let Err(msg) = engine.set_option(&name_str, &value_str) {
+            println!("info string {msg}");
+            return;
+        }
+
+        if is_value {
+            println!("info string Option {name_str} has been set to {value_str}");
+        } else {
+            println!("info string Option {name_str} has been triggered");
+        }
     }
 }
