@@ -39,11 +39,11 @@ impl MiscProcessor {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
 
         match tokens[0] {
-            "draw" | "d"    => engine.position().board().draw_board(),
-            "tunables"      => engine.params().print_tunables(),
-            "perft"         => Self::perft::<_, true>(&tokens[1..], engine),
+            "draw" | "d" => engine.position().board().draw_board(),
+            "tunables" => engine.params().print_tunables(),
+            "perft" => Self::perft::<_, true>(&tokens[1..], engine),
             "perft_no_bulk" => Self::perft::<_, false>(&tokens[1..], engine),
-            "bench"         => Self::bench(&tokens[1..], engine),
+            "bench" => Self::bench(&tokens[1..], engine),
             "clear" | "cls" => {
                 print!("\x1B[2J\x1B[1;1H");
                 io::stdout().flush().unwrap_or_default()
@@ -70,12 +70,12 @@ impl MiscProcessor {
         println!("  PEXT: {}", cfg!(target_feature = "bmi2"));
         println!("-----------------------------------------------------------\n");
 
-        let (result, duration) = if true {
+        let (result, duration) = if engine.params().general().ches960() {
             prism_chess::perft::<BULK, true, true>(engine.position().board(), depth)
         } else {
             prism_chess::perft::<BULK, true, false>(engine.position().board(), depth)
         };
-            
+
         let miliseconds = duration.as_millis().max(1);
 
         println!("\n-----------------------------------------------------------");
@@ -87,7 +87,5 @@ impl MiscProcessor {
         println!("-----------------------------------------------------------\n");
     }
 
-    fn bench<C: EngineConfig>(args: &[&str], engine: &Engine<C>) {
-
-    }
+    fn bench<C: EngineConfig>(args: &[&str], engine: &Engine<C>) {}
 }

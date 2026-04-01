@@ -28,6 +28,7 @@
 
 pub mod macros;
 
+use crate::define_engine_params;
 use crate::engine::EngineConfig;
 use crate::engine::builder::{BestMoveStrategy, ExplorationStrategy};
 
@@ -47,44 +48,10 @@ pub trait StrategyParams: std::fmt::Debug + Clone {
     fn print_tunables(&self);
 }
 
-#[derive(Debug)]
-pub struct EngineParams<C: EngineConfig> {
-    pub general: GeneralParams,
-    pub best_move: <C::BestMove as BestMoveStrategy>::Params,
-    pub exploration: <C::Exploration as ExplorationStrategy>::Params,
-}
-
-impl<C: EngineConfig> EngineParams<C> {
-    pub fn new() -> Self {
-        Self {
-            general: GeneralParams::new(),
-            best_move: <C::BestMove as BestMoveStrategy>::Params::new(),
-            exploration: <C::Exploration as ExplorationStrategy>::Params::new(),
-        }
+define_engine_params!(
+    pub struct EngineParams<C: EngineConfig> {
+        general: GeneralParams,
+        best_move: <C::BestMove as BestMoveStrategy>::Params,
+        exploration: <C::Exploration as ExplorationStrategy>::Params,
     }
-
-    pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
-        self.general
-            .set_option(name, value)
-            .or_else(|_| self.best_move.set_option(name, value))
-            .or_else(|_| self.exploration.set_option(name, value))
-    }
-
-    pub fn print_options(&self) {
-        self.general.print_options();
-        self.best_move.print_options();
-        self.exploration.print_options();
-    }
-
-    pub fn print_tunables(&self) {
-        self.general.print_tunables();
-        self.best_move.print_tunables();
-        self.exploration.print_tunables();
-    }
-}
-
-impl<C: EngineConfig> Default for EngineParams<C> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+);

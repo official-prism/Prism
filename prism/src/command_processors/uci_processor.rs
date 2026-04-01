@@ -44,9 +44,9 @@ impl UciProcessor {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
 
         match tokens[0] {
-            "uci"        => Self::uci(engine),
-            "isready"    => println!("readyok"),
-            "position"   => Self::position(&tokens[1..], engine),
+            "uci" => Self::uci(engine),
+            "isready" => println!("readyok"),
+            "position" => Self::position(&tokens[1..], engine),
             "quit" | "q" => shutdown_token.store(true, Ordering::SeqCst),
             _ => {}
         }
@@ -90,10 +90,10 @@ impl UciProcessor {
             for &mv_str in &args[idx..] {
                 let mut legal_move = false;
                 chess_position.board().clone().map_legal_moves(|legal_mv| {
-                    legal_move = mv_str == legal_mv.to_string(false);
+                    legal_move = mv_str == legal_mv.to_string(engine.params().general().ches960());
                     if legal_move {
                         chess_position.make_move_no_mask(legal_mv);
-                    } 
+                    }
                 });
 
                 if !legal_move {

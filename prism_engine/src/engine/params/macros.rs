@@ -211,7 +211,7 @@ macro_rules! define_strategy_params {
                     )*
                 )?
 
-                Err(format!("Unknown option '{}'", _name))
+                Ok(())
             }
 
             fn print_options(&self) {
@@ -285,6 +285,55 @@ macro_rules! define_strategy_params {
                         )*
                     )?
                 }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! define_engine_params {
+    (
+        $vis:vis struct $name:ident < $gen:ident : $bound:ident > {
+            $( $field_vis:vis $field:ident : $ftype:ty ),* $(,)?
+        }
+    ) => {
+        #[derive(Debug)]
+        $vis struct $name<$gen: $bound> {
+            $( $field_vis $field: $ftype, )*
+        }
+
+        impl<$gen: $bound> $name<$gen> {
+            pub fn new() -> Self {
+                Self {
+                    $( $field: <$ftype>::new(), )*
+                }
+            }
+
+            $(
+                pub fn $field(&self) -> &$ftype {
+                    &self.$field
+                }
+            )*
+
+            pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
+                Err(format!("Unknown option '{}'", name))
+                $(
+                    .or_else(|_| self.$field.set_option(name, value))
+                )*
+            }
+
+            pub fn print_options(&self) {
+                $( self.$field.print_options(); )*
+            }
+
+            pub fn print_tunables(&self) {
+                $( self.$field.print_tunables(); )*
+            }
+        }
+
+        impl<$gen: $bound> Default for $name<$gen> {
+            fn default() -> Self {
+                Self::new()
             }
         }
     };
