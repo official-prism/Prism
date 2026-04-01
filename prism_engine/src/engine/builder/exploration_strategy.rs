@@ -26,6 +26,10 @@
     permission to convey the resulting work.
 */
 
+use crate::engine::StrategyParams;
+
 register_strategy!(puct);
 
-pub trait ExplorationStrategy {}
+pub trait ExplorationStrategy: std::fmt::Debug {
+    type Params: StrategyParams;
+}

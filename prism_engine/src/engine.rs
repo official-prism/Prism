@@ -27,8 +27,12 @@
 */
 
 pub mod builder;
+#[macro_use]
+pub mod params;
 
-use crate::engine::builder::{BestMoveStrategy, ExplorationStrategy};
+use self::builder::{BestMoveStrategy, ExplorationStrategy};
+use self::params::StrategyParams;
+pub use params::EngineParams;
 use std::marker::PhantomData;
 
 pub trait EngineConfig {
@@ -48,7 +52,20 @@ impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineConfig for GenericCon
 
 #[derive(Debug)]
 pub struct Engine<C: EngineConfig> {
+    params: EngineParams<C>,
     _c: PhantomData<C>,
 }
 
-impl<C: EngineConfig> Engine<C> {}
+impl<C: EngineConfig> Engine<C> {
+    pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
+        self.params.set_option(name, value)
+    }
+
+    pub fn print_options(&self) {
+        self.params.print_options();
+    }
+
+    pub fn print_tunables(&self) {
+        self.params.print_tunables();
+    }
+}

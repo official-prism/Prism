@@ -1,0 +1,292 @@
+/*
+    This file is part of Prism.
+
+    Copyright (C) 2026 Tomasz Jaworski
+
+    Prism is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Prism is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Prism.  If not, see <https://www.gnu.org/licenses/>.
+
+    Additional permission under GNU GPL version 3 section 7
+
+    If you modify this Program, or any covered work, by linking or
+    combining it with the ONNX Runtime and/or NVIDIA TensorRT libraries
+    (or a modified version of those libraries), containing parts covered
+    by the terms of the respective ONNX Runtime and NVIDIA license
+    agreements, the licensors of this Program grant you additional
+    permission to convey the resulting work.
+*/
+
+
+#[macro_export]
+macro_rules! define_strategy_params {
+    (
+        $name:ident {
+            $(Options {
+                $(
+                    [$option_key:literal] $option:ident : $option_ty:ty =>
+                        $option_default:expr $(, $option_min:expr, $option_max:expr)?;
+                )*
+            })?
+            $(Buttons {
+                $(
+                    $button_key:literal,
+                )*
+            })?
+            $(Tunables {
+                $(
+                    $(#[$tune_meta:meta])*
+                    $tunable:ident : $tunable_ty:ty =>
+                        $tunable_default:expr,
+                        $tunable_min:expr,
+                        $tunable_max:expr,
+                        $tunable_c:expr,
+                        $tunable_r:expr;
+                )*
+            })?
+            $(Variables {
+                $(
+                    $(#[$var_meta:meta])*
+                    $variable:ident : $variable_ty:ty =
+                        $variable_default:expr;
+                )*
+            })?
+        }
+    ) => {
+        #[derive(Debug, Clone)]
+        #[allow(non_snake_case)]
+        pub struct $name {
+            $(
+                $(pub $option: $option_ty,)*
+            )?
+            $(
+                $(
+                #[cfg(feature = "tunable")]
+                pub $tunable: $tunable_ty,
+                )*
+            )?
+            $(
+                $(pub $variable: $variable_ty,)*
+            )?
+        }
+
+        impl Default for $name {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
+        #[allow(non_snake_case)]
+        impl $name {
+            pub fn new() -> Self {
+                Self {
+                    $(
+                        $( $option: $option_default,)*
+                    )?
+                    $(
+                        $(
+                        #[cfg(feature = "tunable")]
+                        $tunable: $tunable_default,
+                        )*
+                    )?
+                    $(
+                        $( $variable: $variable_default,)*
+                    )?
+                }
+            }
+
+            $(
+                $(
+                pub fn $option(&self) -> $option_ty {
+                    self.$option.clone()
+                }
+                )*
+            )?
+
+            $(
+                $(
+                $(#[$tune_meta])*
+                #[cfg(feature = "tunable")]
+                pub const fn $tunable(&self) -> $tunable_ty {
+                    self.$tunable
+                }
+
+                $(#[$tune_meta])*
+                #[cfg(not(feature = "tunable"))]
+                #[inline(always)]
+                pub const fn $tunable(&self) -> $tunable_ty {
+                    $tunable_default
+                }
+                )*
+            )?
+
+            $(
+                $(
+                $(#[$var_meta])*
+                pub const fn $variable(&self) -> $variable_ty {
+                    self.$variable
+                }
+
+                $crate::paste::paste! {
+                    pub fn [< set_ $variable >] (&mut self, value: $variable_ty) {
+                        self.$variable = value;
+                    }
+                }
+                )*
+            )?
+        }
+
+        impl $crate::StrategyParams for $name {
+            fn new() -> Self {
+                Self::new()
+            }
+
+            fn set_option(&mut self, _name: &str, _value: &str) -> std::result::Result<(), String> {
+                $(
+                    $(
+                    if _name.eq_ignore_ascii_case($option_key) {
+                        match _value.parse::<$option_ty>() {
+                            Ok(new_value) => {
+                                $(
+                                    if !($option_min..=$option_max).contains(&new_value) {
+                                        return Err(format!("Value out of range for {}", _name));
+                                    }
+                                )?
+                                self.$option = new_value;
+                                return Ok(());
+                            }
+                            Err(_) => return Err(format!("Incorrect param type for {}", _name)),
+                        }
+                    }
+                    )*
+                )?
+
+                $(
+                    $(
+                    if _name.eq_ignore_ascii_case($button_key) {
+                        return Ok(());
+                    }
+                    )*
+                )?
+
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        if _name.eq_ignore_ascii_case(stringify!($tunable)) {
+                            match _value.parse::<$tunable_ty>() {
+                                Ok(new_value) => {
+                                    if !($tunable_min..=$tunable_max).contains(&new_value) {
+                                        return Err(format!("Value out of range for {}", _name));
+                                    }
+                                    self.$tunable = new_value;
+                                    return Ok(());
+                                }
+                                Err(_) => return Err(format!("Incorrect param type for {}", _name)),
+                            }
+                        }
+                        )*
+                    )?
+                }
+
+                $(
+                    $(
+                    if _name.eq_ignore_ascii_case(stringify!($variable)) {
+                        match _value.parse::<$variable_ty>() {
+                            Ok(new_value) => {
+                                self.$variable = new_value;
+                                return Ok(());
+                            }
+                            Err(_) => return Err(format!("Incorrect param type for {}", _name)),
+                        }
+                    }
+                    )*
+                )?
+
+                Err(format!("Unknown option '{}'", _name))
+            }
+
+            fn print_options(&self) {
+                $(
+                    $(
+                    {
+                        let uci_type = match stringify!($option_ty) {
+                            "bool" => "check",
+                            "i64"  => "spin",
+                            "i32"  => "spin",
+                            _      => "string",
+                        };
+                        let mut default_str = self.$option.to_string();
+                        if default_str.is_empty() {
+                            default_str = "<empty>".to_string();
+                        }
+                        print!("option name {} type {} default {}", $option_key, uci_type, default_str);
+                        $( print!(" min {} max {}", $option_min, $option_max); )?
+                        println!();
+                    }
+                    )*
+                )?
+
+                $(
+                    $(
+                    {
+                        println!("option name {} type button", $button_key);
+                    }
+                    )*
+                )?
+
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        {
+                            let uci_type = match stringify!($tunable_ty) {
+                                "bool" => "check",
+                                "i64"  => "spin",
+                                _      => "string",
+                            };
+                            print!("option name {} type {} default {}", stringify!($tunable), uci_type, self.$tunable);
+                            print!(" min {} max {}", $tunable_min, $tunable_max);
+                            println!();
+                        }
+                        )*
+                    )?
+                }
+            }
+
+            fn print_tunables(&self) {
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        {
+                            let kind = if stringify!($tunable_ty) == "i64" { "int" } else { "float" };
+                            println!("{}, {}, {}, {}, {}, {}, {}", stringify!($tunable), kind, self.$tunable, $tunable_min, $tunable_max, $tunable_c, $tunable_r);
+                        }
+                        )*
+                    )?
+                }
+                #[cfg(not(feature = "tunable"))]
+                {
+                    $(
+                        $(
+                        {
+                            let kind = if stringify!($tunable_ty) == "i64" { "int" } else { "float" };
+                            println!("{}, {}, {}, {}, {}, {}, {}", stringify!($tunable), kind, $tunable_default, $tunable_min, $tunable_max, $tunable_c, $tunable_r);
+                        }
+                        )*
+                    )?
+                }
+            }
+        }
+    };
+}

@@ -28,5 +28,21 @@
 
 use crate::engine::builder::ExplorationStrategy;
 
+#[derive(Debug)]
 pub struct Puct;
-impl ExplorationStrategy for Puct {}
+
+crate::define_strategy_params! {
+    PuctParams {
+        Options {
+            ["Puct_Log"] log: bool => true;
+        }
+        Tunables {
+            cpuct: f64 => 1.41, 0.1, 5.0, 0.1, 0.1;
+            puct_fPU: f64 => 0.5, 0.0, 1.0, 0.1, 0.1;
+        }
+    }
+}
+
+impl ExplorationStrategy for Puct {
+    type Params = PuctParams;
+}

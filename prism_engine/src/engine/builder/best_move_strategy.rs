@@ -26,6 +26,10 @@
     permission to convey the resulting work.
 */
 
+use crate::engine::StrategyParams;
+
 register_strategy!(max_q);
 
-pub trait BestMoveStrategy {}
+pub trait BestMoveStrategy: std::fmt::Debug {
+    type Params: StrategyParams;
+}

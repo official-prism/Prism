@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::engine::{Engine, GenericConfig};
+use super::{Engine, EngineParams, GenericConfig};
 use std::marker::PhantomData;
 
 macro_rules! register_strategy {
@@ -41,8 +41,8 @@ macro_rules! register_strategy {
 pub mod best_move_strategy;
 pub mod exploration_strategy;
 
-pub use crate::engine::builder::best_move_strategy::BestMoveStrategy;
-pub use crate::engine::builder::exploration_strategy::ExplorationStrategy;
+pub use self::best_move_strategy::BestMoveStrategy;
+pub use self::exploration_strategy::ExplorationStrategy;
 
 pub struct Unspecified;
 
@@ -57,6 +57,12 @@ impl EngineBuilder<Unspecified, Unspecified> {
             _bms: PhantomData,
             _es: PhantomData,
         }
+    }
+}
+
+impl Default for EngineBuilder<Unspecified, Unspecified> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -78,6 +84,9 @@ impl<BMS, ES> EngineBuilder<BMS, ES> {
 
 impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineBuilder<BMS, ES> {
     pub fn build(self) -> Engine<GenericConfig<BMS, ES>> {
-        Engine { _c: PhantomData }
+        Engine {
+            params: EngineParams::new(),
+            _c: PhantomData,
+        }
     }
 }

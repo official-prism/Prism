@@ -11,15 +11,16 @@ endif
 
 .PHONY: default debug v2 v3 v4
 
-default debug: TARGET_CPU = native
-v2: 	       TARGET_CPU = x86-64-v2
-v3: 	       TARGET_CPU = x86-64-v3
-v4: 	       TARGET_CPU = x86-64-v4
+default: TARGET_CPU = native
+debug:   TARGET_CPU = native
+v2:      TARGET_CPU = x86-64-v2
+v3:      TARGET_CPU = x86-64-v3
+v4:      TARGET_CPU = x86-64-v4
 
 default v2 v3 v4:
 	$(SET_RUSTFLAGS) cargo build --release -p prism --bin prism
 	$(COPY_CMD)
 
 debug:
-    $(SET_RUSTFLAGS) cargo build -p prism --bin prism
+	$(SET_RUSTFLAGS) cargo build -p prism --bin prism
 	$(COPY_CMD)
