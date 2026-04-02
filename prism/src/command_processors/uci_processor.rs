@@ -113,7 +113,7 @@ impl UciProcessor {
 
     fn set_option<C: EngineConfig>(args: &[&str], engine: &mut Engine<C>) {
         if args.len() < 2 || args[0] != "name" {
-            println!("info string Error: setoption must start with 'name <id>'");
+            println!("info string Incorrect command params");
             return;
         }
 

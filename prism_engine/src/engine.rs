@@ -27,28 +27,33 @@
 */
 
 pub mod builder;
-#[macro_use]
-pub mod params;
+mod params;
+mod logger;
 
-use self::builder::{BestMoveStrategy, ExplorationStrategy};
-use self::params::StrategyParams;
+pub use params::StrategyParams;
 pub use params::EngineParams;
+pub use logger::Logger;
+
+use builder::{BestMoveStrategy, ExplorationStrategy};
 use prism_chess::ChessPosition;
 use std::marker::PhantomData;
 
 pub trait EngineConfig {
     type BestMove: BestMoveStrategy;
     type Exploration: ExplorationStrategy;
+    type Logger: Logger;
 }
 
-pub struct GenericConfig<BMS, ES> {
+pub struct GenericConfig<BMS, ES, L> {
     _bms: PhantomData<BMS>,
     _es: PhantomData<ES>,
+    _l: PhantomData<L>,
 }
 
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineConfig for GenericConfig<BMS, ES> {
+impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, L: Logger> EngineConfig for GenericConfig<BMS, ES, L> {
     type BestMove = BMS;
     type Exploration = ES;
+    type Logger = L;
 }
 
 #[derive(Debug)]
@@ -77,5 +82,11 @@ impl<C: EngineConfig> Engine<C> {
 
     pub fn set_position(&mut self, position: &ChessPosition) {
         self.position = *position;
+    }
+
+    #[allow(unused_variables)]
+    pub fn print(&self, msg: &str) {
+        #[cfg(feature = "debug")]
+        C::Logger::print(msg)
     }
 }

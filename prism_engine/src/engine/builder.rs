@@ -28,6 +28,8 @@
 
 use prism_chess::{ChessBoard, ChessPosition, FEN};
 
+use crate::engine::logger::{Logger, NoLogger};
+
 use super::{Engine, EngineParams, GenericConfig};
 use std::marker::PhantomData;
 
@@ -48,16 +50,18 @@ pub use self::exploration_strategy::ExplorationStrategy;
 
 pub struct Unspecified;
 
-pub struct EngineBuilder<BMS = Unspecified, ES = Unspecified> {
+pub struct EngineBuilder<BMS = Unspecified, ES = Unspecified, L = NoLogger> {
     _bms: PhantomData<BMS>,
     _es: PhantomData<ES>,
+    _l: PhantomData<L>,
 }
 
-impl EngineBuilder<Unspecified, Unspecified> {
+impl EngineBuilder<Unspecified, Unspecified, NoLogger> {
     pub fn new() -> Self {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
+            _l: PhantomData,
         }
     }
 }
@@ -68,24 +72,34 @@ impl Default for EngineBuilder<Unspecified, Unspecified> {
     }
 }
 
-impl<BMS, ES> EngineBuilder<BMS, ES> {
-    pub fn exploration_strategy<S: ExplorationStrategy>(self) -> EngineBuilder<BMS, S> {
+impl<BMS, ES, L> EngineBuilder<BMS, ES, L> {
+    pub fn exploration_strategy<S: ExplorationStrategy>(self) -> EngineBuilder<BMS, S, L> {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
+            _l: PhantomData,
         }
     }
 
-    pub fn best_move_strategy<S: BestMoveStrategy>(self) -> EngineBuilder<S, ES> {
+    pub fn best_move_strategy<S: BestMoveStrategy>(self) -> EngineBuilder<S, ES, L> {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
+            _l: PhantomData,
+        }
+    }
+
+    pub fn logger<NL: Logger>(self) -> EngineBuilder<BMS, ES, NL> {
+        EngineBuilder {
+            _bms: PhantomData,
+            _es: PhantomData,
+            _l: PhantomData,
         }
     }
 }
 
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy> EngineBuilder<BMS, ES> {
-    pub fn build(self) -> Engine<GenericConfig<BMS, ES>> {
+impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, L: Logger> EngineBuilder<BMS, ES, L> {
+    pub fn build(self) -> Engine<GenericConfig<BMS, ES, L>> {
         Engine {
             params: EngineParams::new(),
             position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),

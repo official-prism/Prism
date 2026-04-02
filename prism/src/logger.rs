@@ -26,45 +26,12 @@
     permission to convey the resulting work.
 */
 
-mod command_processors;
-mod input_wrapper;
-mod number_to_string;
-mod logger;
+use prism_engine::{EngineConfig, engine::Engine};
 
-use std::sync::atomic::{AtomicBool, Ordering};
-
-use command_processors::misc_processor::MiscProcessor;
-use command_processors::uci_processor::UciProcessor;
-use input_wrapper::InputWrapper;
-use prism_engine::EngineBuilder;
-use prism_engine::engine::builder::{
-    best_move_strategy::MaxQ, exploration_strategy::Puct,
-};
-
-fn main() {
-    let mut engine = EngineBuilder::new()
-        .best_move_strategy::<MaxQ>()
-        .exploration_strategy::<Puct>()
-        .logger::<crate::logger::Logger>()
-        .build();
-
-    let shutdown_token = AtomicBool::new(false);
-    let mut input_wrapper = InputWrapper::new();
-
-    while !shutdown_token.load(Ordering::SeqCst) {
-        let cmd = match input_wrapper.get_input() {
-            Some(cmd) => cmd,
-            None => break,
-        };
-
-        let cmd = cmd.trim();
-
-        if MiscProcessor::execute(cmd, &engine)
-            || UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper, &mut engine)
-        {
-            continue;
-        }
-
-        println!("info string Unknown command");
+#[allow(unused)]
+pub struct Logger;
+impl prism_engine::Logger for Logger {
+    fn print<C: EngineConfig>(msg: &str, _engine: &Engine<C>) {
+        println!("info string {msg}")
     }
 }

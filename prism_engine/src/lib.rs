@@ -26,10 +26,10 @@
     permission to convey the resulting work.
 */
 
-#[macro_use]
 pub mod engine;
 pub use engine::Engine;
 pub use engine::EngineConfig;
+pub use engine::builder::EngineBuilder;
 pub use engine::builder::{BestMoveStrategy, ExplorationStrategy};
-pub use engine::params::StrategyParams;
-pub use paste;
+pub use engine::StrategyParams;
+pub use engine::Logger;
