@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::engine::builder::ExplorationStrategy;
+use crate::{Engine, EngineConfig, engine::{builder::ExplorationStrategy, structures::{IterationStats, SearchStats}}};
 
 #[derive(Debug)]
 pub struct Puct;
@@ -45,4 +45,8 @@ crate::define_strategy_params! {
 
 impl ExplorationStrategy for Puct {
     type Params = PuctParams;
+
+    fn excute<C: EngineConfig>(_engine: &Engine<C>, _search_stats: &SearchStats, _iteration_stats: &IterationStats) {
+        
+    }
 }

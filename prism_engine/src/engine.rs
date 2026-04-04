@@ -27,16 +27,23 @@
 */
 
 pub mod builder;
-mod params;
 mod logger;
+mod params;
+mod structures;
 
-pub use params::StrategyParams;
-pub use params::EngineParams;
 pub use logger::Logger;
+pub use params::EngineParams;
+pub use params::StrategyParams;
 
 use builder::{BestMoveStrategy, ExplorationStrategy};
 use prism_chess::ChessPosition;
+use prism_chess::Move;
 use std::marker::PhantomData;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+
+use crate::engine::structures::SearchLimits;
+use crate::engine::structures::SearchStats;
 
 pub trait EngineConfig {
     type BestMove: BestMoveStrategy;
@@ -50,7 +57,9 @@ pub struct GenericConfig<BMS, ES, L> {
     _l: PhantomData<L>,
 }
 
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, L: Logger> EngineConfig for GenericConfig<BMS, ES, L> {
+impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, L: Logger> EngineConfig
+    for GenericConfig<BMS, ES, L>
+{
     type BestMove = BMS;
     type Exploration = ES;
     type Logger = L;
@@ -60,33 +69,76 @@ impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, L: Logger> EngineConfig for
 pub struct Engine<C: EngineConfig> {
     params: EngineParams<C>,
     position: ChessPosition,
+    interruption_token: AtomicBool,
     _c: PhantomData<C>,
 }
 
 impl<C: EngineConfig> Engine<C> {
+    #[inline]
     pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
         self.params.set_option(name, value)
     }
 
+    #[inline]
     pub fn params(&self) -> &EngineParams<C> {
         &self.params
     }
 
+    #[inline]
     pub fn params_mut(&mut self) -> &mut EngineParams<C> {
         &mut self.params
     }
 
+    #[inline]
     pub fn position(&self) -> &ChessPosition {
         &self.position
     }
 
+    #[inline]
     pub fn set_position(&mut self, position: &ChessPosition) {
         self.position = *position;
     }
 
+    #[inline]
+    pub fn interruption_token(&self) -> bool {
+        self.interruption_token.load(Ordering::Relaxed)
+    }
+
+    #[inline]
+    pub fn interrupt_search(&self) {
+        self.interruption_token.store(true, Ordering::Relaxed)
+    }
+
+    #[inline]
     #[allow(unused_variables)]
     pub fn print(&self, msg: &str) {
         #[cfg(feature = "debug")]
         C::Logger::print(msg)
+    }
+
+    pub fn search(&self, limits: &SearchLimits) -> SearchStats {
+        self.interruption_token.store(false, Ordering::Relaxed);
+
+        let search_stats = SearchStats::new();
+
+        self.main_thread_search(limits, &search_stats);
+
+        C::Logger::search_report(&self);
+        C::Logger::best_move(Move::NULL, &self);
+
+        search_stats
+    }
+
+    fn main_thread_search(&self, _limits: &SearchLimits, _stats: &SearchStats) {
+        while !self.interruption_token() {
+            //iteration step
+
+            //add iteration
+            //print report 
+
+            //test limits
+
+            //check for max tree size
+        }
     }
 }

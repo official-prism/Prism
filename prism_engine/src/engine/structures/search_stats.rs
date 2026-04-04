@@ -26,19 +26,38 @@
     permission to convey the resulting work.
 */
 
-use prism_chess::Move;
+use std::sync::atomic::{AtomicU64, Ordering};
 
-use crate::{Engine, EngineConfig};
-
-pub trait Logger {
-    fn print<C: EngineConfig>(msg: &str, engine: &Engine<C>);
-    fn search_report<C: EngineConfig>(engine: &Engine<C>);
-    fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>);
+pub struct SearchStats {
+    max_depth: AtomicU64,
+    cumulative_depth: AtomicU64,
+    iterations: AtomicU64,
 }
 
-pub struct NoLogger;
-impl Logger for NoLogger {
-    fn print<C: EngineConfig>(_msg: &str, _engine: &Engine<C>) {}
-    fn search_report<C: EngineConfig>(_engine: &Engine<C>) {}
-    fn best_move<C: EngineConfig>(_mv: Move, _engine: &Engine<C>) {}
+impl SearchStats {
+    pub fn new() -> Self {
+        Self { max_depth: AtomicU64::new(0), cumulative_depth: AtomicU64::new(0), iterations: AtomicU64::new(0) }
+    }
+
+    pub fn max_depth(&self) -> u64 {
+        self.max_depth.load(Ordering::Relaxed)
+    }
+
+    pub fn cumulative_depth(&self) -> u64 {
+        self.cumulative_depth.load(Ordering::Relaxed)
+    }
+
+    pub fn iterations(&self) -> u64 {
+        self.iterations.load(Ordering::Relaxed)
+    }
+
+    pub fn avg_depth(&self) -> u64 {
+        self.cumulative_depth() / self.iterations()
+    }
+
+    pub fn add_iteration(&self, depth: u64) {
+        self.max_depth.fetch_max(depth, Ordering::Relaxed);
+        self.cumulative_depth.fetch_add(depth, Ordering::Relaxed);
+        self.iterations.fetch_add(1, Ordering::Relaxed);
+    }
 }

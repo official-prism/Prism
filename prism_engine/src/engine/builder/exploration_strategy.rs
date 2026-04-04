@@ -26,10 +26,12 @@
     permission to convey the resulting work.
 */
 
-use crate::engine::StrategyParams;
+use crate::{Engine, EngineConfig, engine::{StrategyParams, structures::{IterationStats, SearchStats}}};
 
 register_strategy!(puct);
 
 pub trait ExplorationStrategy: std::fmt::Debug {
     type Params: StrategyParams;
+
+    fn excute<C: EngineConfig>(engine: &Engine<C>, search_stats: &SearchStats, iteration_stats: &IterationStats);
 }

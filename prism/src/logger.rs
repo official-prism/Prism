@@ -26,6 +26,7 @@
     permission to convey the resulting work.
 */
 
+use prism_chess::Move;
 use prism_engine::{EngineConfig, engine::Engine};
 
 #[allow(unused)]
@@ -33,5 +34,13 @@ pub struct Logger;
 impl prism_engine::Logger for Logger {
     fn print<C: EngineConfig>(msg: &str, _engine: &Engine<C>) {
         println!("info string {msg}")
+    }
+
+    fn search_report<C: EngineConfig>(_engine: &Engine<C>) {
+        println!("info depth xyz seldepth xyz score cp xyz time xyz nodes xyz nps xyz hashfull xyz multipv x pv xyz xyz xyz xyz")
+    }
+
+    fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>) {
+        println!("bestmove {}", mv.to_string(engine.params().general().ches960()))
     }
 }

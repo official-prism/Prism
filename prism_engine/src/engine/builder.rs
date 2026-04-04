@@ -32,6 +32,7 @@ use crate::engine::logger::{Logger, NoLogger};
 
 use super::{Engine, EngineParams, GenericConfig};
 use std::marker::PhantomData;
+use std::sync::atomic::AtomicBool;
 
 macro_rules! register_strategy {
     ($($name:ident),*) => {
@@ -103,6 +104,7 @@ impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, L: Logger> EngineBuilder<BM
         Engine {
             params: EngineParams::new(),
             position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
+            interruption_token: AtomicBool::new(false),
             _c: PhantomData,
         }
     }

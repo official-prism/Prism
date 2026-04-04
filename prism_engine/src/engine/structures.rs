@@ -26,19 +26,10 @@
     permission to convey the resulting work.
 */
 
-use prism_chess::Move;
+mod search_stats;
+mod search_limits;
+mod iteration_stats;
 
-use crate::{Engine, EngineConfig};
-
-pub trait Logger {
-    fn print<C: EngineConfig>(msg: &str, engine: &Engine<C>);
-    fn search_report<C: EngineConfig>(engine: &Engine<C>);
-    fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>);
-}
-
-pub struct NoLogger;
-impl Logger for NoLogger {
-    fn print<C: EngineConfig>(_msg: &str, _engine: &Engine<C>) {}
-    fn search_report<C: EngineConfig>(_engine: &Engine<C>) {}
-    fn best_move<C: EngineConfig>(_mv: Move, _engine: &Engine<C>) {}
-}
+pub(crate) use search_stats::SearchStats;
+pub(crate) use search_limits::SearchLimits;
+pub(crate) use iteration_stats::IterationStats;
