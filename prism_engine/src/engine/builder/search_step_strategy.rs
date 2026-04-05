@@ -30,8 +30,8 @@ use crate::{Engine, engine::{StrategyParams, builder::EngineConfig, structures::
 
 register_strategy!(classical);
 
-pub trait SearchStepStrategy: std::fmt::Debug {
-    type Params: StrategyParams;
+pub trait SearchStepStrategy: std::fmt::Debug + Send + Sync{
+    type Params: StrategyParams + Send + Sync;
 
     fn excute<C: EngineConfig>(engine: &Engine<C>) -> IterationStats;
 }

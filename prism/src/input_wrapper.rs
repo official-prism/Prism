@@ -62,18 +62,18 @@ impl InputWrapper {
         Some(input_command.trim().to_string())
     }
 
-    // pub fn get_input_no_queue(&mut self) -> Option<String> {
-    //     let mut input_command = String::new();
+    pub fn get_input_no_queue(&mut self) -> Option<String> {
+        let mut input_command = String::new();
 
-    //     match stdin().read_line(&mut input_command) {
-    //         Ok(0) | Err(_) => return None,
-    //         _ => {}
-    //     }
+        match stdin().read_line(&mut input_command) {
+            Ok(0) | Err(_) => return None,
+            _ => {}
+        }
 
-    //     Some(input_command.trim().to_string())
-    // }
+        Some(input_command.trim().to_string())
+    }
 
-    // pub fn push_back(&mut self, command: String) {
-    //     self.command_queue.push(command);
-    // }
+    pub fn push_back(&mut self, command: String) {
+        self.command_queue.push(command);
+    }
 }

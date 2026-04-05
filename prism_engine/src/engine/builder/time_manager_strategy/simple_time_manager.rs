@@ -49,6 +49,11 @@ impl TimeManagerStrategy for SimpleTimeManager {
             hard_limit: None
         };
 
+        if let Some(move_time) = limits.move_time() {
+            time_manager.hard_limit = Some(move_time);
+            return time_manager;
+        }
+
         let time = limits.time().unwrap_or_default();
 
         if time == 0 {

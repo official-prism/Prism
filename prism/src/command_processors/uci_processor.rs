@@ -29,7 +29,7 @@
 use core::str;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use prism_chess::{ChessBoard, ChessPosition, FEN};
+use prism_chess::{ChessBoard, ChessPosition, FEN, Side};
 use prism_engine::{Engine, EngineConfig, SearchLimits};
 
 use crate::input_wrapper::InputWrapper;
@@ -39,7 +39,7 @@ impl UciProcessor {
     pub fn execute<C: EngineConfig>(
         cmd: &str,
         shutdown_token: &AtomicBool,
-        _input_wrapper: &mut InputWrapper,
+        input_wrapper: &mut InputWrapper,
         engine: &mut Engine<C>,
     ) -> bool {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
@@ -50,6 +50,7 @@ impl UciProcessor {
             "position" => Self::position(&tokens[1..], engine),
             "setoption" => Self::set_option(&tokens[1..], engine),
             "quit" | "q" => shutdown_token.store(true, Ordering::SeqCst),
+            "go" => Self::go(&tokens[1..], engine, input_wrapper, shutdown_token),
             _ => return false,
         }
 
@@ -150,12 +151,87 @@ impl UciProcessor {
         }
     }
 
-    fn go<C: EngineConfig>(args: &[&str], engine: &Engine<C>) {
+    fn go<C: EngineConfig>(args: &[&str], engine: &Engine<C>, input_wrapper: &mut InputWrapper, shutdown_token: &AtomicBool) {
+        let limits = args_to_search_limits(args, engine.position().board().side());
 
+        std::thread::scope(|s| { 
+            s.spawn(|| { 
+                engine.search(&limits); 
+            }); 
+
+            while !engine.interruption_token() {
+                let cmd = match input_wrapper.get_input_no_queue() {
+                    Some(cmd) => cmd,
+                    None => {
+                        engine.interrupt_search();
+                        shutdown_token.store(true, Ordering::Relaxed);
+                        break;
+                    }
+                };
+
+                match cmd.trim() {
+                    "isready" => println!("readyok"),
+                    "stop" | "s" => engine.interrupt_search(),
+                    "quit" | "q" => {
+                        engine.interrupt_search();
+                        shutdown_token.store(true, Ordering::Relaxed);
+                    }
+                    _ => input_wrapper.push_back(cmd)
+                }
+            }
+        });
     }
 }
 
-fn args_to_search_limits<C: EngineConfig>(args: &[&str], _engine: &Engine<C>) -> SearchLimits {
+fn args_to_search_limits(args: &[&str], stm: Side) -> SearchLimits {
     let mut limits = SearchLimits::default();
+
+    for (idx, &arg) in args.iter().enumerate() {
+        match arg {
+            "wtime" => {
+                if args.len() > idx + 1 && stm == Side::WHITE {
+                    limits.set_time(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "winc" => {
+                if args.len() > idx + 1 && stm == Side::WHITE {
+                    limits.set_increment(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "btime" => {
+                if args.len() > idx + 1 && stm == Side::BLACK {
+                    limits.set_time(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "binc" => {
+                if args.len() > idx + 1 && stm == Side::BLACK {
+                    limits.set_increment(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "movestogo" => {
+                if args.len() > idx + 1 {
+                    limits.set_moves_to_go(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "movetime" => {
+                if args.len() > idx + 1 {
+                    limits.set_move_time(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "depth" => {
+                if args.len() > idx + 1 {
+                    limits.set_depth(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "nodes" => {
+                if args.len() > idx + 1 {
+                    limits.set_nodes(args[idx + 1].parse::<u64>().ok());
+                }
+            }
+            "infinite" => limits.set_infinite(true),
+            _ => continue
+        }
+    }
+
     limits
 }

@@ -126,7 +126,6 @@ impl<C: EngineConfig> Engine<C> {
                 last_raport_time = Instant::now();
             }
 
-            //test limits
             if limits.check_limits(&stats, &self) {
                 self.interrupt_search();
                 break;

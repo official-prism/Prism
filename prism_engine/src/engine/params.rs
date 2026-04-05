@@ -45,7 +45,7 @@ crate::define_strategy_params! {
     }
 }
 
-pub trait StrategyParams: std::fmt::Debug + Clone {
+pub trait StrategyParams: std::fmt::Debug + Clone + Send + Sync {
     fn new() -> Self;
     fn set_option(&mut self, name: &str, value: &str) -> std::result::Result<(), String>;
     fn print_options(&self);

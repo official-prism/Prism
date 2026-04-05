@@ -127,7 +127,7 @@ impl<BMS, ES, SS, TM, L> EngineBuilder<BMS, ES, SS, TM, L> {
     }
 }
 
-pub trait EngineConfig {
+pub trait EngineConfig: Send + Sync {
     type BestMove: BestMoveStrategy;
     type Exploration: ExplorationStrategy;
     type SearchStep: SearchStepStrategy;
@@ -163,4 +163,3 @@ impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, TM:
         }
     }
 }
-

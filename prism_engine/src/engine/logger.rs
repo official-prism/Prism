@@ -30,7 +30,7 @@ use prism_chess::Move;
 
 use crate::{Engine, engine::builder::EngineConfig};
 
-pub trait Logger {
+pub trait Logger: Send + Sync {
     fn print<C: EngineConfig>(msg: &str, engine: &Engine<C>);
     fn search_report<C: EngineConfig>(engine: &Engine<C>);
     fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>);

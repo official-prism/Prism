@@ -54,7 +54,7 @@ impl SearchStats {
     }
 
     pub fn avg_depth(&self) -> u64 {
-        self.cumulative_depth() / self.iterations()
+        self.cumulative_depth() / self.iterations().max(1)
     }
 
     pub fn add_iteration(&self, stats: &IterationStats) {

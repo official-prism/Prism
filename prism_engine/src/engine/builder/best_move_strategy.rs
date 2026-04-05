@@ -30,8 +30,8 @@ use crate::{Engine, EngineConfig, engine::{StrategyParams, structures::{Iteratio
 
 register_strategy!(max_q);
 
-pub trait BestMoveStrategy: std::fmt::Debug {
-    type Params: StrategyParams;
+pub trait BestMoveStrategy: std::fmt::Debug + Send + Sync {
+    type Params: StrategyParams + Send + Sync;
 
     fn excute<C: EngineConfig>(engine: &Engine<C>, search_stats: &SearchStats, iteration_stats: &IterationStats);
 }
