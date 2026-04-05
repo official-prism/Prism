@@ -26,10 +26,12 @@
     permission to convey the resulting work.
 */
 
-pub mod engine;
-pub use engine::Engine;
-pub use engine::builder::EngineConfig;
-pub use engine::builder::EngineBuilder;
-pub use engine::builder::{BestMoveStrategy, ExplorationStrategy};
-pub use engine::StrategyParams;
-pub use engine::Logger;
+use crate::{Engine, engine::{StrategyParams, builder::EngineConfig}};
+
+register_strategy!(classical);
+
+pub trait SearchStepStrategy: std::fmt::Debug {
+    type Params: StrategyParams;
+
+    fn excute<C: EngineConfig>(engine: &Engine<C>) -> u64;
+}

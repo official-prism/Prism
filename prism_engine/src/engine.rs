@@ -42,28 +42,10 @@ use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
+use crate::engine::builder::EngineConfig;
+use crate::engine::builder::search_step_strategy::SearchStepStrategy;
 use crate::engine::structures::SearchLimits;
 use crate::engine::structures::SearchStats;
-
-pub trait EngineConfig {
-    type BestMove: BestMoveStrategy;
-    type Exploration: ExplorationStrategy;
-    type Logger: Logger;
-}
-
-pub struct GenericConfig<BMS, ES, L> {
-    _bms: PhantomData<BMS>,
-    _es: PhantomData<ES>,
-    _l: PhantomData<L>,
-}
-
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, L: Logger> EngineConfig
-    for GenericConfig<BMS, ES, L>
-{
-    type BestMove = BMS;
-    type Exploration = ES;
-    type Logger = L;
-}
 
 #[derive(Debug)]
 pub struct Engine<C: EngineConfig> {
@@ -129,12 +111,13 @@ impl<C: EngineConfig> Engine<C> {
         search_stats
     }
 
-    fn main_thread_search(&self, _limits: &SearchLimits, _stats: &SearchStats) {
+    fn main_thread_search(&self, _limits: &SearchLimits, stats: &SearchStats) {
         while !self.interruption_token() {
-            //iteration step
+            let depth = C::SearchStep::excute(&self);
 
-            //add iteration
-            //print report 
+            stats.add_iteration(depth);
+
+            //print report (do the checks with data from before adding the iteration)
 
             //test limits
 

@@ -37,6 +37,7 @@ use command_processors::misc_processor::MiscProcessor;
 use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
 use prism_engine::EngineBuilder;
+use prism_engine::engine::builder::search_step_strategy::Classical;
 use prism_engine::engine::builder::{
     best_move_strategy::MaxQ, exploration_strategy::Puct,
 };
@@ -45,6 +46,7 @@ fn main() {
     let mut engine = EngineBuilder::new()
         .best_move_strategy::<MaxQ>()
         .exploration_strategy::<Puct>()
+        .search_step_strategy::<Classical>()
         .logger::<crate::logger::Logger>()
         .build();
 

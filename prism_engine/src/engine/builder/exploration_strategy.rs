@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{Engine, EngineConfig, engine::{StrategyParams, structures::{IterationStats, SearchStats}}};
+use crate::{Engine, engine::{StrategyParams, builder::EngineConfig, structures::{IterationStats, SearchStats}}};
 
 register_strategy!(puct);
 

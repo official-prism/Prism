@@ -26,10 +26,20 @@
     permission to convey the resulting work.
 */
 
-pub mod engine;
-pub use engine::Engine;
-pub use engine::builder::EngineConfig;
-pub use engine::builder::EngineBuilder;
-pub use engine::builder::{BestMoveStrategy, ExplorationStrategy};
-pub use engine::StrategyParams;
-pub use engine::Logger;
+use crate::engine::builder::search_step_strategy::SearchStepStrategy;
+
+#[derive(Debug)]
+pub struct Classical;
+
+crate::define_strategy_params! {
+    ClassicalSearchParams {
+    }
+}
+
+impl SearchStepStrategy for Classical {
+    type Params = ClassicalSearchParams;
+
+    fn excute<C: crate::EngineConfig>(_engine: &crate::Engine<C>) -> u64 {
+        0
+    }
+}

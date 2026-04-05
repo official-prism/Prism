@@ -28,7 +28,7 @@
 
 use prism_chess::Move;
 
-use crate::{Engine, EngineConfig};
+use crate::{Engine, engine::builder::EngineConfig};
 
 pub trait Logger {
     fn print<C: EngineConfig>(msg: &str, engine: &Engine<C>);
