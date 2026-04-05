@@ -28,7 +28,6 @@
 
 mod command_processors;
 mod input_wrapper;
-mod number_to_string;
 mod logger;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -39,9 +38,7 @@ use input_wrapper::InputWrapper;
 use prism_engine::EngineBuilder;
 use prism_engine::engine::builder::search_step_strategy::Classical;
 use prism_engine::engine::builder::time_manager_strategy::SimpleTimeManager;
-use prism_engine::engine::builder::{
-    best_move_strategy::MaxQ, exploration_strategy::Puct,
-};
+use prism_engine::engine::builder::{best_move_strategy::MaxQ, exploration_strategy::Puct};
 
 fn main() {
     let mut engine = EngineBuilder::new()

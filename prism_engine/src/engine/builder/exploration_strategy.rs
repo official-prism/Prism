@@ -26,12 +26,23 @@
     permission to convey the resulting work.
 */
 
-use crate::{Engine, engine::{StrategyParams, builder::EngineConfig, structures::{IterationStats, SearchStats}}};
+use crate::{
+    Engine,
+    engine::{
+        StrategyParams,
+        builder::EngineConfig,
+        structures::{IterationStats, SearchStats},
+    },
+};
 
 register_strategy!(puct);
 
 pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
     type Params: StrategyParams + Send + Sync;
 
-    fn excute<C: EngineConfig>(engine: &Engine<C>, search_stats: &SearchStats, iteration_stats: &IterationStats);
+    fn excute<C: EngineConfig>(
+        engine: &Engine<C>,
+        search_stats: &SearchStats,
+        iteration_stats: &IterationStats,
+    );
 }

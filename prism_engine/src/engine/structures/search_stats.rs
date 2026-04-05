@@ -38,7 +38,11 @@ pub struct SearchStats {
 
 impl SearchStats {
     pub fn new() -> Self {
-        Self { max_depth: AtomicU64::new(0), cumulative_depth: AtomicU64::new(0), iterations: AtomicU64::new(0) }
+        Self {
+            max_depth: AtomicU64::new(0),
+            cumulative_depth: AtomicU64::new(0),
+            iterations: AtomicU64::new(0),
+        }
     }
 
     pub fn max_depth(&self) -> u64 {

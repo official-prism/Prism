@@ -27,7 +27,7 @@
 */
 
 use prism_chess::Move;
-use prism_engine::{EngineConfig, engine::Engine};
+use prism_engine::{EngineConfig, SearchStats, engine::Engine};
 
 #[allow(unused)]
 pub struct Logger;
@@ -38,11 +38,34 @@ impl prism_engine::Logger for Logger {
         println!("info string {msg}")
     }
 
-    fn search_report<C: EngineConfig>(_engine: &Engine<C>) {
-        println!("info depth xyz seldepth xyz score cp xyz time xyz nodes xyz nps xyz hashfull xyz multipv x pv xyz xyz xyz xyz")
+    fn search_report<C: EngineConfig>(
+        time_passed: u64,
+        search_stats: &SearchStats,
+        engine: &Engine<C>,
+    ) {
+        let depth = search_stats.avg_depth();
+        let max_depth = search_stats.max_depth();
+        let score = 0;
+        let nodes = if engine.params().general().iters_as_nodes() {
+            search_stats.iterations()
+        } else {
+            search_stats.cumulative_depth()
+        };
+        let nps = nodes as u128 * 1000 / time_passed.max(1) as u128;
+        let hashfull = 0;
+        let pv_idx = 1;
+        let pv: Vec<String> = Vec::new();
+
+        println!(
+            "info depth {depth} seldepth {max_depth} score cp {score} time {time_passed} nodes {nodes} nps {nps} hashfull {hashfull} multipv {pv_idx} pv {}",
+            pv.join(" ")
+        )
     }
 
     fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>) {
-        println!("bestmove {}", mv.to_string(engine.params().general().ches960()))
+        println!(
+            "bestmove {}",
+            mv.to_string(engine.params().general().ches960())
+        )
     }
 }

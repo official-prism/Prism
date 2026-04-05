@@ -28,17 +28,29 @@
 
 use prism_chess::Move;
 
-use crate::{Engine, engine::builder::EngineConfig};
+use crate::{
+    Engine,
+    engine::{builder::EngineConfig, structures::SearchStats},
+};
 
 pub trait Logger: Send + Sync {
     fn print<C: EngineConfig>(msg: &str, engine: &Engine<C>);
-    fn search_report<C: EngineConfig>(engine: &Engine<C>);
+    fn search_report<C: EngineConfig>(
+        time_passed: u64,
+        search_stats: &SearchStats,
+        engine: &Engine<C>,
+    );
     fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>);
 }
 
 pub struct NoLogger;
 impl Logger for NoLogger {
     fn print<C: EngineConfig>(_msg: &str, _engine: &Engine<C>) {}
-    fn search_report<C: EngineConfig>(_engine: &Engine<C>) {}
+    fn search_report<C: EngineConfig>(
+        _time_passed: u64,
+        _search_stats: &SearchStats,
+        _engine: &Engine<C>,
+    ) {
+    }
     fn best_move<C: EngineConfig>(_mv: Move, _engine: &Engine<C>) {}
 }

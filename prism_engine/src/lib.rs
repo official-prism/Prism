@@ -28,9 +28,10 @@
 
 pub mod engine;
 pub use engine::Engine;
-pub use engine::builder::EngineConfig;
-pub use engine::builder::EngineBuilder;
-pub use engine::builder::{BestMoveStrategy, ExplorationStrategy};
-pub use engine::StrategyParams;
 pub use engine::Logger;
 pub use engine::SearchLimits;
+pub use engine::SearchStats;
+pub use engine::StrategyParams;
+pub use engine::builder::EngineBuilder;
+pub use engine::builder::EngineConfig;
+pub use engine::builder::{BestMoveStrategy, ExplorationStrategy};

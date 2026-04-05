@@ -151,13 +151,18 @@ impl UciProcessor {
         }
     }
 
-    fn go<C: EngineConfig>(args: &[&str], engine: &Engine<C>, input_wrapper: &mut InputWrapper, shutdown_token: &AtomicBool) {
+    fn go<C: EngineConfig>(
+        args: &[&str],
+        engine: &Engine<C>,
+        input_wrapper: &mut InputWrapper,
+        shutdown_token: &AtomicBool,
+    ) {
         let limits = args_to_search_limits(args, engine.position().board().side());
 
-        std::thread::scope(|s| { 
-            s.spawn(|| { 
-                engine.search(&limits); 
-            }); 
+        std::thread::scope(|s| {
+            s.spawn(|| {
+                engine.search(&limits);
+            });
 
             while !engine.interruption_token() {
                 let cmd = match input_wrapper.get_input_no_queue() {
@@ -176,7 +181,7 @@ impl UciProcessor {
                         engine.interrupt_search();
                         shutdown_token.store(true, Ordering::Relaxed);
                     }
-                    _ => input_wrapper.push_back(cmd)
+                    _ => input_wrapper.push_back(cmd),
                 }
             }
         });
@@ -229,7 +234,7 @@ fn args_to_search_limits(args: &[&str], stm: Side) -> SearchLimits {
                 }
             }
             "infinite" => limits.set_infinite(true),
-            _ => continue
+            _ => continue,
         }
     }
 

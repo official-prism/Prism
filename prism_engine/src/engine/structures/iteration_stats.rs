@@ -27,14 +27,12 @@
 */
 
 pub struct IterationStats {
-    depth: u64
+    depth: u64,
 }
 
 impl IterationStats {
     pub fn new() -> Self {
-        Self { 
-            depth: 0 
-        }
+        Self { depth: 0 }
     }
 
     pub fn depth(&self) -> u64 {

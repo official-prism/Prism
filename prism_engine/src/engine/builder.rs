@@ -55,7 +55,13 @@ pub use self::time_manager_strategy::TimeManagerStrategy;
 
 pub struct Unspecified;
 
-pub struct EngineBuilder<BMS = Unspecified, ES = Unspecified, SS = Unspecified, TM = Unspecified, L = NoLogger> {
+pub struct EngineBuilder<
+    BMS = Unspecified,
+    ES = Unspecified,
+    SS = Unspecified,
+    TM = Unspecified,
+    L = NoLogger,
+> {
     _bms: PhantomData<BMS>,
     _es: PhantomData<ES>,
     _ss: PhantomData<SS>,
@@ -143,8 +149,13 @@ pub struct GenericConfig<BMS, ES, SS, TM, L> {
     _l: PhantomData<L>,
 }
 
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, TM: TimeManagerStrategy, L: Logger> EngineConfig
-    for GenericConfig<BMS, ES, SS, TM, L>
+impl<
+    BMS: BestMoveStrategy,
+    ES: ExplorationStrategy,
+    SS: SearchStepStrategy,
+    TM: TimeManagerStrategy,
+    L: Logger,
+> EngineConfig for GenericConfig<BMS, ES, SS, TM, L>
 {
     type BestMove = BMS;
     type Exploration = ES;
@@ -153,7 +164,14 @@ impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, TM:
     type Logger = L;
 }
 
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, TM: TimeManagerStrategy, L: Logger> EngineBuilder<BMS, ES, SS, TM, L> {
+impl<
+    BMS: BestMoveStrategy,
+    ES: ExplorationStrategy,
+    SS: SearchStepStrategy,
+    TM: TimeManagerStrategy,
+    L: Logger,
+> EngineBuilder<BMS, ES, SS, TM, L>
+{
     pub fn build(self) -> Engine<GenericConfig<BMS, ES, SS, TM, L>> {
         Engine {
             params: EngineParams::new(),

@@ -31,8 +31,6 @@ use std::process::Command;
 use prism_chess::DEFAULT_PERFT_DEPTH;
 use prism_engine::{Engine, EngineConfig};
 
-use crate::number_to_string::{number_to_string, time_to_string};
-
 pub struct MiscProcessor;
 impl MiscProcessor {
     pub fn execute<C: EngineConfig>(cmd: &str, engine: &Engine<C>) -> bool {
@@ -79,9 +77,8 @@ impl MiscProcessor {
 
         println!("\n-----------------------------------------------------------");
         println!(
-            "  Perft ended! {result} nodes, {}, {}n/s",
-            time_to_string(miliseconds),
-            number_to_string(((result * 1000) as f64 / miliseconds as f64) as u128)
+            "  Perft ended! {result} nodes, {miliseconds}ms, {} nps",
+            result as u128 * 1000 / miliseconds as u128
         );
         println!("-----------------------------------------------------------\n");
     }

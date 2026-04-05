@@ -26,10 +26,10 @@
     permission to convey the resulting work.
 */
 
-mod search_stats;
-mod search_limits;
 mod iteration_stats;
+mod search_limits;
+mod search_stats;
 
-pub(crate) use search_stats::SearchStats;
 pub(crate) use iteration_stats::IterationStats;
 pub use search_limits::SearchLimits;
+pub use search_stats::SearchStats;
