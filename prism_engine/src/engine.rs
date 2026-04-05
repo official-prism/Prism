@@ -113,12 +113,12 @@ impl<C: EngineConfig> Engine<C> {
         let mut main_thread_iters = 0;
 
         while !self.interruption_token() {
-            let depth = C::SearchStep::excute(&self);
+            let iteration_stats = C::SearchStep::excute(&self);
 
             let avg_depth = stats.avg_depth();
             let max_depth = stats.max_depth();
 
-            stats.add_iteration(depth);
+            stats.add_iteration(&iteration_stats);
             main_thread_iters += 1;
 
             if stats.avg_depth() > avg_depth || stats.max_depth() > max_depth || last_raport_time.elapsed().as_millis() > 1000 {
@@ -127,6 +127,10 @@ impl<C: EngineConfig> Engine<C> {
             }
 
             //test limits
+            if limits.check_limits(&stats, &self) {
+                self.interrupt_search();
+                break;
+            }
 
             //check for max tree size
 
@@ -134,13 +138,13 @@ impl<C: EngineConfig> Engine<C> {
             
             if time_manager.hard_limit(time_passed, self.params().time_manager(), self) {
                 self.interrupt_search();
-                continue;
+                break;
             }
 
             if main_thread_iters % 4096 == 0 && 
                 time_manager.soft_limit(time_passed, self.params().time_manager(), self) {
                 self.interrupt_search();
-                continue;
+                break;
             }
         }
     }

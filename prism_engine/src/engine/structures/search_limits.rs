@@ -26,6 +26,8 @@
     permission to convey the resulting work.
 */
 
+use crate::{Engine, EngineConfig, engine::structures::SearchStats};
+
 #[derive(Debug, Default)]
 pub struct SearchLimits {
     nodes: Option<u64>,
@@ -49,4 +51,19 @@ impl SearchLimits  {
     pub fn set_time(&mut self, time: Option<u64>) { self.time = time; }
     pub fn set_increment(&mut self, increment: Option<u64>) { self.increment = increment; }
     pub fn set_moves_to_go(&mut self, moves_to_go: Option<u64>) { self.moves_to_go = moves_to_go; }
+    pub fn check_limits<C: EngineConfig>(&self, stats: &SearchStats, _engine: &Engine<C>) -> bool {
+        if self.infinite {
+            return false;
+        }
+
+        if let Some(nodes) = self.nodes() && nodes <= stats.iterations() {
+            return true
+        }
+
+        if let Some(depth) = self.depth() && depth <= stats.avg_depth() {
+            return true
+        }
+
+        false
+    }
 }

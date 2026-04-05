@@ -57,7 +57,7 @@ impl SearchStats {
         self.cumulative_depth() / self.iterations()
     }
 
-    pub fn add_iteration(&self, stats: IterationStats) {
+    pub fn add_iteration(&self, stats: &IterationStats) {
         let depth = stats.depth();
         self.max_depth.fetch_max(depth, Ordering::Relaxed);
         self.cumulative_depth.fetch_add(depth, Ordering::Relaxed);

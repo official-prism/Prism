@@ -37,6 +37,7 @@ crate::define_strategy_params! {
         Options {
             ["Hash"] hash: i32 => 1024, 1, 524288;
             ["UCI_Chess960"] ches960: bool => false;
+            ["ItersAsNodes"] iters_as_nodes: bool => false;
         }
         Buttons {
             "Clear",
