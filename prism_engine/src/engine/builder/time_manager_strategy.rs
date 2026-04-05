@@ -26,11 +26,14 @@
     permission to convey the resulting work.
 */
 
-pub mod engine;
-pub use engine::Engine;
-pub use engine::builder::EngineConfig;
-pub use engine::builder::EngineBuilder;
-pub use engine::builder::{BestMoveStrategy, ExplorationStrategy};
-pub use engine::StrategyParams;
-pub use engine::Logger;
-pub use engine::SearchLimits;
+use crate::{Engine, SearchLimits, engine::{StrategyParams, builder::EngineConfig}};
+
+register_strategy!(simple_time_manager);
+
+pub trait TimeManagerStrategy: std::fmt::Debug { 
+    type Params: StrategyParams;
+
+    fn new<C: EngineConfig>(limits: &SearchLimits, params: &Self::Params, engine: &crate::Engine<C>) -> Self;
+    fn soft_limit<C: EngineConfig>(&self, time_passed: u64, params: &Self::Params, engine: &Engine<C>) -> bool;
+    fn hard_limit<C: EngineConfig>(&self, time_passed: u64, params: &Self::Params, engine: &Engine<C>) -> bool; 
+}

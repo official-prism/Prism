@@ -26,10 +26,11 @@
     permission to convey the resulting work.
 */
 
+use core::str;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use prism_chess::{ChessBoard, ChessPosition, FEN};
-use prism_engine::{Engine, EngineConfig};
+use prism_engine::{Engine, EngineConfig, SearchLimits};
 
 use crate::input_wrapper::InputWrapper;
 
@@ -137,7 +138,7 @@ impl UciProcessor {
         let name_str = name.join(" ");
         let value_str = value.join(" ");
 
-        if let Err(msg) = engine.set_option(&name_str, &value_str) {
+        if let Err(msg) = engine.params_mut().set_option(&name_str, &value_str) {
             println!("info string {msg}");
             return;
         }
@@ -148,4 +149,13 @@ impl UciProcessor {
             println!("info string Option {name_str} has been triggered");
         }
     }
+
+    fn go<C: EngineConfig>(args: &[&str], engine: &Engine<C>) {
+
+    }
+}
+
+fn args_to_search_limits<C: EngineConfig>(args: &[&str], _engine: &Engine<C>) -> SearchLimits {
+    let mut limits = SearchLimits::default();
+    limits
 }

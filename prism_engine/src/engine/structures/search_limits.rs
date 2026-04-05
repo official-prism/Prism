@@ -26,6 +26,27 @@
     permission to convey the resulting work.
 */
 
+#[derive(Debug, Default)]
 pub struct SearchLimits {
-    
+    nodes: Option<u64>,
+    depth: Option<u64>,
+    infinite: bool,
+    time: Option<u64>,
+    increment: Option<u64>,
+    moves_to_go: Option<u64>
+}
+
+impl SearchLimits  {
+    pub const fn nodes(&self) -> Option<u64> { self.nodes }
+    pub const fn depth(&self) -> Option<u64> { self.depth }
+    pub const fn is_infinite(&self) -> bool { self.infinite }
+    pub const fn time(&self) -> Option<u64> { self.time }
+    pub const fn increment(&self) -> Option<u64> { self.increment }
+    pub const fn moves_to_go(&self) -> Option<u64> { self.moves_to_go }
+    pub fn set_nodes(&mut self, nodes: Option<u64>) { self.nodes = nodes; }
+    pub fn set_depth(&mut self, depth: Option<u64>) { self.depth = depth; }
+    pub fn set_infinite(&mut self, infinite: bool) { self.infinite = infinite; }
+    pub fn set_time(&mut self, time: Option<u64>) { self.time = time; }
+    pub fn set_increment(&mut self, increment: Option<u64>) { self.increment = increment; }
+    pub fn set_moves_to_go(&mut self, moves_to_go: Option<u64>) { self.moves_to_go = moves_to_go; }
 }

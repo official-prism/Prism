@@ -31,5 +31,5 @@ mod search_limits;
 mod iteration_stats;
 
 pub(crate) use search_stats::SearchStats;
-pub(crate) use search_limits::SearchLimits;
 pub(crate) use iteration_stats::IterationStats;
+pub use search_limits::SearchLimits;

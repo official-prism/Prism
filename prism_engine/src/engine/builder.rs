@@ -28,7 +28,6 @@
 
 use prism_chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::engine::builder::search_step_strategy::SearchStepStrategy;
 use crate::engine::logger::{Logger, NoLogger};
 
 use super::{Engine, EngineParams};
@@ -47,69 +46,82 @@ macro_rules! register_strategy {
 pub mod best_move_strategy;
 pub mod exploration_strategy;
 pub mod search_step_strategy;
+pub mod time_manager_strategy;
 
 pub use self::best_move_strategy::BestMoveStrategy;
 pub use self::exploration_strategy::ExplorationStrategy;
+pub use self::search_step_strategy::SearchStepStrategy;
+pub use self::time_manager_strategy::TimeManagerStrategy;
 
 pub struct Unspecified;
 
-pub struct EngineBuilder<BMS = Unspecified, ES = Unspecified, SS = Unspecified, L = NoLogger> {
+pub struct EngineBuilder<BMS = Unspecified, ES = Unspecified, SS = Unspecified, TM = Unspecified, L = NoLogger> {
     _bms: PhantomData<BMS>,
     _es: PhantomData<ES>,
     _ss: PhantomData<SS>,
+    _tm: PhantomData<TM>,
     _l: PhantomData<L>,
 }
 
-impl EngineBuilder<Unspecified, Unspecified, Unspecified, NoLogger> {
+impl EngineBuilder<Unspecified, Unspecified, Unspecified, Unspecified, NoLogger> {
     pub fn new() -> Self {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
             _ss: PhantomData,
+            _tm: PhantomData,
             _l: PhantomData,
         }
     }
 }
 
-impl Default for EngineBuilder<Unspecified, Unspecified> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<BMS, ES, SS, L> EngineBuilder<BMS, ES, SS, L> {
-    pub fn exploration_strategy<S: ExplorationStrategy>(self) -> EngineBuilder<BMS, S, SS, L> {
+impl<BMS, ES, SS, TM, L> EngineBuilder<BMS, ES, SS, TM, L> {
+    pub fn exploration_strategy<S: ExplorationStrategy>(self) -> EngineBuilder<BMS, S, SS, TM, L> {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
             _ss: PhantomData,
+            _tm: PhantomData,
             _l: PhantomData,
         }
     }
 
-    pub fn best_move_strategy<S: BestMoveStrategy>(self) -> EngineBuilder<S, ES, SS, L> {
+    pub fn best_move_strategy<S: BestMoveStrategy>(self) -> EngineBuilder<S, ES, SS, TM, L> {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
             _ss: PhantomData,
+            _tm: PhantomData,
             _l: PhantomData,
         }
     }
 
-    pub fn search_step_strategy<S: SearchStepStrategy>(self) -> EngineBuilder<BMS, ES, S, L> {
+    pub fn search_step_strategy<S: SearchStepStrategy>(self) -> EngineBuilder<BMS, ES, S, TM, L> {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
             _ss: PhantomData,
+            _tm: PhantomData,
             _l: PhantomData,
         }
     }
 
-    pub fn logger<NL: Logger>(self) -> EngineBuilder<BMS, ES, SS, NL> {
+    pub fn time_manager_strategy<S: TimeManagerStrategy>(self) -> EngineBuilder<BMS, ES, SS, S, L> {
         EngineBuilder {
             _bms: PhantomData,
             _es: PhantomData,
             _ss: PhantomData,
+            _tm: PhantomData,
+            _l: PhantomData,
+        }
+    }
+
+    pub fn logger<NL: Logger>(self) -> EngineBuilder<BMS, ES, SS, TM, NL> {
+        EngineBuilder {
+            _bms: PhantomData,
+            _es: PhantomData,
+            _ss: PhantomData,
+            _tm: PhantomData,
             _l: PhantomData,
         }
     }
@@ -119,27 +131,30 @@ pub trait EngineConfig {
     type BestMove: BestMoveStrategy;
     type Exploration: ExplorationStrategy;
     type SearchStep: SearchStepStrategy;
+    type TimeManager: TimeManagerStrategy;
     type Logger: Logger;
 }
 
-pub struct GenericConfig<BMS, ES, SS, L> {
+pub struct GenericConfig<BMS, ES, SS, TM, L> {
     _bms: PhantomData<BMS>,
     _es: PhantomData<ES>,
     _ss: PhantomData<SS>,
+    _tm: PhantomData<TM>,
     _l: PhantomData<L>,
 }
 
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, L: Logger> EngineConfig
-    for GenericConfig<BMS, ES, SS, L>
+impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, TM: TimeManagerStrategy, L: Logger> EngineConfig
+    for GenericConfig<BMS, ES, SS, TM, L>
 {
     type BestMove = BMS;
     type Exploration = ES;
     type SearchStep = SS;
+    type TimeManager = TM;
     type Logger = L;
 }
 
-impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, L: Logger> EngineBuilder<BMS, ES, SS, L> {
-    pub fn build(self) -> Engine<GenericConfig<BMS, ES, SS, L>> {
+impl<BMS: BestMoveStrategy, ES: ExplorationStrategy, SS: SearchStepStrategy, TM: TimeManagerStrategy, L: Logger> EngineBuilder<BMS, ES, SS, TM, L> {
+    pub fn build(self) -> Engine<GenericConfig<BMS, ES, SS, TM, L>> {
         Engine {
             params: EngineParams::new(),
             position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),

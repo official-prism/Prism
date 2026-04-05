@@ -9,10 +9,11 @@ else
     COPY_CMD      = cp "target/release/$(EXE)$(EXT)" "./$(EXE)$(EXT)" 2>/dev/null
 endif
 
-.PHONY: default debug v2 v3 v4
+.PHONY: default debug tunable v2 v3 v4
 
 default: TARGET_CPU = native
 debug:   TARGET_CPU = native
+tunable:   TARGET_CPU = native
 v2:      TARGET_CPU = x86-64-v2
 v3:      TARGET_CPU = x86-64-v3
 v4:      TARGET_CPU = x86-64-v4
@@ -22,5 +23,9 @@ default v2 v3 v4:
 	$(COPY_CMD)
 
 debug:
-	$(SET_RUSTFLAGS) cargo build -p prism --bin prism
+	$(SET_RUSTFLAGS) cargo build -p prism --bin prism --features=debug
+	$(COPY_CMD)
+
+tunable:
+	$(SET_RUSTFLAGS) cargo build --release -p prism --bin prism --features=tunable
 	$(COPY_CMD)

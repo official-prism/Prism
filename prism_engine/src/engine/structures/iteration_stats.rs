@@ -27,5 +27,21 @@
 */
 
 pub struct IterationStats {
-    
+    depth: u64
+}
+
+impl IterationStats {
+    pub fn new() -> Self {
+        Self { 
+            depth: 0 
+        }
+    }
+
+    pub fn depth(&self) -> u64 {
+        self.depth
+    }
+
+    pub fn add_depth(&mut self) {
+        self.depth += 1
+    }
 }

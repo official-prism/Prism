@@ -30,13 +30,16 @@ pub mod macros;
 
 use crate::define_engine_params;
 use crate::engine::EngineConfig;
-use crate::engine::builder::{BestMoveStrategy, ExplorationStrategy};
+use crate::engine::builder::{BestMoveStrategy, ExplorationStrategy, SearchStepStrategy, TimeManagerStrategy};
 
 crate::define_strategy_params! {
     GeneralParams {
         Options {
             ["Hash"] hash: i32 => 1024, 1, 524288;
             ["UCI_Chess960"] ches960: bool => false;
+        }
+        Buttons {
+            "Clear",
         }
     }
 }
@@ -53,5 +56,7 @@ define_engine_params!(
         general: GeneralParams,
         best_move: <C::BestMove as BestMoveStrategy>::Params,
         exploration: <C::Exploration as ExplorationStrategy>::Params,
+        search: <C::SearchStep as SearchStepStrategy>::Params,
+        time_manager: <C::TimeManager as TimeManagerStrategy>::Params,
     }
 );

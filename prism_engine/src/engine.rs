@@ -34,17 +34,18 @@ mod structures;
 pub use logger::Logger;
 pub use params::EngineParams;
 pub use params::StrategyParams;
+pub use structures::SearchLimits;
 
-use builder::{BestMoveStrategy, ExplorationStrategy};
 use prism_chess::ChessPosition;
 use prism_chess::Move;
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
+use std::time::Instant;
 
 use crate::engine::builder::EngineConfig;
+use crate::engine::builder::TimeManagerStrategy;
 use crate::engine::builder::search_step_strategy::SearchStepStrategy;
-use crate::engine::structures::SearchLimits;
 use crate::engine::structures::SearchStats;
 
 #[derive(Debug)]
@@ -56,11 +57,6 @@ pub struct Engine<C: EngineConfig> {
 }
 
 impl<C: EngineConfig> Engine<C> {
-    #[inline]
-    pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
-        self.params.set_option(name, value)
-    }
-
     #[inline]
     pub fn params(&self) -> &EngineParams<C> {
         &self.params
@@ -92,10 +88,8 @@ impl<C: EngineConfig> Engine<C> {
     }
 
     #[inline]
-    #[allow(unused_variables)]
     pub fn print(&self, msg: &str) {
-        #[cfg(feature = "debug")]
-        C::Logger::print(msg)
+        C::Logger::print(msg, self)
     }
 
     pub fn search(&self, limits: &SearchLimits) -> SearchStats {
@@ -111,17 +105,43 @@ impl<C: EngineConfig> Engine<C> {
         search_stats
     }
 
-    fn main_thread_search(&self, _limits: &SearchLimits, stats: &SearchStats) {
+    fn main_thread_search(&self, limits: &SearchLimits, stats: &SearchStats) {
+        let mut last_raport_time = Instant::now();
+        let search_time = Instant::now();
+
+        let time_manager = C::TimeManager::new(limits, self.params().time_manager(), self);
+        let mut main_thread_iters = 0;
+
         while !self.interruption_token() {
             let depth = C::SearchStep::excute(&self);
 
-            stats.add_iteration(depth);
+            let avg_depth = stats.avg_depth();
+            let max_depth = stats.max_depth();
 
-            //print report (do the checks with data from before adding the iteration)
+            stats.add_iteration(depth);
+            main_thread_iters += 1;
+
+            if stats.avg_depth() > avg_depth || stats.max_depth() > max_depth || last_raport_time.elapsed().as_millis() > 1000 {
+                C::Logger::search_report(&self);
+                last_raport_time = Instant::now();
+            }
 
             //test limits
 
             //check for max tree size
+
+            let time_passed = search_time.elapsed().as_millis() as u64;
+            
+            if time_manager.hard_limit(time_passed, self.params().time_manager(), self) {
+                self.interrupt_search();
+                continue;
+            }
+
+            if main_thread_iters % 4096 == 0 && 
+                time_manager.soft_limit(time_passed, self.params().time_manager(), self) {
+                self.interrupt_search();
+                continue;
+            }
         }
     }
 }

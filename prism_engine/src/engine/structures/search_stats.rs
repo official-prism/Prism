@@ -28,6 +28,8 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use crate::engine::structures::IterationStats;
+
 pub struct SearchStats {
     max_depth: AtomicU64,
     cumulative_depth: AtomicU64,
@@ -55,7 +57,8 @@ impl SearchStats {
         self.cumulative_depth() / self.iterations()
     }
 
-    pub fn add_iteration(&self, depth: u64) {
+    pub fn add_iteration(&self, stats: IterationStats) {
+        let depth = stats.depth();
         self.max_depth.fetch_max(depth, Ordering::Relaxed);
         self.cumulative_depth.fetch_add(depth, Ordering::Relaxed);
         self.iterations.fetch_add(1, Ordering::Relaxed);

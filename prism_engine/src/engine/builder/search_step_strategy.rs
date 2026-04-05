@@ -26,12 +26,12 @@
     permission to convey the resulting work.
 */
 
-use crate::{Engine, engine::{StrategyParams, builder::EngineConfig}};
+use crate::{Engine, engine::{StrategyParams, builder::EngineConfig, structures::IterationStats}};
 
 register_strategy!(classical);
 
 pub trait SearchStepStrategy: std::fmt::Debug {
     type Params: StrategyParams;
 
-    fn excute<C: EngineConfig>(engine: &Engine<C>) -> u64;
+    fn excute<C: EngineConfig>(engine: &Engine<C>) -> IterationStats;
 }

@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::engine::builder::search_step_strategy::SearchStepStrategy;
+use crate::engine::{builder::search_step_strategy::SearchStepStrategy, structures::IterationStats};
 
 #[derive(Debug)]
 pub struct Classical;
@@ -39,7 +39,9 @@ crate::define_strategy_params! {
 impl SearchStepStrategy for Classical {
     type Params = ClassicalSearchParams;
 
-    fn excute<C: crate::EngineConfig>(_engine: &crate::Engine<C>) -> u64 {
-        0
+    fn excute<C: crate::EngineConfig>(_engine: &crate::Engine<C>) -> IterationStats {
+        let mut iteration_stats = IterationStats::new();
+        iteration_stats.add_depth();
+        iteration_stats
     }
 }

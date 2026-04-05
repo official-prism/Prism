@@ -38,6 +38,7 @@ use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
 use prism_engine::EngineBuilder;
 use prism_engine::engine::builder::search_step_strategy::Classical;
+use prism_engine::engine::builder::time_manager_strategy::SimpleTimeManager;
 use prism_engine::engine::builder::{
     best_move_strategy::MaxQ, exploration_strategy::Puct,
 };
@@ -47,6 +48,7 @@ fn main() {
         .best_move_strategy::<MaxQ>()
         .exploration_strategy::<Puct>()
         .search_step_strategy::<Classical>()
+        .time_manager_strategy::<SimpleTimeManager>()
         .logger::<crate::logger::Logger>()
         .build();
 
