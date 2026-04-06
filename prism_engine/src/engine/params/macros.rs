@@ -65,16 +65,16 @@ macro_rules! define_strategy_params {
         #[allow(non_snake_case)]
         pub struct $name {
             $(
-                $(pub $option: $option_ty,)*
+                $($option: $option_ty,)*
             )?
             $(
                 $(
                 #[cfg(feature = "tunable")]
-                pub $tunable: $tunable_ty,
+                $tunable: $tunable_ty,
                 )*
             )?
             $(
-                $(pub $variable: $variable_ty,)*
+                $($variable: $variable_ty,)*
             )?
         }
 

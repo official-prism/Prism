@@ -144,6 +144,11 @@ impl UciProcessor {
             return;
         }
 
+        if name_str.to_lowercase() == "hash" {
+            let hash_size = engine.params().general().hash() as usize;
+            engine.tree_mut().resize(hash_size);
+        }
+
         if is_value {
             println!("info string Option {name_str} has been set to {value_str}");
         } else {

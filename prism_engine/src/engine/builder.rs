@@ -29,6 +29,7 @@
 use prism_chess::{ChessBoard, ChessPosition, FEN};
 
 use crate::engine::logger::{Logger, NoLogger};
+use crate::engine::tree::Tree;
 
 use super::{Engine, EngineParams};
 use std::marker::PhantomData;
@@ -173,10 +174,14 @@ impl<
 > EngineBuilder<BMS, ES, SS, TM, L>
 {
     pub fn build(self) -> Engine<GenericConfig<BMS, ES, SS, TM, L>> {
+        let params = EngineParams::new();
+        let hash_size = params.general().hash() as usize;
+
         Engine {
-            params: EngineParams::new(),
+            params,
             position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
             interruption_token: AtomicBool::new(false),
+            tree: Tree::new(hash_size),
             _c: PhantomData,
         }
     }

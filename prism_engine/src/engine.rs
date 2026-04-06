@@ -30,6 +30,7 @@ pub mod builder;
 mod logger;
 mod params;
 mod structures;
+mod tree;
 
 pub use logger::Logger;
 pub use params::EngineParams;
@@ -47,12 +48,14 @@ use std::time::Instant;
 use crate::engine::builder::EngineConfig;
 use crate::engine::builder::TimeManagerStrategy;
 use crate::engine::builder::search_step_strategy::SearchStepStrategy;
+use crate::engine::tree::Tree;
 
 #[derive(Debug)]
 pub struct Engine<C: EngineConfig> {
     params: EngineParams<C>,
     position: ChessPosition,
     interruption_token: AtomicBool,
+    tree: Tree,
     _c: PhantomData<C>,
 }
 
@@ -75,6 +78,16 @@ impl<C: EngineConfig> Engine<C> {
     #[inline]
     pub fn set_position(&mut self, position: &ChessPosition) {
         self.position = *position;
+    }
+
+    #[inline]
+    pub fn tree(&self) -> &Tree {
+        &self.tree
+    }
+
+    #[inline]
+    pub fn tree_mut(&mut self) -> &mut Tree {
+        &mut self.tree
     }
 
     #[inline]
@@ -132,7 +145,7 @@ impl<C: EngineConfig> Engine<C> {
 
             if stats.avg_depth() > avg_depth
                 || stats.max_depth() > max_depth
-                || (main_thread_iters.is_multiple_of(128)
+                || (main_thread_iters.is_multiple_of(128) //todo: maybe remove that
                     && last_raport_time.elapsed().as_millis() >= 1000)
             {
                 let time_passed = search_time.elapsed().as_millis() as u64;
@@ -145,7 +158,11 @@ impl<C: EngineConfig> Engine<C> {
                 break;
             }
 
-            //check for max tree size
+            let hash_size = self.params().general().hash() as usize;
+            if self.tree().tree_full(hash_size) {
+                self.interrupt_search();
+                break;
+            }
 
             if main_thread_iters.is_multiple_of(128)
                 && time_manager.hard_limit(
