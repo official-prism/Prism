@@ -61,65 +61,43 @@ pub struct Unspecified;
 
 macro_rules! define_engine_config {
     (
-        strategies {
-            $( $s_assoc:ident : $s_bound:path | $s_method:ident | $s_default:ty ),+ $(,)?
-        }
-        services {
-            $( $v_assoc:ident : $v_bound:path | $v_method:ident | $v_default:ty ),+ $(,)?
-        }
+        $( $assoc:ident : $bound:path | $method:ident | $default:ty ),+ $(,)?
     ) => {
-        paste::paste! {
-            #[derive(Debug, Default)]
-            pub struct CombinedNodePayload< $( [<$s_method:camel Np>] ),+ > {
-                $( pub $s_method: [<$s_method:camel Np>], )+
-            }
-
-            #[derive(Debug, Default)]
-            pub struct CombinedEdgePayload< $( [<$s_method:camel Ep>] ),+ > {
-                $( pub $s_method: [<$s_method:camel Ep>], )+
-            }
-        }
-
         pub trait EngineConfig: Send + Sync {
-            $( type $s_assoc: $s_bound; )+
-            $( type $v_assoc: $v_bound; )+
+            $( type $assoc: $bound; )+
             type NodePayload: PayloadType;
             type EdgePayload: PayloadType;
         }
 
-        pub struct EngineBuilder< $( $s_assoc = $s_default, )+ $( $v_assoc = $v_default ),+ >(
-            $( PhantomData<$s_assoc>, )+
-            $( PhantomData<$v_assoc>, )+
+        pub struct EngineBuilder< $( $assoc = $default ),+ >(
+            $( PhantomData<$assoc>, )+
         );
 
-        impl EngineBuilder< $( $s_default, )+ $( $v_default ),+ > {
+        impl EngineBuilder< $( $default ),+ > {
             pub fn new() -> Self {
                 EngineBuilder(
-                    $( <PhantomData<$s_default>>::default(), )+
-                    $( <PhantomData<$v_default>>::default(), )+
+                    $( <PhantomData<$default>>::default(), )+
                 )
             }
         }
 
         define_engine_config!(@setters
             []
-            [ $( $s_assoc : $s_bound | $s_method | $s_default ),+ , $( $v_assoc : $v_bound | $v_method | $v_default ),+ ]
+            [ $( $assoc : $bound | $method | $default ),+ ]
         );
 
-        pub struct GenericConfig< $( $s_assoc, )+ $( $v_assoc ),+ >(
-            $( PhantomData<$s_assoc>, )+
-            $( PhantomData<$v_assoc>, )+
+        pub struct GenericConfig< $( $assoc ),+ >(
+            $( PhantomData<$assoc>, )+
         );
 
-        impl< $( $s_assoc: $s_bound, )+ $( $v_assoc: $v_bound ),+ > EngineConfig for GenericConfig< $( $s_assoc, )+ $( $v_assoc ),+ > {
-            $( type $s_assoc = $s_assoc; )+
-            $( type $v_assoc = $v_assoc; )+
-            type NodePayload = CombinedNodePayload< $( <$s_assoc as $s_bound>::NodePayload ),+ >;
-            type EdgePayload = CombinedEdgePayload< $( <$s_assoc as $s_bound>::EdgePayload ),+ >;
+        impl< $( $assoc: $bound, )+ > EngineConfig for GenericConfig< $( $assoc ),+ > {
+            $( type $assoc = $assoc; )+
+            type NodePayload = Node::NodePayload;
+            type EdgePayload = Node::EdgePayload;
         }
 
-        impl< $( $s_assoc: $s_bound, )+ $( $v_assoc: $v_bound ),+ > EngineBuilder< $( $s_assoc, )+ $( $v_assoc ),+ > {
-            pub fn build(self) -> Engine<GenericConfig< $( $s_assoc, )+ $( $v_assoc ),+ >> {
+        impl< $( $assoc: $bound, )+ > EngineBuilder< $( $assoc ),+ > {
+            pub fn build(self) -> Engine<GenericConfig< $( $assoc ),+ >> {
                 let params = EngineParams::new();
                 let hash_size = params.general().hash() as usize;
                 Engine {
@@ -162,14 +140,10 @@ macro_rules! define_engine_config {
 }
 
 define_engine_config! {
-    strategies {
-        BestMove:    BestMoveStrategy    | best_move    | Unspecified,
-        Exploration: ExplorationStrategy | exploration  | Unspecified,
-        SearchStep:  SearchStepStrategy  | search_step  | Unspecified,
-        Node:        NodeStrategy        | node         | Unspecified,
-    }
-    services {
-        TimeManager: TimeManagerStrategy | time_manager | Unspecified,
-        Logger:      LoggerTrait         | logger       | NoLogger,
-    }
+    BestMove:    BestMoveStrategy    | best_move    | Unspecified,
+    Exploration: ExplorationStrategy | exploration  | Unspecified,
+    SearchStep:  SearchStepStrategy  | search_step  | Unspecified,
+    Node:        NodeStrategy        | node         | Unspecified,
+    TimeManager: TimeManagerStrategy | time_manager | Unspecified,
+    Logger:      LoggerTrait         | logger       | NoLogger,
 }

@@ -31,7 +31,6 @@ use crate::{
     engine::{
         StrategyParams,
         structures::{IterationStats, SearchStats},
-        tree::payload::PayloadType,
     },
 };
 
