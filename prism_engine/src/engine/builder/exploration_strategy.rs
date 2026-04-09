@@ -36,11 +36,13 @@ use crate::{
 };
 
 register_strategy!(puct);
+register_strategy!(test_compound);
 
 pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
     type Params: StrategyParams + Send + Sync;
 
     fn excute<C: EngineConfig>(
+        params: &Self::Params,
         engine: &Engine<C>,
         search_stats: &SearchStats,
         iteration_stats: &IterationStats,

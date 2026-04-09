@@ -39,7 +39,7 @@ crate::define_strategy_params! {
 impl SearchStepStrategy for Classical {
     type Params = ClassicalSearchParams;
 
-    fn excute<C: crate::EngineConfig>(_engine: &crate::Engine<C>) -> IterationStats {
+    fn excute<C: crate::EngineConfig>(_params: &Self::Params, _engine: &crate::Engine<C>) -> IterationStats {
         let mut iteration_stats = IterationStats::new();
         iteration_stats.add_depth();
         iteration_stats

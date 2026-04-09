@@ -135,7 +135,7 @@ impl<C: EngineConfig> Engine<C> {
         let mut main_thread_iters = 0u64;
 
         while !self.interruption_token() {
-            let iteration_stats = C::SearchStep::excute(&self);
+            let iteration_stats = C::SearchStep::excute(self.params().search(), &self);
 
             let avg_depth = stats.avg_depth();
             let max_depth = stats.max_depth();

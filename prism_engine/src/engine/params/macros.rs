@@ -351,3 +351,485 @@ macro_rules! define_engine_params {
         }
     };
 }
+
+/// Macro for creating compound strategy params that embed one or more inner
+/// strategy params alongside the compound's own Options/Tunables.
+///
+/// # Non-generic form
+/// ```ignore
+/// define_compound_params! {
+///     MyParams {
+///         Strategies {
+///             inner: PuctParams;
+///         }
+///         Options { ... }
+///     }
+/// }
+/// ```
+///
+/// # Generic form
+/// ```ignore
+/// define_compound_params! {
+///     RaveParams<Inner: ExplorationStrategy> {
+///         Strategies {
+///             inner: Inner::Params;
+///         }
+///         Options { ... }
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! define_compound_params {
+    // ── Non-generic arm ──────────────────────────────────────────────
+    (
+        $name:ident {
+            Strategies {
+                $( $inner_field:ident : $inner_type:ty; )+
+            }
+            $(Options {
+                $(
+                    [$option_key:literal] $option:ident : $option_ty:ty =>
+                        $option_default:expr $(, $option_min:expr, $option_max:expr)?;
+                )*
+            })?
+            $(Tunables {
+                $(
+                    $(#[$tune_meta:meta])*
+                    $tunable:ident : $tunable_ty:ty =>
+                        $tunable_default:expr,
+                        $tunable_min:expr,
+                        $tunable_max:expr,
+                        $tunable_c:expr,
+                        $tunable_r:expr;
+                )*
+            })?
+        }
+    ) => {
+        #[derive(Debug, Clone)]
+        #[allow(non_snake_case)]
+        pub struct $name {
+            $( $inner_field: $inner_type, )+
+            $(
+                $($option: $option_ty,)*
+            )?
+            $(
+                $(
+                #[cfg(feature = "tunable")]
+                $tunable: $tunable_ty,
+                )*
+            )?
+        }
+
+        #[allow(non_snake_case)]
+        impl $name {
+            $( pub fn $inner_field(&self) -> &$inner_type { &self.$inner_field } )+
+
+            $(
+                $(
+                pub fn $option(&self) -> $option_ty {
+                    self.$option.clone()
+                }
+                )*
+            )?
+
+            $(
+                $(
+                $(#[$tune_meta])*
+                #[cfg(feature = "tunable")]
+                pub const fn $tunable(&self) -> $tunable_ty {
+                    self.$tunable
+                }
+
+                $(#[$tune_meta])*
+                #[cfg(not(feature = "tunable"))]
+                #[inline(always)]
+                pub const fn $tunable(&self) -> $tunable_ty {
+                    $tunable_default
+                }
+                )*
+            )?
+        }
+
+        impl $crate::StrategyParams for $name {
+            fn new() -> Self {
+                Self {
+                    $( $inner_field: <$inner_type as $crate::StrategyParams>::new(), )+
+                    $(
+                        $($option: $option_default,)*
+                    )?
+                    $(
+                        $(
+                        #[cfg(feature = "tunable")]
+                        $tunable: $tunable_default,
+                        )*
+                    )?
+                }
+            }
+
+            fn set_option(&mut self, _name: &str, _value: &str) -> std::result::Result<(), String> {
+                // Own options first
+                $(
+                    $(
+                    if _name.eq_ignore_ascii_case($option_key) {
+                        match _value.parse::<$option_ty>() {
+                            Ok(new_value) => {
+                                $(
+                                    if !($option_min..=$option_max).contains(&new_value) {
+                                        return Err(format!("Value out of range for {}", _name));
+                                    }
+                                )?
+                                if self.$option == new_value {
+                                    return Err(format!("Value of {} is already {}", _name, new_value));
+                                }
+                                self.$option = new_value;
+                                return Ok(());
+                            }
+                            Err(_) => return Err(format!("Incorrect param type for {}", _name)),
+                        }
+                    }
+                    )*
+                )?
+
+                // Own tunables
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        if _name.eq_ignore_ascii_case(stringify!($tunable)) {
+                            match _value.parse::<$tunable_ty>() {
+                                Ok(new_value) => {
+                                    if !($tunable_min..=$tunable_max).contains(&new_value) {
+                                        return Err(format!("Value out of range for {}", _name));
+                                    }
+                                    if self.$tunable == new_value {
+                                        return Err(format!("Value of {} is already {}", _name, new_value));
+                                    }
+                                    self.$tunable = new_value;
+                                    return Ok(());
+                                }
+                                Err(_) => return Err(format!("Incorrect param type for {}", _name)),
+                            }
+                        }
+                        )*
+                    )?
+                }
+
+                // Delegate to inner params
+                let unknown_msg = format!("Unknown option '{}'", _name);
+                $(
+                    match self.$inner_field.set_option(_name, _value) {
+                        Err(e) if e == unknown_msg => {},
+                        res => return res,
+                    }
+                )+
+
+                Err(unknown_msg)
+            }
+
+            fn print_options(&self) {
+                $(
+                    $(
+                    {
+                        let uci_type = match stringify!($option_ty) {
+                            "bool" => "check",
+                            "i64"  => "spin",
+                            "i32"  => "spin",
+                            _      => "string",
+                        };
+                        let mut default_str = self.$option.to_string();
+                        if default_str.is_empty() {
+                            default_str = "<empty>".to_string();
+                        }
+                        print!("option name {} type {} default {}", $option_key, uci_type, default_str);
+                        $( print!(" min {} max {}", $option_min, $option_max); )?
+                        println!();
+                    }
+                    )*
+                )?
+
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        {
+                            let uci_type = match stringify!($tunable_ty) {
+                                "bool" => "check",
+                                "i64"  => "spin",
+                                _      => "string",
+                            };
+                            print!("option name {} type {} default {}", stringify!($tunable), uci_type, self.$tunable);
+                            print!(" min {} max {}", $tunable_min, $tunable_max);
+                            println!();
+                        }
+                        )*
+                    )?
+                }
+
+                $( self.$inner_field.print_options(); )+
+            }
+
+            fn print_tunables(&self) {
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        {
+                            let kind = if stringify!($tunable_ty) == "i64" { "int" } else { "float" };
+                            println!("{}, {}, {}, {}, {}, {}, {}", stringify!($tunable), kind, self.$tunable, $tunable_min, $tunable_max, $tunable_c, $tunable_r);
+                        }
+                        )*
+                    )?
+                }
+                #[cfg(not(feature = "tunable"))]
+                {
+                    $(
+                        $(
+                        {
+                            let kind = if stringify!($tunable_ty) == "i64" { "int" } else { "float" };
+                            println!("{}, {}, {}, {}, {}, {}, {}", stringify!($tunable), kind, $tunable_default, $tunable_min, $tunable_max, $tunable_c, $tunable_r);
+                        }
+                        )*
+                    )?
+                }
+
+                $( self.$inner_field.print_tunables(); )+
+            }
+        }
+    };
+
+    // ── Generic arm ──────────────────────────────────────────────────
+    (
+        $name:ident < $gen:ident : $bound:path > {
+            Strategies {
+                $( $inner_field:ident : $inner_type:ty; )+
+            }
+            $(Options {
+                $(
+                    [$option_key:literal] $option:ident : $option_ty:ty =>
+                        $option_default:expr $(, $option_min:expr, $option_max:expr)?;
+                )*
+            })?
+            $(Tunables {
+                $(
+                    $(#[$tune_meta:meta])*
+                    $tunable:ident : $tunable_ty:ty =>
+                        $tunable_default:expr,
+                        $tunable_min:expr,
+                        $tunable_max:expr,
+                        $tunable_c:expr,
+                        $tunable_r:expr;
+                )*
+            })?
+        }
+    ) => {
+        #[derive(Debug)]
+        #[allow(non_snake_case)]
+        pub struct $name<$gen: $bound> {
+            $( $inner_field: $inner_type, )+
+            $(
+                $($option: $option_ty,)*
+            )?
+            $(
+                $(
+                #[cfg(feature = "tunable")]
+                $tunable: $tunable_ty,
+                )*
+            )?
+        }
+
+        // Manual Clone impl — only requires inner types to be Clone
+        // (guaranteed by StrategyParams), avoids requiring $gen: Clone.
+        impl<$gen: $bound> Clone for $name<$gen> {
+            fn clone(&self) -> Self {
+                Self {
+                    $( $inner_field: self.$inner_field.clone(), )+
+                    $(
+                        $($option: self.$option.clone(),)*
+                    )?
+                    $(
+                        $(
+                        #[cfg(feature = "tunable")]
+                        $tunable: self.$tunable.clone(),
+                        )*
+                    )?
+                }
+            }
+        }
+
+        #[allow(non_snake_case)]
+        impl<$gen: $bound> $name<$gen> {
+            $( pub fn $inner_field(&self) -> &$inner_type { &self.$inner_field } )+
+
+            $(
+                $(
+                pub fn $option(&self) -> $option_ty {
+                    self.$option.clone()
+                }
+                )*
+            )?
+
+            $(
+                $(
+                $(#[$tune_meta])*
+                #[cfg(feature = "tunable")]
+                pub const fn $tunable(&self) -> $tunable_ty {
+                    self.$tunable
+                }
+
+                $(#[$tune_meta])*
+                #[cfg(not(feature = "tunable"))]
+                #[inline(always)]
+                pub const fn $tunable(&self) -> $tunable_ty {
+                    $tunable_default
+                }
+                )*
+            )?
+        }
+
+        impl<$gen: $bound> $crate::StrategyParams for $name<$gen> {
+            fn new() -> Self {
+                Self {
+                    $( $inner_field: <$inner_type as $crate::StrategyParams>::new(), )+
+                    $(
+                        $($option: $option_default,)*
+                    )?
+                    $(
+                        $(
+                        #[cfg(feature = "tunable")]
+                        $tunable: $tunable_default,
+                        )*
+                    )?
+                }
+            }
+
+            fn set_option(&mut self, _name: &str, _value: &str) -> std::result::Result<(), String> {
+                // Own options first
+                $(
+                    $(
+                    if _name.eq_ignore_ascii_case($option_key) {
+                        match _value.parse::<$option_ty>() {
+                            Ok(new_value) => {
+                                $(
+                                    if !($option_min..=$option_max).contains(&new_value) {
+                                        return Err(format!("Value out of range for {}", _name));
+                                    }
+                                )?
+                                if self.$option == new_value {
+                                    return Err(format!("Value of {} is already {}", _name, new_value));
+                                }
+                                self.$option = new_value;
+                                return Ok(());
+                            }
+                            Err(_) => return Err(format!("Incorrect param type for {}", _name)),
+                        }
+                    }
+                    )*
+                )?
+
+                // Own tunables
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        if _name.eq_ignore_ascii_case(stringify!($tunable)) {
+                            match _value.parse::<$tunable_ty>() {
+                                Ok(new_value) => {
+                                    if !($tunable_min..=$tunable_max).contains(&new_value) {
+                                        return Err(format!("Value out of range for {}", _name));
+                                    }
+                                    if self.$tunable == new_value {
+                                        return Err(format!("Value of {} is already {}", _name, new_value));
+                                    }
+                                    self.$tunable = new_value;
+                                    return Ok(());
+                                }
+                                Err(_) => return Err(format!("Incorrect param type for {}", _name)),
+                            }
+                        }
+                        )*
+                    )?
+                }
+
+                // Delegate to inner params
+                let unknown_msg = format!("Unknown option '{}'", _name);
+                $(
+                    match self.$inner_field.set_option(_name, _value) {
+                        Err(e) if e == unknown_msg => {},
+                        res => return res,
+                    }
+                )+
+
+                Err(unknown_msg)
+            }
+
+            fn print_options(&self) {
+                $(
+                    $(
+                    {
+                        let uci_type = match stringify!($option_ty) {
+                            "bool" => "check",
+                            "i64"  => "spin",
+                            "i32"  => "spin",
+                            _      => "string",
+                        };
+                        let mut default_str = self.$option.to_string();
+                        if default_str.is_empty() {
+                            default_str = "<empty>".to_string();
+                        }
+                        print!("option name {} type {} default {}", $option_key, uci_type, default_str);
+                        $( print!(" min {} max {}", $option_min, $option_max); )?
+                        println!();
+                    }
+                    )*
+                )?
+
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        {
+                            let uci_type = match stringify!($tunable_ty) {
+                                "bool" => "check",
+                                "i64"  => "spin",
+                                _      => "string",
+                            };
+                            print!("option name {} type {} default {}", stringify!($tunable), uci_type, self.$tunable);
+                            print!(" min {} max {}", $tunable_min, $tunable_max);
+                            println!();
+                        }
+                        )*
+                    )?
+                }
+
+                $( self.$inner_field.print_options(); )+
+            }
+
+            fn print_tunables(&self) {
+                #[cfg(feature = "tunable")]
+                {
+                    $(
+                        $(
+                        {
+                            let kind = if stringify!($tunable_ty) == "i64" { "int" } else { "float" };
+                            println!("{}, {}, {}, {}, {}, {}, {}", stringify!($tunable), kind, self.$tunable, $tunable_min, $tunable_max, $tunable_c, $tunable_r);
+                        }
+                        )*
+                    )?
+                }
+                #[cfg(not(feature = "tunable"))]
+                {
+                    $(
+                        $(
+                        {
+                            let kind = if stringify!($tunable_ty) == "i64" { "int" } else { "float" };
+                            println!("{}, {}, {}, {}, {}, {}, {}", stringify!($tunable), kind, $tunable_default, $tunable_min, $tunable_max, $tunable_c, $tunable_r);
+                        }
+                        )*
+                    )?
+                }
+
+                $( self.$inner_field.print_tunables(); )+
+            }
+        }
+    };
+}

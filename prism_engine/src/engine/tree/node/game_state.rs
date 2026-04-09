@@ -79,7 +79,7 @@ impl AtomicGameState {
                 GameState::Lost(dtm) => 2 << 6 | (dtm & 0x3F),
                 GameState::Drew => 3 << 6,
             },
-            Ordering::Release,
+            Ordering::Relaxed,
         );
     }
 }

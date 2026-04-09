@@ -75,12 +75,12 @@ impl AtomicNodeIndex {
 
     #[inline]
     pub fn load(&self) -> NodeIndex {
-        NodeIndex::new(self.0.load(Ordering::Acquire))
+        NodeIndex::new(self.0.load(Ordering::Relaxed))
     }
 
     #[inline]
     pub fn store(&self, index: NodeIndex) {
-        self.0.store(index.raw(), Ordering::Release);
+        self.0.store(index.raw(), Ordering::Relaxed);
     }
 }
 

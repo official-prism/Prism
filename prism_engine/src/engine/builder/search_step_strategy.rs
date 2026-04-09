@@ -36,5 +36,5 @@ register_strategy!(classical);
 pub trait SearchStepStrategy: std::fmt::Debug + Send + Sync {
     type Params: StrategyParams + Send + Sync;
 
-    fn excute<C: EngineConfig>(engine: &Engine<C>) -> IterationStats;
+    fn excute<C: EngineConfig>(params: &Self::Params, engine: &Engine<C>) -> IterationStats;
 }
