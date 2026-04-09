@@ -352,35 +352,8 @@ macro_rules! define_engine_params {
     };
 }
 
-/// Macro for creating compound strategy params that embed one or more inner
-/// strategy params alongside the compound's own Options/Tunables.
-///
-/// # Non-generic form
-/// ```ignore
-/// define_compound_params! {
-///     MyParams {
-///         Strategies {
-///             inner: PuctParams;
-///         }
-///         Options { ... }
-///     }
-/// }
-/// ```
-///
-/// # Generic form
-/// ```ignore
-/// define_compound_params! {
-///     RaveParams<Inner: ExplorationStrategy> {
-///         Strategies {
-///             inner: Inner::Params;
-///         }
-///         Options { ... }
-///     }
-/// }
-/// ```
 #[macro_export]
 macro_rules! define_compound_params {
-    // ── Non-generic arm ──────────────────────────────────────────────
     (
         $name:ident {
             Strategies {
@@ -467,7 +440,6 @@ macro_rules! define_compound_params {
             }
 
             fn set_option(&mut self, _name: &str, _value: &str) -> std::result::Result<(), String> {
-                // Own options first
                 $(
                     $(
                     if _name.eq_ignore_ascii_case($option_key) {
@@ -490,7 +462,6 @@ macro_rules! define_compound_params {
                     )*
                 )?
 
-                // Own tunables
                 #[cfg(feature = "tunable")]
                 {
                     $(
@@ -514,7 +485,6 @@ macro_rules! define_compound_params {
                     )?
                 }
 
-                // Delegate to inner params
                 let unknown_msg = format!("Unknown option '{}'", _name);
                 $(
                     match self.$inner_field.set_option(_name, _value) {
@@ -597,9 +567,8 @@ macro_rules! define_compound_params {
         }
     };
 
-    // ── Generic arm ──────────────────────────────────────────────────
     (
-        $name:ident < $gen:ident : $bound:path > {
+        $name:ident < $( $gen:ident : $bound:path ),+ > {
             Strategies {
                 $( $inner_field:ident : $inner_type:ty; )+
             }
@@ -624,7 +593,7 @@ macro_rules! define_compound_params {
     ) => {
         #[derive(Debug)]
         #[allow(non_snake_case)]
-        pub struct $name<$gen: $bound> {
+        pub struct $name<$($gen: $bound),+> {
             $( $inner_field: $inner_type, )+
             $(
                 $($option: $option_ty,)*
@@ -637,9 +606,7 @@ macro_rules! define_compound_params {
             )?
         }
 
-        // Manual Clone impl — only requires inner types to be Clone
-        // (guaranteed by StrategyParams), avoids requiring $gen: Clone.
-        impl<$gen: $bound> Clone for $name<$gen> {
+        impl<$($gen: $bound),+> Clone for $name<$($gen),+> {
             fn clone(&self) -> Self {
                 Self {
                     $( $inner_field: self.$inner_field.clone(), )+
@@ -657,7 +624,7 @@ macro_rules! define_compound_params {
         }
 
         #[allow(non_snake_case)]
-        impl<$gen: $bound> $name<$gen> {
+        impl<$($gen: $bound),+> $name<$($gen),+> {
             $( pub fn $inner_field(&self) -> &$inner_type { &self.$inner_field } )+
 
             $(
@@ -686,7 +653,7 @@ macro_rules! define_compound_params {
             )?
         }
 
-        impl<$gen: $bound> $crate::StrategyParams for $name<$gen> {
+        impl<$($gen: $bound),+> $crate::StrategyParams for $name<$($gen),+> {
             fn new() -> Self {
                 Self {
                     $( $inner_field: <$inner_type as $crate::StrategyParams>::new(), )+
@@ -703,7 +670,6 @@ macro_rules! define_compound_params {
             }
 
             fn set_option(&mut self, _name: &str, _value: &str) -> std::result::Result<(), String> {
-                // Own options first
                 $(
                     $(
                     if _name.eq_ignore_ascii_case($option_key) {
@@ -726,7 +692,6 @@ macro_rules! define_compound_params {
                     )*
                 )?
 
-                // Own tunables
                 #[cfg(feature = "tunable")]
                 {
                     $(
@@ -750,7 +715,6 @@ macro_rules! define_compound_params {
                     )?
                 }
 
-                // Delegate to inner params
                 let unknown_msg = format!("Unknown option '{}'", _name);
                 $(
                     match self.$inner_field.set_option(_name, _value) {
