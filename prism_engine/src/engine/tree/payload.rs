@@ -26,24 +26,5 @@
     permission to convey the resulting work.
 */
 
-use crate::{
-    Engine,
-    engine::{
-        StrategyParams,
-        builder::EngineConfig,
-        structures::{IterationStats, SearchStats}
-    },
-};
-
-register_strategy!(puct);
-
-pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-
-    fn excute<C: EngineConfig>(
-        params: &Self::Params,
-        engine: &Engine<C>,
-        search_stats: &SearchStats,
-        iteration_stats: &IterationStats,
-    );
-}
+pub trait PayloadType: Default + std::fmt::Debug + Send + Sync + 'static {}
+impl<T: Default + std::fmt::Debug + Send + Sync + 'static> PayloadType for T {}

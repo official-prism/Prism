@@ -36,15 +36,17 @@ use command_processors::misc_processor::MiscProcessor;
 use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
 use prism_engine::EngineBuilder;
+use prism_engine::engine::builder::node_strategy::AvgScoreNode;
 use prism_engine::engine::builder::search_step_strategy::Classical;
 use prism_engine::engine::builder::time_manager_strategy::SimpleTimeManager;
-use prism_engine::engine::builder::{best_move_strategy::MaxQ, exploration_strategy::{DummyExploration, Puct, TestCompound}};
+use prism_engine::engine::builder::{best_move_strategy::MaxQ, exploration_strategy::Puct};
 
 fn main() {
     let mut engine = EngineBuilder::new()
         .best_move::<MaxQ>()
-        .exploration::<TestCompound<Puct, DummyExploration>>()
+        .exploration::<Puct>()
         .search_step::<Classical>()
+        .node::<AvgScoreNode>()
         .time_manager::<SimpleTimeManager>()
         .logger::<crate::logger::Logger>()
         .build();

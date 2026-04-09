@@ -26,24 +26,12 @@
     permission to convey the resulting work.
 */
 
-use crate::{
-    Engine,
-    engine::{
-        StrategyParams,
-        builder::EngineConfig,
-        structures::{IterationStats, SearchStats}
-    },
-};
+use crate::engine::{StrategyParams, tree::payload::PayloadType};
 
-register_strategy!(puct);
+register_strategy!(avg_score_node);
 
-pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
+pub trait NodeStrategy: std::fmt::Debug + Send + Sync {
     type Params: StrategyParams + Send + Sync;
-
-    fn excute<C: EngineConfig>(
-        params: &Self::Params,
-        engine: &Engine<C>,
-        search_stats: &SearchStats,
-        iteration_stats: &IterationStats,
-    );
+    type NodePayload: PayloadType;
+    type EdgePayload: PayloadType;
 }

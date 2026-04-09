@@ -32,25 +32,38 @@ mod game_state;
 pub use edge::Edge;
 pub use game_state::{AtomicGameState, GameState};
 
+use super::payload::PayloadType;
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 #[derive(Debug)]
-pub struct Node {
+pub struct Node<NP: PayloadType = (), EP: PayloadType = ()> {
     state: AtomicGameState,
-    edges: RwLock<Vec<Edge>>,
+    edges: RwLock<Vec<Edge<EP>>>,
+    payload: NP,
 }
 
-impl Node {
+impl<NP: PayloadType, EP: PayloadType> Node<NP, EP> {
     #[inline]
     pub fn size() -> usize {
-        std::mem::size_of::<Node>()
+        std::mem::size_of::<Node<NP, EP>>()
     }
 
     pub fn new() -> Self {
         Self {
             state: AtomicGameState::new(GameState::Ongoing),
             edges: RwLock::new(Vec::new()),
+            payload: NP::default(),
         }
+    }
+
+    #[inline]
+    pub fn payload(&self) -> &NP {
+        &self.payload
+    }
+
+    #[inline]
+    pub fn payload_mut(&mut self) -> &mut NP {
+        &mut self.payload
     }
 
     #[inline]
@@ -69,12 +82,12 @@ impl Node {
     }
 
     #[inline]
-    pub fn edges(&self) -> RwLockReadGuard<'_, Vec<Edge>> {
+    pub fn edges(&self) -> RwLockReadGuard<'_, Vec<Edge<EP>>> {
         self.edges.read().unwrap()
     }
 
     #[inline]
-    pub fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<Edge>> {
+    pub fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<Edge<EP>>> {
         self.edges.write().unwrap()
     }
 
@@ -89,7 +102,7 @@ impl Node {
     }
 }
 
-impl Default for Node {
+impl<NP: PayloadType, EP: PayloadType> Default for Node<NP, EP> {
     fn default() -> Self {
         Self::new()
     }

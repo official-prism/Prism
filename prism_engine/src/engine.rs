@@ -55,7 +55,7 @@ pub struct Engine<C: EngineConfig> {
     params: EngineParams<C>,
     position: ChessPosition,
     interruption_token: AtomicBool,
-    tree: Tree,
+    tree: Tree<C::NodePayload, C::EdgePayload>,
     _c: PhantomData<C>,
 }
 
@@ -81,12 +81,12 @@ impl<C: EngineConfig> Engine<C> {
     }
 
     #[inline]
-    pub fn tree(&self) -> &Tree {
+    pub fn tree(&self) -> &Tree<C::NodePayload, C::EdgePayload> {
         &self.tree
     }
 
     #[inline]
-    pub fn tree_mut(&mut self) -> &mut Tree {
+    pub fn tree_mut(&mut self) -> &mut Tree<C::NodePayload, C::EdgePayload> {
         &mut self.tree
     }
 

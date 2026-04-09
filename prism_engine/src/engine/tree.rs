@@ -28,24 +28,26 @@
 
 mod node;
 pub(crate) mod node_index;
+pub mod payload;
 
 pub use node::Node;
 pub use node_index::NodeIndex;
 
+use payload::PayloadType;
 use std::{
     collections::HashMap,
     sync::{RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
 #[derive(Debug)]
-pub struct Tree {
-    tree: RwLock<HashMap<NodeIndex, Node>>,
+pub struct Tree<NP: PayloadType = (), EP: PayloadType = ()> {
+    tree: RwLock<HashMap<NodeIndex, Node<NP, EP>>>,
 }
 
-impl Tree {
+impl<NP: PayloadType, EP: PayloadType> Tree<NP, EP> {
     pub fn new(size_in_mb: usize) -> Self {
         let bytes = size_in_mb * 1024 * 1024;
-        let size = bytes / Node::size();
+        let size = bytes / Node::<NP, EP>::size();
 
         Self {
             tree: RwLock::new(HashMap::with_capacity(size)),
@@ -54,25 +56,25 @@ impl Tree {
 
     pub fn resize(&mut self, size_in_mb: usize) {
         let bytes = size_in_mb * 1024 * 1024;
-        let size = bytes / Node::size();
+        let size = bytes / Node::<NP, EP>::size();
 
         self.tree = RwLock::new(HashMap::with_capacity(size));
     }
 
     pub fn tree_full(&self, size_in_mb: usize) -> bool {
         let bytes = size_in_mb * 1024 * 1024;
-        let size = bytes / Node::size();
+        let size = bytes / Node::<NP, EP>::size();
 
         self.tree.read().unwrap().len() >= size
     }
 
     #[inline]
-    pub fn read(&self) -> RwLockReadGuard<'_, HashMap<NodeIndex, Node>> {
+    pub fn read(&self) -> RwLockReadGuard<'_, HashMap<NodeIndex, Node<NP, EP>>> {
         self.tree.read().unwrap()
     }
 
     #[inline]
-    pub fn write(&self) -> RwLockWriteGuard<'_, HashMap<NodeIndex, Node>> {
+    pub fn write(&self) -> RwLockWriteGuard<'_, HashMap<NodeIndex, Node<NP, EP>>> {
         self.tree.write().unwrap()
     }
 
@@ -82,7 +84,7 @@ impl Tree {
     }
 
     #[inline]
-    pub fn remove(&self, key: NodeIndex) -> Option<Node> {
+    pub fn remove(&self, key: NodeIndex) -> Option<Node<NP, EP>> {
         self.tree.write().unwrap().remove(&key)
     }
 

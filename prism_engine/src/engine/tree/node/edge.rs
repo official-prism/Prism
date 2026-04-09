@@ -32,18 +32,20 @@ use prism_chess::Move;
 
 use crate::engine::tree::node_index::AtomicNodeIndex;
 use crate::engine::tree::node_index::NodeIndex;
+use crate::engine::tree::payload::PayloadType;
 
 #[derive(Debug)]
-pub struct Edge {
+pub struct Edge<EP: PayloadType = ()> {
     child_node: AtomicNodeIndex,
     score: AtomicU64,
     visits: AtomicU64,
     policy: AtomicU32,
     draw_chance: AtomicU32,
     mv: AtomicU16,
+    payload: EP,
 }
 
-impl Edge {
+impl<EP: PayloadType> Edge<EP> {
     pub fn new(mv: Move, policy: f32) -> Self {
         Self {
             score: AtomicU64::new(0f64.to_bits()),
@@ -52,7 +54,18 @@ impl Edge {
             policy: AtomicU32::new(policy.to_bits()),
             draw_chance: AtomicU32::new(0f32.to_bits()),
             child_node: AtomicNodeIndex::null(),
+            payload: EP::default(),
         }
+    }
+
+    #[inline]
+    pub fn payload(&self) -> &EP {
+        &self.payload
+    }
+
+    #[inline]
+    pub fn payload_mut(&mut self) -> &mut EP {
+        &mut self.payload
     }
 
     #[inline]

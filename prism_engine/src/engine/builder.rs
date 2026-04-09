@@ -28,8 +28,10 @@
 
 use prism_chess::{ChessBoard, ChessPosition, FEN};
 
+use crate::engine::builder::node_strategy::NodeStrategy;
 use crate::engine::logger::{LoggerTrait, NoLogger};
 use crate::engine::tree::Tree;
+use crate::engine::tree::payload::PayloadType;
 
 use super::{Engine, EngineParams};
 use std::marker::PhantomData;
@@ -48,6 +50,7 @@ pub mod best_move_strategy;
 pub mod exploration_strategy;
 pub mod search_step_strategy;
 pub mod time_manager_strategy;
+pub mod node_strategy;
 
 pub use self::best_move_strategy::BestMoveStrategy;
 pub use self::exploration_strategy::ExplorationStrategy;
@@ -57,36 +60,66 @@ pub use self::time_manager_strategy::TimeManagerStrategy;
 pub struct Unspecified;
 
 macro_rules! define_engine_config {
-    ( $( $assoc:ident : $bound:path | $method:ident | $default:ty ),+ $(,)? ) => {
-        pub trait EngineConfig: Send + Sync {
-            $( type $assoc: $bound; )+
+    (
+        strategies {
+            $( $s_assoc:ident : $s_bound:path | $s_method:ident | $s_default:ty ),+ $(,)?
+        }
+        services {
+            $( $v_assoc:ident : $v_bound:path | $v_method:ident | $v_default:ty ),+ $(,)?
+        }
+    ) => {
+        paste::paste! {
+            #[derive(Debug, Default)]
+            pub struct CombinedNodePayload< $( [<$s_method:camel Np>] ),+ > {
+                $( pub $s_method: [<$s_method:camel Np>], )+
+            }
+
+            #[derive(Debug, Default)]
+            pub struct CombinedEdgePayload< $( [<$s_method:camel Ep>] ),+ > {
+                $( pub $s_method: [<$s_method:camel Ep>], )+
+            }
         }
 
-        pub struct EngineBuilder< $( $assoc = $default ),+ >(
-            $( PhantomData<$assoc>, )+
+        pub trait EngineConfig: Send + Sync {
+            $( type $s_assoc: $s_bound; )+
+            $( type $v_assoc: $v_bound; )+
+            type NodePayload: PayloadType;
+            type EdgePayload: PayloadType;
+        }
+
+        pub struct EngineBuilder< $( $s_assoc = $s_default, )+ $( $v_assoc = $v_default ),+ >(
+            $( PhantomData<$s_assoc>, )+
+            $( PhantomData<$v_assoc>, )+
         );
 
-        impl EngineBuilder< $( $default ),+ > {
+        impl EngineBuilder< $( $s_default, )+ $( $v_default ),+ > {
             pub fn new() -> Self {
-                EngineBuilder( $( <PhantomData<$default>>::default(), )+ )
+                EngineBuilder(
+                    $( <PhantomData<$s_default>>::default(), )+
+                    $( <PhantomData<$v_default>>::default(), )+
+                )
             }
         }
 
         define_engine_config!(@setters
             []
-            [ $( $assoc : $bound | $method | $default ),+ ]
+            [ $( $s_assoc : $s_bound | $s_method | $s_default ),+ , $( $v_assoc : $v_bound | $v_method | $v_default ),+ ]
         );
 
-        pub struct GenericConfig< $( $assoc ),+ >(
-            $( PhantomData<$assoc>, )+
+        pub struct GenericConfig< $( $s_assoc, )+ $( $v_assoc ),+ >(
+            $( PhantomData<$s_assoc>, )+
+            $( PhantomData<$v_assoc>, )+
         );
 
-        impl< $( $assoc: $bound ),+ > EngineConfig for GenericConfig< $( $assoc ),+ > {
-            $( type $assoc = $assoc; )+
+        impl< $( $s_assoc: $s_bound, )+ $( $v_assoc: $v_bound ),+ > EngineConfig for GenericConfig< $( $s_assoc, )+ $( $v_assoc ),+ > {
+            $( type $s_assoc = $s_assoc; )+
+            $( type $v_assoc = $v_assoc; )+
+            type NodePayload = CombinedNodePayload< $( <$s_assoc as $s_bound>::NodePayload ),+ >;
+            type EdgePayload = CombinedEdgePayload< $( <$s_assoc as $s_bound>::EdgePayload ),+ >;
         }
 
-        impl< $( $assoc: $bound ),+ > EngineBuilder< $( $assoc ),+ > {
-            pub fn build(self) -> Engine<GenericConfig< $( $assoc ),+ >> {
+        impl< $( $s_assoc: $s_bound, )+ $( $v_assoc: $v_bound ),+ > EngineBuilder< $( $s_assoc, )+ $( $v_assoc ),+ > {
+            pub fn build(self) -> Engine<GenericConfig< $( $s_assoc, )+ $( $v_assoc ),+ >> {
                 let params = EngineParams::new();
                 let hash_size = params.general().hash() as usize;
                 Engine {
@@ -129,9 +162,14 @@ macro_rules! define_engine_config {
 }
 
 define_engine_config! {
-    BestMove:    BestMoveStrategy    | best_move    | Unspecified,
-    Exploration: ExplorationStrategy | exploration  | Unspecified,
-    SearchStep:  SearchStepStrategy  | search_step  | Unspecified,
-    TimeManager: TimeManagerStrategy | time_manager | Unspecified,
-    Logger:      LoggerTrait         | logger       | NoLogger,
+    strategies {
+        BestMove:    BestMoveStrategy    | best_move    | Unspecified,
+        Exploration: ExplorationStrategy | exploration  | Unspecified,
+        SearchStep:  SearchStepStrategy  | search_step  | Unspecified,
+        Node:        NodeStrategy        | node         | Unspecified,
+    }
+    services {
+        TimeManager: TimeManagerStrategy | time_manager | Unspecified,
+        Logger:      LoggerTrait         | logger       | NoLogger,
+    }
 }
