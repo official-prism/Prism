@@ -28,7 +28,7 @@
 
 use prism_chess::{ChessBoard, ChessPosition, FEN};
 
-use crate::engine::logger::{Logger, NoLogger};
+use crate::engine::logger::{LoggerTrait, NoLogger};
 use crate::engine::tree::Tree;
 
 use super::{Engine, EngineParams};
@@ -56,133 +56,82 @@ pub use self::time_manager_strategy::TimeManagerStrategy;
 
 pub struct Unspecified;
 
-pub struct EngineBuilder<
-    BMS = Unspecified,
-    ES = Unspecified,
-    SS = Unspecified,
-    TM = Unspecified,
-    L = NoLogger,
-> {
-    _bms: PhantomData<BMS>,
-    _es: PhantomData<ES>,
-    _ss: PhantomData<SS>,
-    _tm: PhantomData<TM>,
-    _l: PhantomData<L>,
+macro_rules! define_engine_config {
+    ( $( $assoc:ident : $bound:path | $method:ident | $default:ty ),+ $(,)? ) => {
+        pub trait EngineConfig: Send + Sync {
+            $( type $assoc: $bound; )+
+        }
+
+        pub struct EngineBuilder< $( $assoc = $default ),+ >(
+            $( PhantomData<$assoc>, )+
+        );
+
+        impl EngineBuilder< $( $default ),+ > {
+            pub fn new() -> Self {
+                EngineBuilder( $( <PhantomData<$default>>::default(), )+ )
+            }
+        }
+
+        define_engine_config!(@setters
+            []
+            [ $( $assoc : $bound | $method | $default ),+ ]
+        );
+
+        pub struct GenericConfig< $( $assoc ),+ >(
+            $( PhantomData<$assoc>, )+
+        );
+
+        impl< $( $assoc: $bound ),+ > EngineConfig for GenericConfig< $( $assoc ),+ > {
+            $( type $assoc = $assoc; )+
+        }
+
+        impl< $( $assoc: $bound ),+ > EngineBuilder< $( $assoc ),+ > {
+            pub fn build(self) -> Engine<GenericConfig< $( $assoc ),+ >> {
+                let params = EngineParams::new();
+                let hash_size = params.general().hash() as usize;
+                Engine {
+                    params,
+                    position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
+                    interruption_token: AtomicBool::new(false),
+                    tree: Tree::new(hash_size),
+                    _c: PhantomData,
+                }
+            }
+        }
+    };
+
+    ( @setters
+        [ $( $b_assoc:ident : $b_bound:path | $b_method:ident | $b_default:ty, )* ]
+        [ $cur_assoc:ident : $cur_bound:path | $cur_method:ident | $cur_default:ty
+          $( , $r_assoc:ident : $r_bound:path | $r_method:ident | $r_default:ty )* ]
+    ) => {
+        impl< $( $b_assoc, )* $cur_assoc $( , $r_assoc )* >
+            EngineBuilder< $( $b_assoc, )* $cur_assoc $( , $r_assoc )* >
+        {
+            pub fn $cur_method<__S: $cur_bound>(self)
+                -> EngineBuilder< $( $b_assoc, )* __S $( , $r_assoc )* >
+            {
+                EngineBuilder(
+                    $( <PhantomData<$b_assoc>>::default(), )*
+                    <PhantomData<__S>>::default(),
+                    $( <PhantomData<$r_assoc>>::default(), )*
+                )
+            }
+        }
+
+        define_engine_config!(@setters
+            [ $( $b_assoc : $b_bound | $b_method | $b_default, )* $cur_assoc : $cur_bound | $cur_method | $cur_default, ]
+            [ $( $r_assoc : $r_bound | $r_method | $r_default ),* ]
+        );
+    };
+
+    ( @setters [ $( $b_assoc:ident : $b_bound:path | $b_method:ident | $b_default:ty, )* ] [] ) => {};
 }
 
-impl EngineBuilder<Unspecified, Unspecified, Unspecified, Unspecified, NoLogger> {
-    pub fn new() -> Self {
-        EngineBuilder {
-            _bms: PhantomData,
-            _es: PhantomData,
-            _ss: PhantomData,
-            _tm: PhantomData,
-            _l: PhantomData,
-        }
-    }
-}
-
-impl<BMS, ES, SS, TM, L> EngineBuilder<BMS, ES, SS, TM, L> {
-    pub fn exploration_strategy<S: ExplorationStrategy>(self) -> EngineBuilder<BMS, S, SS, TM, L> {
-        EngineBuilder {
-            _bms: PhantomData,
-            _es: PhantomData,
-            _ss: PhantomData,
-            _tm: PhantomData,
-            _l: PhantomData,
-        }
-    }
-
-    pub fn best_move_strategy<S: BestMoveStrategy>(self) -> EngineBuilder<S, ES, SS, TM, L> {
-        EngineBuilder {
-            _bms: PhantomData,
-            _es: PhantomData,
-            _ss: PhantomData,
-            _tm: PhantomData,
-            _l: PhantomData,
-        }
-    }
-
-    pub fn search_step_strategy<S: SearchStepStrategy>(self) -> EngineBuilder<BMS, ES, S, TM, L> {
-        EngineBuilder {
-            _bms: PhantomData,
-            _es: PhantomData,
-            _ss: PhantomData,
-            _tm: PhantomData,
-            _l: PhantomData,
-        }
-    }
-
-    pub fn time_manager_strategy<S: TimeManagerStrategy>(self) -> EngineBuilder<BMS, ES, SS, S, L> {
-        EngineBuilder {
-            _bms: PhantomData,
-            _es: PhantomData,
-            _ss: PhantomData,
-            _tm: PhantomData,
-            _l: PhantomData,
-        }
-    }
-
-    pub fn logger<NL: Logger>(self) -> EngineBuilder<BMS, ES, SS, TM, NL> {
-        EngineBuilder {
-            _bms: PhantomData,
-            _es: PhantomData,
-            _ss: PhantomData,
-            _tm: PhantomData,
-            _l: PhantomData,
-        }
-    }
-}
-
-pub trait EngineConfig: Send + Sync {
-    type BestMove: BestMoveStrategy;
-    type Exploration: ExplorationStrategy;
-    type SearchStep: SearchStepStrategy;
-    type TimeManager: TimeManagerStrategy;
-    type Logger: Logger;
-}
-
-pub struct GenericConfig<BMS, ES, SS, TM, L> {
-    _bms: PhantomData<BMS>,
-    _es: PhantomData<ES>,
-    _ss: PhantomData<SS>,
-    _tm: PhantomData<TM>,
-    _l: PhantomData<L>,
-}
-
-impl<
-    BMS: BestMoveStrategy,
-    ES: ExplorationStrategy,
-    SS: SearchStepStrategy,
-    TM: TimeManagerStrategy,
-    L: Logger,
-> EngineConfig for GenericConfig<BMS, ES, SS, TM, L>
-{
-    type BestMove = BMS;
-    type Exploration = ES;
-    type SearchStep = SS;
-    type TimeManager = TM;
-    type Logger = L;
-}
-
-impl<
-    BMS: BestMoveStrategy,
-    ES: ExplorationStrategy,
-    SS: SearchStepStrategy,
-    TM: TimeManagerStrategy,
-    L: Logger,
-> EngineBuilder<BMS, ES, SS, TM, L>
-{
-    pub fn build(self) -> Engine<GenericConfig<BMS, ES, SS, TM, L>> {
-        let params = EngineParams::new();
-        let hash_size = params.general().hash() as usize;
-
-        Engine {
-            params,
-            position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
-            interruption_token: AtomicBool::new(false),
-            tree: Tree::new(hash_size),
-            _c: PhantomData,
-        }
-    }
+define_engine_config! {
+    BestMove:    BestMoveStrategy    | best_move    | Unspecified,
+    Exploration: ExplorationStrategy | exploration  | Unspecified,
+    SearchStep:  SearchStepStrategy  | search_step  | Unspecified,
+    TimeManager: TimeManagerStrategy | time_manager | Unspecified,
+    Logger:      LoggerTrait         | logger       | NoLogger,
 }

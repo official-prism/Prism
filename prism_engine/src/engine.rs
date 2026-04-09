@@ -32,7 +32,7 @@ mod params;
 mod structures;
 mod tree;
 
-pub use logger::Logger;
+pub use logger::LoggerTrait;
 pub use params::EngineParams;
 pub use params::StrategyParams;
 pub use structures::SearchLimits;

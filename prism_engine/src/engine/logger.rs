@@ -33,7 +33,7 @@ use crate::{
     engine::{builder::EngineConfig, structures::SearchStats},
 };
 
-pub trait Logger: Send + Sync {
+pub trait LoggerTrait: Send + Sync {
     fn print<C: EngineConfig>(msg: &str, engine: &Engine<C>);
     fn search_report<C: EngineConfig>(
         time_passed: u64,
@@ -44,7 +44,7 @@ pub trait Logger: Send + Sync {
 }
 
 pub struct NoLogger;
-impl Logger for NoLogger {
+impl LoggerTrait for NoLogger {
     fn print<C: EngineConfig>(_msg: &str, _engine: &Engine<C>) {}
     fn search_report<C: EngineConfig>(
         _time_passed: u64,

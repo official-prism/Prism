@@ -28,7 +28,7 @@
 
 pub mod engine;
 pub use engine::Engine;
-pub use engine::Logger;
+pub use engine::LoggerTrait;
 pub use engine::SearchLimits;
 pub use engine::SearchStats;
 pub use engine::StrategyParams;

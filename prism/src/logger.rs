@@ -31,7 +31,7 @@ use prism_engine::{EngineConfig, SearchStats, engine::Engine};
 
 #[allow(unused)]
 pub struct Logger;
-impl prism_engine::Logger for Logger {
+impl prism_engine::LoggerTrait for Logger {
     #[allow(unused_variables)]
     fn print<C: EngineConfig>(msg: &str, _engine: &Engine<C>) {
         #[cfg(feature = "debug")]

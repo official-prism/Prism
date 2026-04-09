@@ -42,10 +42,10 @@ use prism_engine::engine::builder::{best_move_strategy::MaxQ, exploration_strate
 
 fn main() {
     let mut engine = EngineBuilder::new()
-        .best_move_strategy::<MaxQ>()
-        .exploration_strategy::<TestCompound<Puct, DummyExploration>>()
-        .search_step_strategy::<Classical>()
-        .time_manager_strategy::<SimpleTimeManager>()
+        .best_move::<MaxQ>()
+        .exploration::<TestCompound<Puct, DummyExploration>>()
+        .search_step::<Classical>()
+        .time_manager::<SimpleTimeManager>()
         .logger::<crate::logger::Logger>()
         .build();
 
