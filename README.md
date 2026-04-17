@@ -1,11 +1,10 @@
 <div align="center">
 
-<img
-  width="200"
-  alt="Prism Logo"
-  src=".readme/logo/prism_logo_small.png">
- 
-<h3>Prism</h3>
+<h3>
+  <img width="300" alt="Valkyrie Logo" src=".readme/logo/Valkyrie-nobg-512-compressed.png"><br>
+  Valkyrie
+</h3>
+
 <b>GPU MCTS chess engine</b>
 <br>
 <br>
