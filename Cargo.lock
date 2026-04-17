@@ -148,30 +148,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
-name = "prism"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "prism_chess",
- "prism_engine",
-]
-
-[[package]]
-name = "prism_chess"
-version = "0.1.0"
-dependencies = [
- "colored",
-]
-
-[[package]]
-name = "prism_engine"
-version = "0.1.0"
-dependencies = [
- "paste",
- "prism_chess",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -217,6 +193,30 @@ name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+
+[[package]]
+name = "valkyrie"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "valkyrie_chess",
+ "valkyrie_engine",
+]
+
+[[package]]
+name = "valkyrie_chess"
+version = "0.1.0"
+dependencies = [
+ "colored",
+]
+
+[[package]]
+name = "valkyrie_engine"
+version = "0.1.0"
+dependencies = [
+ "paste",
+ "valkyrie_chess",
+]
 
 [[package]]
 name = "wasm-bindgen"

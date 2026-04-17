@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "prism_chess",
-    "prism_engine",
-    "prism",
+    "valkyrie_chess",
+    "valkyrie_engine",
+    "valkyrie",
 ]
 resolver = "2"
 
@@ -14,12 +14,12 @@ license = "GPL-3.0"
 description = "GPU MCTS chess engine"
 readme = "README.md"
 authors = ["Tomasz Jaworski"]
-repository = "https://github.com/official-prism/Prism"
-homepage = "https://github.com/official-prism/Prism"
+repository = "https://github.com/official-valkyrie/Valkyrie"
+homepage = "https://github.com/official-valkyrie/Valkyrie"
 
 [workspace.dependencies]
-prism_chess = { path = "prism_chess" }
-prism_engine = { path = "prism_engine" }
+valkyrie_chess = { path = "valkyrie_chess" }
+valkyrie_engine = { path = "valkyrie_engine" }
 
 [profile.release]
 panic = "abort"

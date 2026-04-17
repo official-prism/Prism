@@ -149,7 +149,7 @@ After step 7, all four of Naphthalin's concerns are covered with proper strategy
 
 ## Mapping to Naphthalin's Four Concerns
 
-| Naphthalin's Concern | Prism Slot | Status after plan |
+| Naphthalin's Concern | Valkyrie Slot | Status after plan |
 |---|---|---|
 | 1. Selection of move to play | `BestMoveStrategy` | Covered (step 5 + 7) |
 | 2. Selection of move to explore | `ExplorationStrategy` | Covered (step 3) |

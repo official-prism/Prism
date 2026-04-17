@@ -1,4 +1,4 @@
-EXE = prism
+EXE = valkyrie
 EXT = $(if $(filter Windows_NT,$(OS)),.exe,)
 
 ifeq ($(OS),Windows_NT)
@@ -19,13 +19,13 @@ v3:      TARGET_CPU = x86-64-v3
 v4:      TARGET_CPU = x86-64-v4
 
 default v2 v3 v4:
-	$(SET_RUSTFLAGS) cargo build --release -p prism --bin prism
+	$(SET_RUSTFLAGS) cargo build --release -p valkyrie --bin valkyrie
 	$(COPY_CMD)
 
 debug:
-	$(SET_RUSTFLAGS) cargo build -p prism --bin prism --features=debug
+	$(SET_RUSTFLAGS) cargo build -p valkyrie --bin valkyrie --features=debug
 	$(COPY_CMD)
 
 tunable:
-	$(SET_RUSTFLAGS) cargo build --release -p prism --bin prism --features=tunable
+	$(SET_RUSTFLAGS) cargo build --release -p valkyrie --bin valkyrie --features=tunable
 	$(COPY_CMD)
