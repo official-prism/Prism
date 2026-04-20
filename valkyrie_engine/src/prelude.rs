@@ -26,31 +26,14 @@
     permission to convey the resulting work.
 */
 
-use crate::{Engine, engine::structures::SearchStats, prelude::*};
-
-#[derive(Debug)]
-pub struct MaxQ;
-
-crate::define_strategy_params! {
-    MaxQParams {
-        Options {
-            ["MaxQ_Depth"] depth: i32 => 10, 1, 100;
-            ["MaxQ_Verbose"] verbose: bool => false;
-        }
-        Tunables {
-            lMR_Base: f64 => 0.75, 0.0, 2.0, 0.1, 0.1;
-            lMR_Division: f64 => 2.25, 1.0, 10.0, 0.5, 0.1;
-            fPU_Value: f64 => 0.5, 0.0, 1.0, 0.1, 0.1;
-            aspiration_Window: i64 => 50, 1, 500, 10, 1;
-            history_Threshold: i64 => 100, 0, 1000, 20, 1;
-        }
-    }
-}
-
-impl BestMoveStrategy for MaxQ {
-    type Params = MaxQParams;
-
-    fn excute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {
-
-    }
-}
+pub(crate) use crate::engine::{
+    LoggerTrait,
+    builder::{
+        BestMoveStrategy,
+        EngineConfig,
+        ExplorationStrategy,
+        SearchStrategy,
+        node_strategy::NodeStrategy,
+        time_manager_strategy::TimeManagerStrategy,
+    },
+};

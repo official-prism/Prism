@@ -27,6 +27,7 @@
 */
 
 pub mod engine;
+pub(crate) mod prelude;
 pub use engine::Engine;
 pub use engine::LoggerTrait;
 pub use engine::SearchLimits;

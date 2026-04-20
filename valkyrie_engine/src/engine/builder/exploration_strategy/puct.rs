@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{Engine, EngineConfig, engine::{builder::ExplorationStrategy, structures::SearchStats}};
+use crate::{Engine, engine::structures::SearchStats, prelude::*};
 
 #[derive(Debug)]
 pub struct Puct;

@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{Engine, EngineConfig, engine::structures::SearchStats};
+use crate::{Engine, engine::structures::SearchStats, prelude::*};
 
 #[derive(Debug, Default)]
 pub struct SearchLimits {

@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{SearchLimits, engine::builder::time_manager_strategy::TimeManagerStrategy};
+use crate::{SearchLimits, prelude::*};
 
 #[derive(Debug, Default)]
 pub struct SimpleTimeManager {

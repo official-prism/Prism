@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::engine::builder::node_strategy::NodeStrategy;
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub struct AvgScoreNode;

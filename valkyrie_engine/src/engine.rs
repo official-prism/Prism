@@ -43,8 +43,7 @@ use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
-use crate::engine::builder::EngineConfig;
-use crate::engine::builder::search_strategy::SearchStrategy;
+use crate::prelude::*;
 use crate::engine::tree::Tree;
 
 #[derive(Debug)]
