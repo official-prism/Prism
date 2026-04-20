@@ -28,13 +28,12 @@
 
 pub mod builder;
 mod logger;
-mod params;
 mod structures;
 mod tree;
 
+pub use builder::EngineParams;
+pub use structures::StrategyParams;
 pub use logger::LoggerTrait;
-pub use params::EngineParams;
-pub use params::StrategyParams;
 pub use structures::SearchLimits;
 pub use structures::SearchStats;
 

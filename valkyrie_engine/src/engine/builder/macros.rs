@@ -26,6 +26,196 @@
     permission to convey the resulting work.
 */
 
+macro_rules! register_strategy {
+    ($($name:ident),*) => {
+        $(
+            pub mod $name;
+            pub use self::$name::*;
+        )*
+    };
+}
+
+macro_rules! define_engine_config {
+    (
+        general: $general_ty:ty,
+        with_params {
+            $( $s_assoc:ident : $s_bound:path | $s_method:ident | $s_default:ty ),+ $(,)?
+        }
+        without_params {
+            $( $a_assoc:ident : $a_bound:path | $a_method:ident | $a_default:ty ),+ $(,)?
+        }
+    ) => {
+        pub trait EngineConfig: Send + Sync {
+            $( type $s_assoc: $s_bound; )+
+            $( type $a_assoc: $a_bound; )+
+            type NodePayload: $crate::engine::tree::payload::PayloadType;
+            type EdgePayload: $crate::engine::tree::payload::PayloadType;
+        }
+
+        pub struct EngineBuilder<
+            $( $s_assoc = $s_default, )+
+            $( $a_assoc = $a_default, )+
+        >(
+            $( ::std::marker::PhantomData<$s_assoc>, )+
+            $( ::std::marker::PhantomData<$a_assoc>, )+
+        );
+
+        impl EngineBuilder<
+            $( $s_default, )+
+            $( $a_default, )+
+        > {
+            pub fn new() -> Self {
+                EngineBuilder(
+                    $( <::std::marker::PhantomData<$s_default>>::default(), )+
+                    $( <::std::marker::PhantomData<$a_default>>::default(), )+
+                )
+            }
+        }
+
+        define_engine_config!(@setters
+            []
+            [
+                $( $s_assoc : $s_bound | $s_method | $s_default ),+ ,
+                $( $a_assoc : $a_bound | $a_method | $a_default ),+
+            ]
+        );
+
+        pub struct GenericConfig<
+            $( $s_assoc, )+
+            $( $a_assoc, )+
+        >(
+            $( ::std::marker::PhantomData<$s_assoc>, )+
+            $( ::std::marker::PhantomData<$a_assoc>, )+
+        );
+
+        impl<
+            $( $s_assoc: $s_bound, )+
+            $( $a_assoc: $a_bound, )+
+        > EngineConfig for GenericConfig<
+            $( $s_assoc, )+
+            $( $a_assoc, )+
+        > {
+            $( type $s_assoc = $s_assoc; )+
+            $( type $a_assoc = $a_assoc; )+
+            type NodePayload = Node::NodePayload;
+            type EdgePayload = Node::EdgePayload;
+        }
+
+        impl<
+            $( $s_assoc: $s_bound, )+
+            $( $a_assoc: $a_bound, )+
+        > EngineBuilder<
+            $( $s_assoc, )+
+            $( $a_assoc, )+
+        > {
+            pub fn build(self) -> $crate::Engine<GenericConfig<
+                $( $s_assoc, )+
+                $( $a_assoc, )+
+            >> {
+                let params = EngineParams::<GenericConfig<
+                    $( $s_assoc, )+
+                    $( $a_assoc, )+
+                >>::new();
+                let hash_size = params.general().hash() as usize;
+                $crate::Engine {
+                    params,
+                    position: ::valkyrie_chess::ChessPosition::from(
+                        ::valkyrie_chess::ChessBoard::from(
+                            &::valkyrie_chess::FEN::start_position()
+                        )
+                    ),
+                    interruption_token: ::std::sync::atomic::AtomicBool::new(false),
+                    tree: $crate::engine::tree::Tree::new(hash_size),
+                    _c: ::std::marker::PhantomData,
+                }
+            }
+        }
+
+        #[derive(Debug)]
+        pub struct EngineParams<C: EngineConfig> {
+            general: $general_ty,
+            $( $s_method: <C::$s_assoc as $s_bound>::Params, )+
+        }
+
+        impl<C: EngineConfig> EngineParams<C> {
+            pub fn new() -> Self {
+                Self {
+                    general: <$general_ty as $crate::StrategyParams>::new(),
+                    $( $s_method: <<C::$s_assoc as $s_bound>::Params as $crate::StrategyParams>::new(), )+
+                }
+            }
+
+            pub fn general(&self) -> &$general_ty {
+                &self.general
+            }
+
+            $(
+                pub fn $s_method(&self) -> &<C::$s_assoc as $s_bound>::Params {
+                    &self.$s_method
+                }
+            )+
+
+            pub fn set_option(&mut self, name: &str, value: &str) -> ::std::result::Result<(), String> {
+                let unknown_msg = format!("Unknown option '{}'", name);
+                match $crate::StrategyParams::set_option(&mut self.general, name, value) {
+                    Err(e) if e == unknown_msg => {},
+                    res => return res,
+                }
+                $(
+                    match $crate::StrategyParams::set_option(&mut self.$s_method, name, value) {
+                        Err(e) if e == unknown_msg => {},
+                        res => return res,
+                    }
+                )+
+                Err(unknown_msg)
+            }
+
+            pub fn print_options(&self) {
+                $crate::StrategyParams::print_options(&self.general);
+                $( $crate::StrategyParams::print_options(&self.$s_method); )+
+            }
+
+            pub fn print_tunables(&self) {
+                $crate::StrategyParams::print_tunables(&self.general);
+                $( $crate::StrategyParams::print_tunables(&self.$s_method); )+
+            }
+        }
+
+        impl<C: EngineConfig> Default for EngineParams<C> {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+    };
+
+    ( @setters
+        [ $( $b_assoc:ident : $b_bound:path | $b_method:ident | $b_default:ty, )* ]
+        [ $cur_assoc:ident : $cur_bound:path | $cur_method:ident | $cur_default:ty
+          $( , $r_assoc:ident : $r_bound:path | $r_method:ident | $r_default:ty )* $(,)? ]
+    ) => {
+        impl< $( $b_assoc, )* $cur_assoc $( , $r_assoc )* >
+            EngineBuilder< $( $b_assoc, )* $cur_assoc $( , $r_assoc )* >
+        {
+            pub fn $cur_method<__S: $cur_bound>(self)
+                -> EngineBuilder< $( $b_assoc, )* __S $( , $r_assoc )* >
+            {
+                EngineBuilder(
+                    $( <::std::marker::PhantomData<$b_assoc>>::default(), )*
+                    <::std::marker::PhantomData<__S>>::default(),
+                    $( <::std::marker::PhantomData<$r_assoc>>::default(), )*
+                )
+            }
+        }
+
+        define_engine_config!(@setters
+            [ $( $b_assoc : $b_bound | $b_method | $b_default, )* $cur_assoc : $cur_bound | $cur_method | $cur_default, ]
+            [ $( $r_assoc : $r_bound | $r_method | $r_default ),* ]
+        );
+    };
+
+    ( @setters [ $( $b_assoc:ident : $b_bound:path | $b_method:ident | $b_default:ty, )* ] [] ) => {};
+}
+
 #[macro_export]
 macro_rules! define_strategy_params {
     (
@@ -294,59 +484,6 @@ macro_rules! define_strategy_params {
                         )*
                     )?
                 }
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! define_engine_params {
-    (
-        $vis:vis struct $name:ident < $gen:ident : $bound:ident > {
-            $( $field_vis:vis $field:ident : $ftype:ty ),* $(,)?
-        }
-    ) => {
-        #[derive(Debug)]
-        $vis struct $name<$gen: $bound> {
-            $( $field_vis $field: $ftype, )*
-        }
-
-        impl<$gen: $bound> $name<$gen> {
-            pub fn new() -> Self {
-                Self {
-                    $( $field: <$ftype>::new(), )*
-                }
-            }
-
-            $(
-                pub fn $field(&self) -> &$ftype {
-                    &self.$field
-                }
-            )*
-
-            pub fn set_option(&mut self, name: &str, value: &str) -> Result<(), String> {
-                let unknown_msg = format!("Unknown option '{}'", name);
-                $(
-                    match self.$field.set_option(name, value) {
-                        Err(e) if e == unknown_msg => {},
-                        res => return res,
-                    }
-                )*
-                Err(unknown_msg)
-            }
-
-            pub fn print_options(&self) {
-                $( self.$field.print_options(); )*
-            }
-
-            pub fn print_tunables(&self) {
-                $( self.$field.print_tunables(); )*
-            }
-        }
-
-        impl<$gen: $bound> Default for $name<$gen> {
-            fn default() -> Self {
-                Self::new()
             }
         }
     };

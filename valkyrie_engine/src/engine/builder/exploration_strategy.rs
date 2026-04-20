@@ -40,7 +40,7 @@ register_strategy!(puct);
 pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
     type Params: StrategyParams + Send + Sync;
 
-    fn excute<C: EngineConfig>(
+    fn execute<C: EngineConfig>(
         params: &Self::Params,
         engine: &Engine<C>,
         search_stats: &SearchStats,

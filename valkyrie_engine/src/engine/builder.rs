@@ -26,124 +26,48 @@
     permission to convey the resulting work.
 */
 
-use valkyrie_chess::{ChessBoard, ChessPosition, FEN};
-
-use crate::engine::builder::node_strategy::NodeStrategy;
-use crate::engine::logger::{LoggerTrait, NoLogger};
-use crate::engine::tree::Tree;
-use crate::engine::tree::payload::PayloadType;
-
-use super::{Engine, EngineParams};
-use std::marker::PhantomData;
-use std::sync::atomic::AtomicBool;
-
-macro_rules! register_strategy {
-    ($($name:ident),*) => {
-        $(
-            pub mod $name;
-            pub use self::$name::*;
-        )*
-    };
-}
+#[macro_use]
+mod macros;
 
 pub mod best_move_strategy;
 pub mod exploration_strategy;
+pub mod node_strategy;
 pub mod search_strategy;
 pub mod time_manager_strategy;
-pub mod node_strategy;
 
 pub use self::best_move_strategy::BestMoveStrategy;
 pub use self::exploration_strategy::ExplorationStrategy;
+pub use self::node_strategy::NodeStrategy;
 pub use self::search_strategy::SearchStrategy;
 pub use self::time_manager_strategy::TimeManagerStrategy;
 
+use crate::engine::logger::{LoggerTrait, NoLogger};
+
 pub struct Unspecified;
 
-macro_rules! define_engine_config {
-    (
-        $( $assoc:ident : $bound:path | $method:ident | $default:ty ),+ $(,)?
-    ) => {
-        pub trait EngineConfig: Send + Sync {
-            $( type $assoc: $bound; )+
-            type NodePayload: PayloadType;
-            type EdgePayload: PayloadType;
+crate::define_strategy_params! {
+    GeneralParams {
+        Options {
+            ["Hash"] hash: i32 => 1024, 1, 524288;
+            ["UCI_Chess960"] ches960: bool => false;
+            ["ItersAsNodes"] iters_as_nodes: bool => false;
         }
-
-        pub struct EngineBuilder< $( $assoc = $default ),+ >(
-            $( PhantomData<$assoc>, )+
-        );
-
-        impl EngineBuilder< $( $default ),+ > {
-            pub fn new() -> Self {
-                EngineBuilder(
-                    $( <PhantomData<$default>>::default(), )+
-                )
-            }
+        Buttons {
+            "Clear",
         }
-
-        define_engine_config!(@setters
-            []
-            [ $( $assoc : $bound | $method | $default ),+ ]
-        );
-
-        pub struct GenericConfig< $( $assoc ),+ >(
-            $( PhantomData<$assoc>, )+
-        );
-
-        impl< $( $assoc: $bound, )+ > EngineConfig for GenericConfig< $( $assoc ),+ > {
-            $( type $assoc = $assoc; )+
-            type NodePayload = Node::NodePayload;
-            type EdgePayload = Node::EdgePayload;
-        }
-
-        impl< $( $assoc: $bound, )+ > EngineBuilder< $( $assoc ),+ > {
-            pub fn build(self) -> Engine<GenericConfig< $( $assoc ),+ >> {
-                let params = EngineParams::new();
-                let hash_size = params.general().hash() as usize;
-                Engine {
-                    params,
-                    position: ChessPosition::from(ChessBoard::from(&FEN::start_position())),
-                    interruption_token: AtomicBool::new(false),
-                    tree: Tree::new(hash_size),
-                    _c: PhantomData,
-                }
-            }
-        }
-    };
-
-    ( @setters
-        [ $( $b_assoc:ident : $b_bound:path | $b_method:ident | $b_default:ty, )* ]
-        [ $cur_assoc:ident : $cur_bound:path | $cur_method:ident | $cur_default:ty
-          $( , $r_assoc:ident : $r_bound:path | $r_method:ident | $r_default:ty )* ]
-    ) => {
-        impl< $( $b_assoc, )* $cur_assoc $( , $r_assoc )* >
-            EngineBuilder< $( $b_assoc, )* $cur_assoc $( , $r_assoc )* >
-        {
-            pub fn $cur_method<__S: $cur_bound>(self)
-                -> EngineBuilder< $( $b_assoc, )* __S $( , $r_assoc )* >
-            {
-                EngineBuilder(
-                    $( <PhantomData<$b_assoc>>::default(), )*
-                    <PhantomData<__S>>::default(),
-                    $( <PhantomData<$r_assoc>>::default(), )*
-                )
-            }
-        }
-
-        define_engine_config!(@setters
-            [ $( $b_assoc : $b_bound | $b_method | $b_default, )* $cur_assoc : $cur_bound | $cur_method | $cur_default, ]
-            [ $( $r_assoc : $r_bound | $r_method | $r_default ),* ]
-        );
-    };
-
-    ( @setters [ $( $b_assoc:ident : $b_bound:path | $b_method:ident | $b_default:ty, )* ] [] ) => {};
+    }
 }
 
 define_engine_config! {
-    BestMove:    BestMoveStrategy    | best_move    | Unspecified,
-    Exploration: ExplorationStrategy | exploration  | Unspecified,
-    Search:      SearchStrategy      | search       | Unspecified,
-    Node:        NodeStrategy        | node         | Unspecified,
-    TimeManager: TimeManagerStrategy | time_manager | Unspecified,
-    Logger:      LoggerTrait         | logger       | NoLogger,
+    general: GeneralParams,
+    with_params {
+        BestMove:    BestMoveStrategy    | best_move    | Unspecified,
+        Exploration: ExplorationStrategy | exploration  | Unspecified,
+        Search:      SearchStrategy      | search       | Unspecified,
+        TimeManager: TimeManagerStrategy | time_manager | Unspecified,
+    }
+    without_params {
+        Node:   NodeStrategy | node   | Unspecified,
+        Logger: LoggerTrait  | logger | NoLogger,
+    }
 }

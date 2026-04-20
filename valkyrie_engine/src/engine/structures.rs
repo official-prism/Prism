@@ -28,6 +28,8 @@
 
 mod search_limits;
 mod search_stats;
+mod strategy_params;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
+pub use strategy_params::StrategyParams;

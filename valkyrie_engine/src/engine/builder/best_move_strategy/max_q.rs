@@ -50,7 +50,7 @@ crate::define_strategy_params! {
 impl BestMoveStrategy for MaxQ {
     type Params = MaxQParams;
 
-    fn excute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {
+    fn execute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {
 
     }
 }

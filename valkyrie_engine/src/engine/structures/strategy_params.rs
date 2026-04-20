@@ -26,37 +26,9 @@
     permission to convey the resulting work.
 */
 
-pub mod macros;
-
-use crate::define_engine_params;
-use crate::prelude::*;
-
-crate::define_strategy_params! {
-    GeneralParams {
-        Options {
-            ["Hash"] hash: i32 => 1024, 1, 524288;
-            ["UCI_Chess960"] ches960: bool => false;
-            ["ItersAsNodes"] iters_as_nodes: bool => false;
-        }
-        Buttons {
-            "Clear",
-        }
-    }
-}
-
 pub trait StrategyParams: std::fmt::Debug + Clone + Send + Sync {
     fn new() -> Self;
     fn set_option(&mut self, name: &str, value: &str) -> std::result::Result<(), String>;
     fn print_options(&self);
     fn print_tunables(&self);
 }
-
-define_engine_params!(
-    pub struct EngineParams<C: EngineConfig> {
-        general: GeneralParams,
-        best_move: <C::BestMove as BestMoveStrategy>::Params,
-        exploration: <C::Exploration as ExplorationStrategy>::Params,
-        search: <C::Search as SearchStrategy>::Params,
-        time_manager: <C::TimeManager as TimeManagerStrategy>::Params,
-    }
-);
