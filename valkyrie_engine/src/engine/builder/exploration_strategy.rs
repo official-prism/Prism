@@ -31,7 +31,7 @@ use crate::{
     engine::{
         StrategyParams,
         builder::EngineConfig,
-        structures::{IterationStats, SearchStats}
+        structures::SearchStats,
     },
 };
 
@@ -44,6 +44,5 @@ pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
         params: &Self::Params,
         engine: &Engine<C>,
         search_stats: &SearchStats,
-        iteration_stats: &IterationStats,
     );
 }

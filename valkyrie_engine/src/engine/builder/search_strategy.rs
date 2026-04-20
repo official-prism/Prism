@@ -26,22 +26,14 @@
     permission to convey the resulting work.
 */
 
-use crate::engine::{builder::search_step_strategy::SearchStepStrategy, structures::IterationStats};
+use crate::{
+    Engine, SearchLimits, SearchStats, engine::{StrategyParams, builder::EngineConfig}
+};
 
-#[derive(Debug)]
-pub struct Classical;
+register_strategy!(classical);
 
-crate::define_strategy_params! {
-    ClassicalSearchParams {
-    }
-}
+pub trait SearchStrategy: std::fmt::Debug + Send + Sync {
+    type Params: StrategyParams + Send + Sync;
 
-impl SearchStepStrategy for Classical {
-    type Params = ClassicalSearchParams;
-
-    fn excute<C: crate::EngineConfig>(_params: &Self::Params, _engine: &crate::Engine<C>) -> IterationStats {
-        let mut iteration_stats = IterationStats::new();
-        iteration_stats.add_depth();
-        iteration_stats
-    }
+    fn execute<C: EngineConfig>(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> SearchStats;
 }

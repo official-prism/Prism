@@ -48,13 +48,13 @@ macro_rules! register_strategy {
 
 pub mod best_move_strategy;
 pub mod exploration_strategy;
-pub mod search_step_strategy;
+pub mod search_strategy;
 pub mod time_manager_strategy;
 pub mod node_strategy;
 
 pub use self::best_move_strategy::BestMoveStrategy;
 pub use self::exploration_strategy::ExplorationStrategy;
-pub use self::search_step_strategy::SearchStepStrategy;
+pub use self::search_strategy::SearchStrategy;
 pub use self::time_manager_strategy::TimeManagerStrategy;
 
 pub struct Unspecified;
@@ -142,7 +142,7 @@ macro_rules! define_engine_config {
 define_engine_config! {
     BestMove:    BestMoveStrategy    | best_move    | Unspecified,
     Exploration: ExplorationStrategy | exploration  | Unspecified,
-    SearchStep:  SearchStepStrategy  | search_step  | Unspecified,
+    Search:      SearchStrategy      | search       | Unspecified,
     Node:        NodeStrategy        | node         | Unspecified,
     TimeManager: TimeManagerStrategy | time_manager | Unspecified,
     Logger:      LoggerTrait         | logger       | NoLogger,

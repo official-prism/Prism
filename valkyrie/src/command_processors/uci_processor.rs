@@ -173,7 +173,7 @@ impl UciProcessor {
                 let cmd = match input_wrapper.get_input_no_queue() {
                     Some(cmd) => cmd,
                     None => {
-                        engine.interrupt_search();
+                        engine.set_interruption_token(true);
                         shutdown_token.store(true, Ordering::Relaxed);
                         break;
                     }
@@ -181,9 +181,9 @@ impl UciProcessor {
 
                 match cmd.trim() {
                     "isready" => println!("readyok"),
-                    "stop" | "s" => engine.interrupt_search(),
+                    "stop" | "s" => engine.set_interruption_token(true),
                     "quit" | "q" => {
-                        engine.interrupt_search();
+                        engine.set_interruption_token(true);
                         shutdown_token.store(true, Ordering::Relaxed);
                     }
                     _ => input_wrapper.push_back(cmd),

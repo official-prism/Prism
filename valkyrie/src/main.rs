@@ -37,7 +37,7 @@ use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
 use valkyrie_engine::EngineBuilder;
 use valkyrie_engine::engine::builder::node_strategy::AvgScoreNode;
-use valkyrie_engine::engine::builder::search_step_strategy::Classical;
+use valkyrie_engine::engine::builder::search_strategy::Classical;
 use valkyrie_engine::engine::builder::time_manager_strategy::SimpleTimeManager;
 use valkyrie_engine::engine::builder::{best_move_strategy::MaxQ, exploration_strategy::Puct};
 
@@ -45,7 +45,7 @@ fn main() {
     let mut engine = EngineBuilder::new()
         .best_move::<MaxQ>()
         .exploration::<Puct>()
-        .search_step::<Classical>()
+        .search::<Classical>()
         .node::<AvgScoreNode>()
         .time_manager::<SimpleTimeManager>()
         .logger::<crate::logger::Logger>()

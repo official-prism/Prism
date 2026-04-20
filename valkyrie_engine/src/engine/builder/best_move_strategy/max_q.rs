@@ -26,7 +26,7 @@
     permission to convey the resulting work.
 */
 
-use crate::{Engine, EngineConfig, engine::{builder::best_move_strategy::BestMoveStrategy, structures::{IterationStats, SearchStats}}};
+use crate::{Engine, EngineConfig, engine::{builder::best_move_strategy::BestMoveStrategy, structures::SearchStats}};
 
 #[derive(Debug)]
 pub struct MaxQ;
@@ -50,7 +50,7 @@ crate::define_strategy_params! {
 impl BestMoveStrategy for MaxQ {
     type Params = MaxQParams;
 
-    fn excute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats, _iteration_stats: &IterationStats) {
+    fn excute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {
 
     }
 }

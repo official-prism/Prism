@@ -31,7 +31,7 @@ pub mod macros;
 use crate::define_engine_params;
 use crate::engine::EngineConfig;
 use crate::engine::builder::{
-    BestMoveStrategy, ExplorationStrategy, SearchStepStrategy, TimeManagerStrategy,
+    BestMoveStrategy, ExplorationStrategy, SearchStrategy, TimeManagerStrategy,
 };
 
 crate::define_strategy_params! {
@@ -59,7 +59,7 @@ define_engine_params!(
         general: GeneralParams,
         best_move: <C::BestMove as BestMoveStrategy>::Params,
         exploration: <C::Exploration as ExplorationStrategy>::Params,
-        search: <C::SearchStep as SearchStepStrategy>::Params,
+        search: <C::Search as SearchStrategy>::Params,
         time_manager: <C::TimeManager as TimeManagerStrategy>::Params,
     }
 );

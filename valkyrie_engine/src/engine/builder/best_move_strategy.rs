@@ -28,10 +28,7 @@
 
 use crate::{
     Engine, EngineConfig,
-    engine::{
-        StrategyParams,
-        structures::{IterationStats, SearchStats},
-    },
+    engine::{StrategyParams, structures::SearchStats},
 };
 
 register_strategy!(max_q);
@@ -43,6 +40,5 @@ pub trait BestMoveStrategy: std::fmt::Debug + Send + Sync {
         params: &Self::Params,
         engine: &Engine<C>,
         search_stats: &SearchStats,
-        iteration_stats: &IterationStats,
     );
 }
