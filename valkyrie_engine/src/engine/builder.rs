@@ -31,12 +31,16 @@ mod macros;
 
 pub mod best_move_strategy;
 pub mod exploration_strategy;
+pub mod expansion_strategy;
+pub mod backpropagate_strategy;
 pub mod node_strategy;
 pub mod search_strategy;
 pub mod time_manager_strategy;
 
 pub use self::best_move_strategy::BestMoveStrategy;
 pub use self::exploration_strategy::ExplorationStrategy;
+pub use self::expansion_strategy::ExpansionStrategy;
+pub use self::backpropagate_strategy::BackpropagateStrategy;
 pub use self::node_strategy::NodeStrategy;
 pub use self::search_strategy::SearchStrategy;
 pub use self::time_manager_strategy::TimeManagerStrategy;
@@ -61,10 +65,12 @@ crate::define_strategy_params! {
 define_engine_config! {
     general: GeneralParams,
     with_params {
-        BestMove:    BestMoveStrategy    | best_move    | Unspecified,
-        Exploration: ExplorationStrategy | exploration  | Unspecified,
-        Search:      SearchStrategy      | search       | Unspecified,
-        TimeManager: TimeManagerStrategy | time_manager | Unspecified,
+        BestMove:        BestMoveStrategy      | best_move       | Unspecified,
+        Exploration:     ExplorationStrategy   | exploration     | Unspecified,
+        Expansion:       ExpansionStrategy     | expansion       | Unspecified,
+        Backpropagation: BackpropagateStrategy | backpropagation | Unspecified,
+        Search:          SearchStrategy        | search          | Unspecified,
+        TimeManager:     TimeManagerStrategy   | time_manager    | Unspecified,
     }
     without_params {
         Node:   NodeStrategy | node   | Unspecified,

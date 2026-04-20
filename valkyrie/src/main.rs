@@ -36,6 +36,8 @@ use command_processors::misc_processor::MiscProcessor;
 use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
 use valkyrie_engine::EngineBuilder;
+use valkyrie_engine::engine::builder::backpropagate_strategy::ClassicBackpropagate;
+use valkyrie_engine::engine::builder::expansion_strategy::ClassicExpansion;
 use valkyrie_engine::engine::builder::node_strategy::AvgScoreNode;
 use valkyrie_engine::engine::builder::search_strategy::Classical;
 use valkyrie_engine::engine::builder::time_manager_strategy::SimpleTimeManager;
@@ -45,6 +47,8 @@ fn main() {
     let mut engine = EngineBuilder::new()
         .best_move::<MaxQ>()
         .exploration::<Puct>()
+        .expansion::<ClassicExpansion>()
+        .backpropagation::<ClassicBackpropagate>()
         .search::<Classical>()
         .node::<AvgScoreNode>()
         .time_manager::<SimpleTimeManager>()

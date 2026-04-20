@@ -26,16 +26,19 @@
     permission to convey the resulting work.
 */
 
-pub(crate) use crate::engine::{
-    LoggerTrait,
-    builder::{
-        BestMoveStrategy,
-        EngineConfig,
-        ExplorationStrategy,
-        SearchStrategy,
-        BackpropagateStrategy,
-        ExpansionStrategy,
-        node_strategy::NodeStrategy,
-        time_manager_strategy::TimeManagerStrategy,
-    },
+use crate::{
+    Engine, EngineConfig,
+    engine::{StrategyParams, structures::SearchStats},
 };
+
+register_strategy!(classic_backpropagate);
+
+pub trait BackpropagateStrategy: std::fmt::Debug + Send + Sync {
+    type Params: StrategyParams + Send + Sync;
+
+    fn execute<C: EngineConfig>(
+        params: &Self::Params,
+        engine: &Engine<C>,
+        search_stats: &SearchStats,
+    );
+}
