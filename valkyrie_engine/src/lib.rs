@@ -32,6 +32,7 @@ pub use engine::Engine;
 pub use engine::LoggerTrait;
 pub use engine::SearchLimits;
 pub use engine::SearchStats;
+pub use engine::EmptyParams;
 pub use engine::StrategyParams;
 pub use engine::builder::EngineBuilder;
 pub use engine::builder::EngineConfig;

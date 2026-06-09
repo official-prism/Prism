@@ -65,15 +65,16 @@ crate::define_strategy_params! {
 define_engine_config! {
     general: GeneralParams,
     with_params {
+        //Type           Trait                   Field/Name        Default Value
         BestMove:        BestMoveStrategy      | best_move       | Unspecified,
         Exploration:     ExplorationStrategy   | exploration     | Unspecified,
         Expansion:       ExpansionStrategy     | expansion       | Unspecified,
         Backpropagation: BackpropagateStrategy | backpropagation | Unspecified,
         Search:          SearchStrategy        | search          | Unspecified,
         TimeManager:     TimeManagerStrategy   | time_manager    | Unspecified,
+        Logger:          LoggerTrait           | logger          | NoLogger,
     }
     without_params {
         Node:   NodeStrategy | node   | Unspecified,
-        Logger: LoggerTrait  | logger | NoLogger,
     }
 }

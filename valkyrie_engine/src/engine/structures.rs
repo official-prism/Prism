@@ -32,4 +32,4 @@ mod strategy_params;
 
 pub use search_limits::SearchLimits;
 pub use search_stats::SearchStats;
-pub use strategy_params::StrategyParams;
+pub use strategy_params::{EmptyParams, StrategyParams};

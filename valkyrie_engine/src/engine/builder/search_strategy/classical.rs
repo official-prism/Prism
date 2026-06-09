@@ -73,9 +73,11 @@ impl SearchStrategy for Classical {
         C::Logger::search_report(
             search_time.elapsed().as_millis() as u64,
             &search_stats,
+            engine.params().logger(),
             engine,
+            true
         );
-        C::Logger::best_move(Move::NULL, engine);
+        C::Logger::best_move(Move::NULL, engine.params().logger(), engine);
 
         search_stats
     }
@@ -110,7 +112,7 @@ impl Classical {
                     && last_raport_time.elapsed().as_millis() >= 1000)
             {
                 let time_passed = search_time.elapsed().as_millis() as u64;
-                C::Logger::search_report(time_passed, stats, &engine);
+                C::Logger::search_report(time_passed, stats, engine.params().logger(), &engine, false);
                 last_raport_time = Instant::now();
             }
 
@@ -153,6 +155,8 @@ impl Classical {
         _params: &Params,
         _engine: &crate::Engine<C>
     ) -> IterationStats {
-        IterationStats::new()
+        let mut x = IterationStats::new();
+        x.add_depth();
+        x
     }
 }

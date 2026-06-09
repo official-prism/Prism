@@ -29,11 +29,22 @@
 use valkyrie_chess::Move;
 use valkyrie_engine::{EngineConfig, SearchStats, engine::Engine};
 
+valkyrie_engine::define_strategy_params! {
+    LoggerParams {
+        Options {
+            ["Minimal"] uci_minimal: bool => false;
+        }
+    }
+}
+
 #[allow(unused)]
+#[derive(Debug)]
 pub struct Logger;
 impl valkyrie_engine::LoggerTrait for Logger {
+    type Params = LoggerParams;
+
     #[allow(unused_variables)]
-    fn print<C: EngineConfig>(msg: &str, _engine: &Engine<C>) {
+    fn print<C: EngineConfig>(msg: &str, _params: &Self::Params, _engine: &Engine<C>) {
         #[cfg(feature = "debug")]
         println!("info string {msg}")
     }
@@ -41,8 +52,14 @@ impl valkyrie_engine::LoggerTrait for Logger {
     fn search_report<C: EngineConfig>(
         time_passed: u64,
         search_stats: &SearchStats,
+        params: &Self::Params,
         engine: &Engine<C>,
+        end_of_search: bool,
     ) {
+        if params.uci_minimal() && !end_of_search {
+            return;
+        }
+
         let depth = search_stats.avg_depth();
         let max_depth = search_stats.max_depth();
         let score = 0;
@@ -62,7 +79,7 @@ impl valkyrie_engine::LoggerTrait for Logger {
         )
     }
 
-    fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>) {
+    fn best_move<C: EngineConfig>(mv: Move, _params: &Self::Params, engine: &Engine<C>) {
         println!(
             "bestmove {}",
             mv.to_string(engine.params().general().ches960())

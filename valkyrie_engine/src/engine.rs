@@ -32,7 +32,7 @@ mod structures;
 mod tree;
 
 pub use builder::EngineParams;
-pub use structures::StrategyParams;
+pub use structures::{EmptyParams, StrategyParams};
 pub use logger::LoggerTrait;
 pub use structures::SearchLimits;
 pub use structures::SearchStats;
@@ -97,7 +97,7 @@ impl<C: EngineConfig> Engine<C> {
 
     #[inline]
     pub fn print(&self, msg: &str) {
-        C::Logger::print(msg, self)
+        C::Logger::print(msg, self.params().logger(), self)
     }
 
     pub fn search(&self, limits: &SearchLimits) -> SearchStats {

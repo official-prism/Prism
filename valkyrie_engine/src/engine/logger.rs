@@ -29,28 +29,36 @@
 use valkyrie_chess::Move;
 
 use crate::{
-    Engine,
-    engine::{builder::EngineConfig, structures::SearchStats},
+    EmptyParams, Engine, StrategyParams, engine::{builder::EngineConfig, structures::SearchStats}
 };
 
-pub trait LoggerTrait: Send + Sync {
-    fn print<C: EngineConfig>(msg: &str, engine: &Engine<C>);
+pub trait LoggerTrait: std::fmt::Debug + Send + Sync {
+    type Params: StrategyParams + Send + Sync;
+
+    fn print<C: EngineConfig>(msg: &str, params: &Self::Params, engine: &Engine<C>);
     fn search_report<C: EngineConfig>(
         time_passed: u64,
         search_stats: &SearchStats,
+        params: &Self::Params,
         engine: &Engine<C>,
+        end_of_search: bool
     );
-    fn best_move<C: EngineConfig>(mv: Move, engine: &Engine<C>);
+    fn best_move<C: EngineConfig>(mv: Move, params: &Self::Params, engine: &Engine<C>);
 }
 
+#[derive(Debug)]
 pub struct NoLogger;
 impl LoggerTrait for NoLogger {
-    fn print<C: EngineConfig>(_msg: &str, _engine: &Engine<C>) {}
+    type Params = EmptyParams;
+
+    fn print<C: EngineConfig>(_msg: &str, _params: &Self::Params, _engine: &Engine<C>) {}
     fn search_report<C: EngineConfig>(
         _time_passed: u64,
         _search_stats: &SearchStats,
+        _params: &Self::Params, 
         _engine: &Engine<C>,
+        _end_of_search: bool
     ) {
     }
-    fn best_move<C: EngineConfig>(_mv: Move, _engine: &Engine<C>) {}
+    fn best_move<C: EngineConfig>(_mv: Move, _params: &Self::Params, _engine: &Engine<C>) {}
 }

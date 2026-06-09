@@ -32,3 +32,23 @@ pub trait StrategyParams: std::fmt::Debug + Clone + Send + Sync {
     fn print_options(&self);
     fn print_tunables(&self);
 }
+
+/// Shared parameter type for strategies that expose no options, tunables or
+/// variables. Use `type Params = EmptyParams;` instead of declaring a fresh
+/// empty struct per strategy.
+#[derive(Debug, Clone)]
+pub struct EmptyParams;
+
+impl StrategyParams for EmptyParams {
+    fn new() -> Self {
+        Self
+    }
+
+    fn set_option(&mut self, name: &str, _value: &str) -> std::result::Result<(), String> {
+        Err(format!("Unknown option '{}'", name))
+    }
+
+    fn print_options(&self) {}
+
+    fn print_tunables(&self) {}
+}
