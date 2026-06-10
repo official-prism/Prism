@@ -63,8 +63,6 @@ impl SearchStrategy for Classical {
     type Params = ClassicalSearchParams;
 
     fn execute<C: crate::EngineConfig>(limits: &SearchLimits, params: &Self::Params, engine: &crate::Engine<C>) -> SearchStats {
-        engine.set_interruption_token(false);
-
         let search_stats = SearchStats::new();
         let search_time = Instant::now();
 

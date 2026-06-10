@@ -164,6 +164,8 @@ impl UciProcessor {
     ) {
         let limits = args_to_search_limits(args, engine.position().board().side());
 
+        engine.set_interruption_token(false);
+
         std::thread::scope(|s| {
             s.spawn(|| {
                 engine.search(&limits);
