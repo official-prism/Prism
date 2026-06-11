@@ -26,16 +26,49 @@
     permission to convey the resulting work.
 */
 
-// Capability traits and concrete payloads are kept apart, one item per file:
-//   `traits/` — capability traits a strategy can require (e.g. `QScore`)
-//   `impls/`  — concrete payload structs, named after the node strategy that
-//               selects them; each implements whatever traits its set needs.
-mod impls;
-mod traits;
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
-pub use impls::AvgScoreEdgePayload;
-pub use traits::QScore;
+use crate::engine::tree::payload::QScore;
 
-/// Marker bound every node/edge payload must satisfy. `()` is a valid payload.
-pub trait PayloadType: Default + std::fmt::Debug + Send + Sync + 'static {}
-impl<T: Default + std::fmt::Debug + Send + Sync + 'static> PayloadType for T {}
+#[derive(Debug, Default)]
+pub struct AvgScoreEdgePayload {
+    score: AtomicU64,
+    draw_chance: AtomicU32,
+}
+
+impl QScore for AvgScoreEdgePayload {
+    #[inline]
+    fn total_score(&self) -> f64 {
+        f64::from_bits(self.score.load(Ordering::Relaxed))
+    }
+
+    #[inline]
+    fn set_score(&self, value: f64) {
+        self.score.store(value.to_bits(), Ordering::Relaxed);
+    }
+
+    #[inline]
+    fn add_score(&self, value: f64) {
+        loop {
+            let current = self.score.load(Ordering::Relaxed);
+            let new = (f64::from_bits(current) + value).to_bits();
+            if self
+                .score
+                .compare_exchange_weak(current, new, Ordering::Relaxed, Ordering::Relaxed)
+                .is_ok()
+            {
+                break;
+            }
+        }
+    }
+
+    #[inline]
+    fn draw_chance(&self) -> f32 {
+        f32::from_bits(self.draw_chance.load(Ordering::Relaxed))
+    }
+
+    #[inline]
+    fn set_draw_chance(&self, value: f32) {
+        self.draw_chance.store(value.to_bits(), Ordering::Relaxed);
+    }
+}

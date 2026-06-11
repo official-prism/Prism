@@ -50,7 +50,10 @@ crate::define_strategy_params! {
 impl BackpropagateStrategy for ClassicBackpropagate {
     type Params = ClassicBackpropagateParams;
 
-    fn execute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {
+    fn execute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats)
+    where
+        C::EdgePayload: QScore,
+    {
 
     }
 }

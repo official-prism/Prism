@@ -29,7 +29,7 @@
 pub mod builder;
 mod logger;
 mod structures;
-mod tree;
+pub(crate) mod tree;
 
 pub use builder::EngineParams;
 pub use structures::{EmptyParams, StrategyParams};

@@ -37,10 +37,8 @@ use crate::engine::tree::payload::PayloadType;
 #[derive(Debug)]
 pub struct Edge<EP: PayloadType = ()> {
     child_node: AtomicNodeIndex,
-    score: AtomicU64,
     visits: AtomicU64,
     policy: AtomicU32,
-    draw_chance: AtomicU32,
     mv: AtomicU16,
     payload: EP,
 }
@@ -48,11 +46,9 @@ pub struct Edge<EP: PayloadType = ()> {
 impl<EP: PayloadType> Edge<EP> {
     pub fn new(mv: Move, policy: f32) -> Self {
         Self {
-            score: AtomicU64::new(0f64.to_bits()),
             visits: AtomicU64::new(0),
             mv: AtomicU16::new(u16::from(mv)),
             policy: AtomicU32::new(policy.to_bits()),
-            draw_chance: AtomicU32::new(0f32.to_bits()),
             child_node: AtomicNodeIndex::null(),
             payload: EP::default(),
         }
@@ -66,31 +62,6 @@ impl<EP: PayloadType> Edge<EP> {
     #[inline]
     pub fn payload_mut(&mut self) -> &mut EP {
         &mut self.payload
-    }
-
-    #[inline]
-    pub fn score(&self) -> f64 {
-        f64::from_bits(self.score.load(Ordering::Relaxed))
-    }
-
-    #[inline]
-    pub fn set_score(&self, value: f64) {
-        self.score.store(value.to_bits(), Ordering::Relaxed);
-    }
-
-    #[inline]
-    pub fn add_score(&self, delta: f64) {
-        loop {
-            let current = self.score.load(Ordering::Relaxed);
-            let new = (f64::from_bits(current) + delta).to_bits();
-            if self
-                .score
-                .compare_exchange_weak(current, new, Ordering::Relaxed, Ordering::Relaxed)
-                .is_ok()
-            {
-                break;
-            }
-        }
     }
 
     #[inline]
@@ -121,16 +92,6 @@ impl<EP: PayloadType> Edge<EP> {
     #[inline]
     pub fn set_policy(&self, value: f32) {
         self.policy.store(value.to_bits(), Ordering::Relaxed);
-    }
-
-    #[inline]
-    pub fn draw_chance(&self) -> f32 {
-        f32::from_bits(self.draw_chance.load(Ordering::Relaxed))
-    }
-
-    #[inline]
-    pub fn set_draw_chance(&self, value: f32) {
-        self.draw_chance.store(value.to_bits(), Ordering::Relaxed);
     }
 
     #[inline]

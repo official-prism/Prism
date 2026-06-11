@@ -28,7 +28,7 @@
 
 use crate::{
     Engine, EngineConfig,
-    engine::{StrategyParams, structures::SearchStats},
+    engine::{StrategyParams, structures::SearchStats, tree::payload::QScore},
 };
 
 register_strategy!(classic_backpropagate);
@@ -40,5 +40,7 @@ pub trait BackpropagateStrategy: std::fmt::Debug + Send + Sync {
         params: &Self::Params,
         engine: &Engine<C>,
         search_stats: &SearchStats,
-    );
+    )
+    where
+        C::EdgePayload: QScore;
 }

@@ -26,16 +26,20 @@
     permission to convey the resulting work.
 */
 
-// Capability traits and concrete payloads are kept apart, one item per file:
-//   `traits/` — capability traits a strategy can require (e.g. `QScore`)
-//   `impls/`  — concrete payload structs, named after the node strategy that
-//               selects them; each implements whatever traits its set needs.
-mod impls;
-mod traits;
+pub trait QScore {
+    fn total_score(&self) -> f64;
+    fn set_score(&self, value: f64);
+    fn add_score(&self, value: f64);
 
-pub use impls::AvgScoreEdgePayload;
-pub use traits::QScore;
+    fn draw_chance(&self) -> f32;
+    fn set_draw_chance(&self, value: f32);
 
-/// Marker bound every node/edge payload must satisfy. `()` is a valid payload.
-pub trait PayloadType: Default + std::fmt::Debug + Send + Sync + 'static {}
-impl<T: Default + std::fmt::Debug + Send + Sync + 'static> PayloadType for T {}
+    #[inline]
+    fn q_score(&self, visits: u64) -> f64 {
+        if visits == 0 {
+            0.0
+        } else {
+            self.total_score() / visits as f64
+        }
+    }
+}

@@ -32,6 +32,7 @@ use crate::{
         StrategyParams,
         builder::EngineConfig,
         structures::SearchStats,
+        tree::payload::QScore,
     },
 };
 
@@ -44,5 +45,7 @@ pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
         params: &Self::Params,
         engine: &Engine<C>,
         search_stats: &SearchStats,
-    );
+    )
+    where
+        C::EdgePayload: QScore;
 }

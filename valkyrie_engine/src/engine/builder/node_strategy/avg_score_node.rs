@@ -26,6 +26,7 @@
     permission to convey the resulting work.
 */
 
+use crate::engine::tree::payload::AvgScoreEdgePayload;
 use crate::prelude::*;
 
 #[derive(Debug)]
@@ -40,5 +41,5 @@ crate::define_strategy_params! {
 impl NodeStrategy for AvgScoreNode {
     type Params = AvgScoreNodeParams;
     type NodePayload = ();
-    type EdgePayload = ();
+    type EdgePayload = AvgScoreEdgePayload;
 }

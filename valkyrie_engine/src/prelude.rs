@@ -28,6 +28,7 @@
 
 pub(crate) use crate::engine::{
     LoggerTrait,
+    tree::payload::QScore,
     builder::{
         BestMoveStrategy,
         EngineConfig,
