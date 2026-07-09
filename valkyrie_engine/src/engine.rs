@@ -34,23 +34,28 @@
     documentation.
 */
 
+#[macro_use]
+mod macros;
+
 pub mod builder;
+pub mod tree;
+
 mod logger;
-mod structures;
-pub(crate) mod tree;
+mod search_limits;
+mod search_stats;
+mod strategy_params;
 
-pub use builder::EngineParams;
-pub use structures::{EmptyParams, StrategyParams};
-pub use logger::LoggerTrait;
-pub use structures::SearchLimits;
-pub use structures::SearchStats;
+pub use builder::{EngineBuilder, EngineConfig, EngineParams, GeneralParams, SearchStrategy};
+pub use logger::{LoggerTrait, NoLogger};
+pub use search_limits::SearchLimits;
+pub use search_stats::SearchStats;
+pub use strategy_params::{EmptyParams, OptionError, StrategyParams, UciOptionType};
 
-use valkyrie_chess::ChessPosition;
-use std::marker::PhantomData;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
-use crate::prelude::*;
+use valkyrie_chess::ChessPosition;
+
 use crate::engine::tree::Tree;
 
 #[derive(Debug)]
@@ -58,8 +63,7 @@ pub struct Engine<C: EngineConfig> {
     params: EngineParams<C>,
     position: ChessPosition,
     interruption_token: AtomicBool,
-    tree: Tree<C::NodePayload, C::EdgePayload>,
-    _c: PhantomData<C>,
+    tree: Tree<C::Node>,
 }
 
 impl<C: EngineConfig> Engine<C> {
@@ -84,12 +88,12 @@ impl<C: EngineConfig> Engine<C> {
     }
 
     #[inline]
-    pub fn tree(&self) -> &Tree<C::NodePayload, C::EdgePayload> {
+    pub fn tree(&self) -> &Tree<C::Node> {
         &self.tree
     }
 
     #[inline]
-    pub fn tree_mut(&mut self) -> &mut Tree<C::NodePayload, C::EdgePayload> {
+    pub fn tree_mut(&mut self) -> &mut Tree<C::Node> {
         &mut self.tree
     }
 
@@ -102,7 +106,13 @@ impl<C: EngineConfig> Engine<C> {
     pub fn set_interruption_token(&self, value: bool) {
         self.interruption_token.store(value, Ordering::Relaxed)
     }
+}
 
+impl<C: EngineConfig> Engine<C>
+where
+    C::Search: SearchStrategy<C>,
+    C::Logger: LoggerTrait<C>,
+{
     #[inline]
     pub fn print(&self, msg: &str) {
         C::Logger::print(msg, self.params().logger(), self)

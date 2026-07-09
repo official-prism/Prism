@@ -34,20 +34,29 @@
     documentation.
 */
 
-use crate::engine::tree::payload::AvgScoreEdgePayload;
-use crate::prelude::*;
+use std::sync::atomic::{AtomicU64, Ordering};
 
-#[derive(Debug)]
-pub struct AvgScoreNode;
+pub trait HasVisits {
+    fn visits(&self) -> u64;
+    fn add_visits(&self, count: u64);
 
-crate::define_strategy_params! {
-    AvgScoreNodeParams {
-
+    #[inline]
+    fn add_visit(&self) {
+        self.add_visits(1);
     }
 }
 
-impl NodeStrategy for AvgScoreNode {
-    type Params = AvgScoreNodeParams;
-    type NodePayload = ();
-    type EdgePayload = AvgScoreEdgePayload;
+#[derive(Debug, Default)]
+pub struct VisitCount(AtomicU64);
+
+impl HasVisits for VisitCount {
+    #[inline]
+    fn visits(&self) -> u64 {
+        self.0.load(Ordering::Relaxed)
+    }
+
+    #[inline]
+    fn add_visits(&self, count: u64) {
+        self.0.fetch_add(count, Ordering::Relaxed);
+    }
 }

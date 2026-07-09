@@ -37,7 +37,7 @@
 use std::process::Command;
 
 use valkyrie_chess::DEFAULT_PERFT_DEPTH;
-use valkyrie_engine::{Engine, EngineConfig};
+use valkyrie_engine::prelude::*;
 
 pub struct MiscProcessor;
 impl MiscProcessor {
@@ -62,7 +62,7 @@ impl MiscProcessor {
 
         engine.position().board().draw_board();
 
-        let depth = if args.len() > 0 {
+        let depth = if !args.is_empty() {
             args[0].parse::<u8>().ok()
         } else {
             None
@@ -75,7 +75,7 @@ impl MiscProcessor {
         println!("  PEXT: {}", cfg!(target_feature = "bmi2"));
         println!("-----------------------------------------------------------\n");
 
-        let (result, duration) = if engine.params().general().ches960() {
+        let (result, duration) = if engine.params().general().chess960() {
             valkyrie_chess::perft::<BULK, true, true>(engine.position().board(), depth)
         } else {
             valkyrie_chess::perft::<BULK, true, false>(engine.position().board(), depth)
@@ -86,12 +86,12 @@ impl MiscProcessor {
         println!("\n-----------------------------------------------------------");
         println!(
             "  Perft ended! {result} nodes, {miliseconds}ms, {} nps",
-            result as u128 * 1000 / miliseconds as u128
+            result as u128 * 1000 / miliseconds
         );
         println!("-----------------------------------------------------------\n");
     }
 
-    fn bench<C: EngineConfig>(args: &[&str], engine: &Engine<C>) {}
+    fn bench<C: EngineConfig>(_args: &[&str], _engine: &Engine<C>) {}
 
     fn clear_terminal_screen() {
         if cfg!(target_os = "windows") {

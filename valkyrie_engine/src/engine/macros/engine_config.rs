@@ -1,0 +1,202 @@
+/*
+    This file is part of Valkyrie.
+
+    Copyright (C) 2026 Tomasz Jaworski and Valkyrie Contributors
+
+    Valkyrie is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Valkyrie is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Valkyrie.  If not, see <https://gnu.org>.
+
+    Additional terms under GNU GPL version 3 section 7
+
+    1. Linking Exception:
+    If you modify this Program, or any covered work, by linking or
+    combining it with the ONNX Runtime and/or NVIDIA TensorRT libraries
+    (or a modified version of those libraries), containing parts covered
+    by the terms of the respective ONNX Runtime and NVIDIA license
+    agreements, the licensors of this Program grant you additional
+    permission to convey the resulting work.
+
+   2. Attribution Requirement (Section 7b):
+    Under Section 7(b) of the GNU General Public License, version 3,
+    the licensors of this Program require that any modified or redistributed
+    versions of this software must prominently preserve original author
+    attributions and credit to the Valkyrie Contributors in the software
+    documentation.
+*/
+
+macro_rules! define_engine_config {
+    (
+        general: $general_ty:ty,
+        strategies {
+            $( $s_assoc:ident : $s_bound:ident | $s_method:ident | $s_default:ty ),+ $(,)?
+        }
+    ) => {
+        pub trait EngineConfig: Send + Sync + Sized + 'static {
+            $( type $s_assoc: Strategy; )+
+            type Node: $crate::engine::tree::components::NodeType;
+            type Edge: $crate::engine::tree::components::EdgeType;
+        }
+
+        pub struct EngineBuilder<
+            $( $s_assoc = $s_default, )+
+            NodeSlot = Unspecified,
+        >(
+            ::std::marker::PhantomData<fn() -> ($( $s_assoc, )+ NodeSlot)>,
+        );
+
+        impl EngineBuilder {
+            pub fn new() -> Self {
+                EngineBuilder(::std::marker::PhantomData)
+            }
+        }
+
+        impl Default for EngineBuilder {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
+        define_engine_config!(@setters
+            []
+            [ $( $s_assoc | $s_method ),+ ]
+        );
+
+        impl< $( $s_assoc, )+ NodeSlot > EngineBuilder< $( $s_assoc, )+ NodeSlot > {
+            pub fn node<__N>(self) -> EngineBuilder< $( $s_assoc, )+ __N > {
+                EngineBuilder(::std::marker::PhantomData)
+            }
+        }
+
+        pub struct GenericConfig< $( $s_assoc, )+ NodeSlot >(
+            ::std::marker::PhantomData<fn() -> ($( $s_assoc, )+ NodeSlot)>,
+        );
+
+        impl< $( $s_assoc, )+ NodeSlot > EngineConfig for GenericConfig< $( $s_assoc, )+ NodeSlot >
+        where
+            $( $s_assoc: Strategy, )+
+            NodeSlot: $crate::engine::tree::components::NodeType,
+        {
+            $( type $s_assoc = $s_assoc; )+
+            type Node = NodeSlot;
+            type Edge = <NodeSlot as $crate::engine::tree::components::HasEdges>::Edge;
+        }
+
+        #[doc(hidden)]
+        pub trait Buildable: EngineConfig {}
+
+        impl< $( $s_assoc, )+ NodeSlot > Buildable for GenericConfig< $( $s_assoc, )+ NodeSlot >
+        where
+            Self: EngineConfig,
+            $( $s_assoc: $s_bound<Self>, )+
+        {
+        }
+
+        impl< $( $s_assoc, )+ NodeSlot > EngineBuilder< $( $s_assoc, )+ NodeSlot >
+        where
+            GenericConfig< $( $s_assoc, )+ NodeSlot >: Buildable,
+        {
+            pub fn build(self) -> $crate::Engine<GenericConfig< $( $s_assoc, )+ NodeSlot >> {
+                let params = EngineParams::<GenericConfig< $( $s_assoc, )+ NodeSlot >>::new();
+                let hash_size = params.general().hash() as usize;
+                $crate::Engine {
+                    params,
+                    position: ::valkyrie_chess::ChessPosition::from(
+                        ::valkyrie_chess::ChessBoard::from(
+                            &::valkyrie_chess::FEN::start_position()
+                        )
+                    ),
+                    interruption_token: ::std::sync::atomic::AtomicBool::new(false),
+                    tree: $crate::engine::tree::Tree::new(hash_size),
+                }
+            }
+        }
+
+        #[derive(Debug)]
+        pub struct EngineParams<C: EngineConfig> {
+            general: $general_ty,
+            $( $s_method: <C::$s_assoc as Strategy>::Params, )+
+        }
+
+        impl<C: EngineConfig> EngineParams<C> {
+            pub fn new() -> Self {
+                Self {
+                    general: <$general_ty as $crate::StrategyParams>::new(),
+                    $( $s_method: <<C::$s_assoc as Strategy>::Params as $crate::StrategyParams>::new(), )+
+                }
+            }
+
+            pub fn general(&self) -> &$general_ty {
+                &self.general
+            }
+
+            $(
+                pub fn $s_method(&self) -> &<C::$s_assoc as Strategy>::Params {
+                    &self.$s_method
+                }
+            )+
+
+            pub fn set_option(&mut self, name: &str, value: &str) -> ::std::result::Result<(), $crate::OptionError> {
+                match $crate::StrategyParams::set_option(&mut self.general, name, value) {
+                    Err($crate::OptionError::Unknown(_)) => {}
+                    res => return res,
+                }
+                $(
+                    match $crate::StrategyParams::set_option(&mut self.$s_method, name, value) {
+                        Err($crate::OptionError::Unknown(_)) => {}
+                        res => return res,
+                    }
+                )+
+                Err($crate::OptionError::Unknown(name.to_string()))
+            }
+
+            pub fn print_options(&self) {
+                $crate::StrategyParams::print_options(&self.general);
+                $( $crate::StrategyParams::print_options(&self.$s_method); )+
+            }
+
+            pub fn print_tunables(&self) {
+                $crate::StrategyParams::print_tunables(&self.general);
+                $( $crate::StrategyParams::print_tunables(&self.$s_method); )+
+            }
+        }
+
+        impl<C: EngineConfig> Default for EngineParams<C> {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+    };
+
+    ( @setters
+        [ $( $b_assoc:ident | $b_method:ident, )* ]
+        [ $cur_assoc:ident | $cur_method:ident
+          $( , $r_assoc:ident | $r_method:ident )* ]
+    ) => {
+        impl< $( $b_assoc, )* $cur_assoc, $( $r_assoc, )* NodeSlot >
+            EngineBuilder< $( $b_assoc, )* $cur_assoc, $( $r_assoc, )* NodeSlot >
+        {
+            pub fn $cur_method<__S>(self)
+                -> EngineBuilder< $( $b_assoc, )* __S, $( $r_assoc, )* NodeSlot >
+            {
+                EngineBuilder(::std::marker::PhantomData)
+            }
+        }
+
+        define_engine_config!(@setters
+            [ $( $b_assoc | $b_method, )* $cur_assoc | $cur_method, ]
+            [ $( $r_assoc | $r_method ),* ]
+        );
+    };
+
+    ( @setters [ $( $b_assoc:ident | $b_method:ident, )* ] [] ) => {};
+}

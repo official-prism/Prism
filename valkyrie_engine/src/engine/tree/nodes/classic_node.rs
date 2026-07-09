@@ -34,84 +34,36 @@
     documentation.
 */
 
-mod edge;
-mod game_state;
-
-pub use edge::Edge;
-pub use game_state::{AtomicGameState, GameState};
-
-use super::payload::PayloadType;
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-#[derive(Debug)]
-pub struct Node<NP: PayloadType = (), EP: PayloadType = ()> {
+use crate::engine::tree::components::{
+    AtomicGameState, EdgeType, GameState, HasEdges, HasGameState,
+};
+use crate::engine::tree::edges::AvgScoreEdge;
+
+#[derive(Debug, Default)]
+pub struct ClassicNode<E: EdgeType = AvgScoreEdge> {
     state: AtomicGameState,
-    edges: RwLock<Vec<Edge<EP>>>,
-    payload: NP,
+    edges: RwLock<Vec<E>>,
 }
 
-impl<NP: PayloadType, EP: PayloadType> Node<NP, EP> {
-    #[inline]
-    pub fn size() -> usize {
-        std::mem::size_of::<Node<NP, EP>>()
+crate::forward! {
+    impl[E: EdgeType] HasGameState for ClassicNode<E> => self.state {
+        fn game_state(&self) -> GameState;
+        fn set_game_state(&self, state: GameState);
     }
+}
 
-    pub fn new() -> Self {
-        Self {
-            state: AtomicGameState::new(GameState::Ongoing),
-            edges: RwLock::new(Vec::new()),
-            payload: NP::default(),
-        }
-    }
+impl<E: EdgeType> HasEdges for ClassicNode<E> {
+    type Edge = E;
 
     #[inline]
-    pub fn payload(&self) -> &NP {
-        &self.payload
-    }
-
-    #[inline]
-    pub fn payload_mut(&mut self) -> &mut NP {
-        &mut self.payload
-    }
-
-    #[inline]
-    pub fn game_state(&self) -> GameState {
-        self.state.load()
-    }
-
-    #[inline]
-    pub fn set_game_state(&self, state: GameState) {
-        self.state.store(state);
-    }
-
-    #[inline]
-    pub fn is_terminal(&self) -> bool {
-        self.state.load() != GameState::Ongoing
-    }
-
-    #[inline]
-    pub fn edges(&self) -> RwLockReadGuard<'_, Vec<Edge<EP>>> {
+    fn edges(&self) -> RwLockReadGuard<'_, Vec<E>> {
         self.edges.read().unwrap()
     }
 
     #[inline]
-    pub fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<Edge<EP>>> {
+    fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<E>> {
         self.edges.write().unwrap()
-    }
-
-    #[inline]
-    pub fn edge_count(&self) -> usize {
-        self.edges.read().unwrap().len()
-    }
-
-    pub fn total_visits(&self) -> u64 {
-        let edges = self.edges.read().unwrap();
-        edges.iter().map(|e| e.visits()).sum()
-    }
-}
-
-impl<NP: PayloadType, EP: PayloadType> Default for Node<NP, EP> {
-    fn default() -> Self {
-        Self::new()
     }
 }

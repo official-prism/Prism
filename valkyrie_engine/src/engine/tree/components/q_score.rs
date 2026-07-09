@@ -34,10 +34,65 @@
     documentation.
 */
 
-mod search_limits;
-mod search_stats;
-mod strategy_params;
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
-pub use search_limits::SearchLimits;
-pub use search_stats::SearchStats;
-pub use strategy_params::{EmptyParams, StrategyParams};
+pub trait HasQScore {
+    fn total_score(&self) -> f64;
+    fn set_score(&self, value: f64);
+    fn add_score(&self, value: f64);
+
+    fn draw_chance(&self) -> f32;
+    fn set_draw_chance(&self, value: f32);
+
+    #[inline]
+    fn q_score(&self, visits: u64) -> f64 {
+        if visits == 0 {
+            0.0
+        } else {
+            self.total_score() / visits as f64
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct ScoreSum {
+    score: AtomicU64,
+    draw_chance: AtomicU32,
+}
+
+impl HasQScore for ScoreSum {
+    #[inline]
+    fn total_score(&self) -> f64 {
+        f64::from_bits(self.score.load(Ordering::Relaxed))
+    }
+
+    #[inline]
+    fn set_score(&self, value: f64) {
+        self.score.store(value.to_bits(), Ordering::Relaxed);
+    }
+
+    #[inline]
+    fn add_score(&self, value: f64) {
+        loop {
+            let current = self.score.load(Ordering::Relaxed);
+            let new = (f64::from_bits(current) + value).to_bits();
+            if self
+                .score
+                .compare_exchange_weak(current, new, Ordering::Relaxed, Ordering::Relaxed)
+                .is_ok()
+            {
+                break;
+            }
+        }
+    }
+
+    #[inline]
+    fn draw_chance(&self) -> f32 {
+        f32::from_bits(self.draw_chance.load(Ordering::Relaxed))
+    }
+
+    #[inline]
+    fn set_draw_chance(&self, value: f32) {
+        self.draw_chance.store(value.to_bits(), Ordering::Relaxed);
+    }
+}

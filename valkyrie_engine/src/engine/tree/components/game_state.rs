@@ -34,20 +34,70 @@
     documentation.
 */
 
-pub trait QScore {
-    fn total_score(&self) -> f64;
-    fn set_score(&self, value: f64);
-    fn add_score(&self, value: f64);
+use std::sync::atomic::{AtomicU8, Ordering};
 
-    fn draw_chance(&self) -> f32;
-    fn set_draw_chance(&self, value: f32);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum GameState {
+    #[default]
+    Ongoing,
+    Won(u8),
+    Lost(u8),
+    Drew,
+}
+
+pub trait HasGameState {
+    fn game_state(&self) -> GameState;
+    fn set_game_state(&self, state: GameState);
 
     #[inline]
-    fn q_score(&self, visits: u64) -> f64 {
-        if visits == 0 {
-            0.0
-        } else {
-            self.total_score() / visits as f64
+    fn is_terminal(&self) -> bool {
+        self.game_state() != GameState::Ongoing
+    }
+}
+
+#[derive(Debug)]
+pub struct AtomicGameState(AtomicU8);
+
+impl AtomicGameState {
+    #[inline]
+    pub fn new(state: GameState) -> Self {
+        Self(AtomicU8::new(Self::pack(state)))
+    }
+
+    #[inline]
+    fn pack(state: GameState) -> u8 {
+        match state {
+            GameState::Ongoing => 0,
+            GameState::Won(dtm) => 1 << 6 | (dtm & 0x3F),
+            GameState::Lost(dtm) => 2 << 6 | (dtm & 0x3F),
+            GameState::Drew => 3 << 6,
         }
+    }
+}
+
+impl HasGameState for AtomicGameState {
+    #[inline]
+    fn game_state(&self) -> GameState {
+        let value = self.0.load(Ordering::Relaxed);
+        let tag = value >> 6;
+        let payload = value & 0x3F;
+        match tag {
+            0 => GameState::Ongoing,
+            1 => GameState::Won(payload),
+            2 => GameState::Lost(payload),
+            3 => GameState::Drew,
+            _ => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn set_game_state(&self, state: GameState) {
+        self.0.store(Self::pack(state), Ordering::Relaxed);
+    }
+}
+
+impl Default for AtomicGameState {
+    fn default() -> Self {
+        Self::new(GameState::Ongoing)
     }
 }

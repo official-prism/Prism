@@ -34,80 +34,66 @@
     documentation.
 */
 
-mod node;
+pub mod components;
+pub mod edges;
+pub mod nodes;
+
 pub(crate) mod node_index;
-pub mod payload;
 
-pub use node::Node;
-pub use node_index::NodeIndex;
-
-use payload::PayloadType;
-use std::{
-    collections::HashMap,
-    sync::{RwLock, RwLockReadGuard, RwLockWriteGuard},
-};
+pub use node_index::{AtomicNodeIndex, NodeIndex};
 
 #[derive(Debug)]
-pub struct Tree<NP: PayloadType = (), EP: PayloadType = ()> {
-    tree: RwLock<HashMap<NodeIndex, Node<NP, EP>>>,
+pub struct Tree<N> {
+    nodes: Vec<N>,
+    capacity: usize,
 }
 
-impl<NP: PayloadType, EP: PayloadType> Tree<NP, EP> {
+impl<N> Tree<N> {
     pub fn new(size_in_mb: usize) -> Self {
-        let bytes = size_in_mb * 1024 * 1024;
-        let size = bytes / Node::<NP, EP>::size();
-
+        let capacity = Self::capacity_for(size_in_mb);
         Self {
-            tree: RwLock::new(HashMap::with_capacity(size)),
+            nodes: Vec::with_capacity(capacity),
+            capacity,
         }
     }
 
+    fn capacity_for(size_in_mb: usize) -> usize {
+        let bytes = size_in_mb * 1024 * 1024;
+        bytes / std::mem::size_of::<N>().max(1)
+    }
+
     pub fn resize(&mut self, size_in_mb: usize) {
-        let bytes = size_in_mb * 1024 * 1024;
-        let size = bytes / Node::<NP, EP>::size();
-
-        self.tree = RwLock::new(HashMap::with_capacity(size));
+        *self = Self::new(size_in_mb);
     }
 
-    pub fn tree_full(&self, size_in_mb: usize) -> bool {
-        let bytes = size_in_mb * 1024 * 1024;
-        let size = bytes / Node::<NP, EP>::size();
-
-        self.tree.read().unwrap().len() >= size
+    pub fn clear(&mut self) {
+        self.nodes.clear();
     }
 
     #[inline]
-    pub fn read(&self) -> RwLockReadGuard<'_, HashMap<NodeIndex, Node<NP, EP>>> {
-        self.tree.read().unwrap()
+    pub fn get(&self, index: NodeIndex) -> Option<&N> {
+        self.nodes.get(index.raw() as usize)
     }
 
     #[inline]
-    pub fn write(&self) -> RwLockWriteGuard<'_, HashMap<NodeIndex, Node<NP, EP>>> {
-        self.tree.write().unwrap()
-    }
-
-    #[inline]
-    pub fn contains_key(&self, key: NodeIndex) -> bool {
-        self.tree.read().unwrap().contains_key(&key)
-    }
-
-    #[inline]
-    pub fn remove(&self, key: NodeIndex) -> Option<Node<NP, EP>> {
-        self.tree.write().unwrap().remove(&key)
-    }
-
-    #[inline]
-    pub fn clear(&self) {
-        self.tree.write().unwrap().clear();
+    pub fn push(&mut self, node: N) -> NodeIndex {
+        let index = NodeIndex::new(self.nodes.len() as u64);
+        self.nodes.push(node);
+        index
     }
 
     #[inline]
     pub fn len(&self) -> usize {
-        self.tree.read().unwrap().len()
+        self.nodes.len()
     }
 
     #[inline]
     pub fn is_empty(&self) -> bool {
-        self.tree.read().unwrap().is_empty()
+        self.nodes.is_empty()
+    }
+
+    #[inline]
+    pub fn is_full(&self) -> bool {
+        self.nodes.len() >= self.capacity
     }
 }

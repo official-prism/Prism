@@ -34,31 +34,18 @@
     documentation.
 */
 
-use crate::{Engine, engine::structures::SearchStats, prelude::*};
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub struct ClassicExpansion;
 
-crate::define_strategy_params! {
-    ClassicExpansionParams {
-        Options {
-            ["MaxQ_Depth"] depth: i32 => 10, 1, 100;
-            ["MaxQ_Verbose"] verbose: bool => false;
-        }
-        Tunables {
-            lMR_Base: f64 => 0.75, 0.0, 2.0, 0.1, 0.1;
-            lMR_Division: f64 => 2.25, 1.0, 10.0, 0.5, 0.1;
-            fPU_Value: f64 => 0.5, 0.0, 1.0, 0.1, 0.1;
-            aspiration_Window: i64 => 50, 1, 500, 10, 1;
-            history_Threshold: i64 => 100, 0, 1000, 20, 1;
-        }
-    }
+impl Strategy for ClassicExpansion {
+    type Params = EmptyParams;
 }
 
-impl ExpansionStrategy for ClassicExpansion {
-    type Params = ClassicExpansionParams;
-
-    fn execute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {
-
-    }
+impl<C: EngineConfig> ExpansionStrategy<C> for ClassicExpansion
+where
+    C::Edge: HasPolicy,
+{
+    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {}
 }

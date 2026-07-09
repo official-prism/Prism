@@ -36,37 +36,39 @@
 
 use valkyrie_chess::Move;
 
-use crate::{
-    EmptyParams, Engine, StrategyParams, engine::{builder::EngineConfig, structures::SearchStats}
-};
+use crate::engine::Engine;
+use crate::engine::builder::{EngineConfig, Strategy};
+use crate::engine::search_stats::SearchStats;
+use crate::engine::strategy_params::EmptyParams;
 
-pub trait LoggerTrait: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-
-    fn print<C: EngineConfig>(msg: &str, params: &Self::Params, engine: &Engine<C>);
-    fn search_report<C: EngineConfig>(
+pub trait LoggerTrait<C: EngineConfig>: Strategy {
+    fn print(msg: &str, params: &Self::Params, engine: &Engine<C>);
+    fn search_report(
         time_passed: u64,
         search_stats: &SearchStats,
         params: &Self::Params,
         engine: &Engine<C>,
-        end_of_search: bool
+        end_of_search: bool,
     );
-    fn best_move<C: EngineConfig>(mv: Move, params: &Self::Params, engine: &Engine<C>);
+    fn best_move(mv: Move, params: &Self::Params, engine: &Engine<C>);
 }
 
 #[derive(Debug)]
 pub struct NoLogger;
-impl LoggerTrait for NoLogger {
-    type Params = EmptyParams;
 
-    fn print<C: EngineConfig>(_msg: &str, _params: &Self::Params, _engine: &Engine<C>) {}
-    fn search_report<C: EngineConfig>(
+impl Strategy for NoLogger {
+    type Params = EmptyParams;
+}
+
+impl<C: EngineConfig> LoggerTrait<C> for NoLogger {
+    fn print(_msg: &str, _params: &Self::Params, _engine: &Engine<C>) {}
+    fn search_report(
         _time_passed: u64,
         _search_stats: &SearchStats,
-        _params: &Self::Params, 
+        _params: &Self::Params,
         _engine: &Engine<C>,
-        _end_of_search: bool
+        _end_of_search: bool,
     ) {
     }
-    fn best_move<C: EngineConfig>(_mv: Move, _params: &Self::Params, _engine: &Engine<C>) {}
+    fn best_move(_mv: Move, _params: &Self::Params, _engine: &Engine<C>) {}
 }

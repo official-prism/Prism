@@ -34,14 +34,10 @@
     documentation.
 */
 
-use crate::{
-    Engine, SearchLimits, SearchStats, engine::{StrategyParams, builder::EngineConfig}
-};
+use crate::prelude::*;
 
 register_strategy!(classical);
 
-pub trait SearchStrategy: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-
-    fn execute<C: EngineConfig>(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> SearchStats;
+pub trait SearchStrategy<C: EngineConfig>: Strategy {
+    fn execute(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> SearchStats;
 }

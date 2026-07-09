@@ -34,21 +34,10 @@
     documentation.
 */
 
-use crate::{
-    Engine, EngineConfig,
-    engine::{StrategyParams, structures::SearchStats, tree::payload::QScore},
-};
+use crate::prelude::*;
 
 register_strategy!(max_q);
 
-pub trait BestMoveStrategy: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-
-    fn execute<C: EngineConfig>(
-        params: &Self::Params,
-        engine: &Engine<C>,
-        search_stats: &SearchStats,
-    )
-    where
-        C::EdgePayload: QScore;
+pub trait BestMoveStrategy<C: EngineConfig>: Strategy {
+    fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);
 }

@@ -34,66 +34,57 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU8, Ordering};
+use valkyrie_chess::Move;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GameState {
-    Ongoing,
-    Won(u8),
-    Lost(u8),
-    Drew,
+use crate::engine::tree::NodeIndex;
+use crate::engine::tree::components::{
+    ChildLink, HasChild, HasMove, HasPolicy, HasQScore, HasVisits, MoveField, PolicyPrior,
+    ScoreSum, VisitCount,
+};
+
+#[derive(Debug, Default)]
+pub struct AvgScoreEdge {
+    mv: MoveField,
+    child: ChildLink,
+    visits: VisitCount,
+    policy: PolicyPrior,
+    q: ScoreSum,
 }
 
-impl Default for GameState {
-    fn default() -> Self {
-        GameState::Ongoing
-    }
-}
-
-#[derive(Debug)]
-pub struct AtomicGameState(AtomicU8);
-
-impl AtomicGameState {
-    #[inline]
-    pub fn new(state: GameState) -> Self {
-        Self(AtomicU8::new(match state {
-            GameState::Ongoing => 0,
-            GameState::Won(dtm) => 1 << 6 | (dtm & 0x3F),
-            GameState::Lost(dtm) => 2 << 6 | (dtm & 0x3F),
-            GameState::Drew => 3 << 6,
-        }))
-    }
-
-    #[inline]
-    pub fn load(&self) -> GameState {
-        let value = self.0.load(Ordering::Relaxed);
-        let tag = value >> 6;
-        let payload = value & 0x3F;
-        match tag {
-            0 => GameState::Ongoing,
-            1 => GameState::Won(payload),
-            2 => GameState::Lost(payload),
-            3 => GameState::Drew,
-            _ => unreachable!(),
-        }
-    }
-
-    #[inline]
-    pub fn store(&self, state: GameState) {
-        self.0.store(
-            match state {
-                GameState::Ongoing => 0,
-                GameState::Won(dtm) => 1 << 6 | (dtm & 0x3F),
-                GameState::Lost(dtm) => 2 << 6 | (dtm & 0x3F),
-                GameState::Drew => 3 << 6,
-            },
-            Ordering::Relaxed,
-        );
+crate::forward! {
+    impl HasMove for AvgScoreEdge => self.mv {
+        fn mv(&self) -> Move;
+        fn set_mv(&self, mv: Move);
     }
 }
 
-impl Default for AtomicGameState {
-    fn default() -> Self {
-        Self::new(GameState::Ongoing)
+crate::forward! {
+    impl HasChild for AvgScoreEdge => self.child {
+        fn child(&self) -> NodeIndex;
+        fn set_child(&self, index: NodeIndex);
+    }
+}
+
+crate::forward! {
+    impl HasVisits for AvgScoreEdge => self.visits {
+        fn visits(&self) -> u64;
+        fn add_visits(&self, count: u64);
+    }
+}
+
+crate::forward! {
+    impl HasPolicy for AvgScoreEdge => self.policy {
+        fn policy(&self) -> f32;
+        fn set_policy(&self, value: f32);
+    }
+}
+
+crate::forward! {
+    impl HasQScore for AvgScoreEdge => self.q {
+        fn total_score(&self) -> f64;
+        fn set_score(&self, value: f64);
+        fn add_score(&self, value: f64);
+        fn draw_chance(&self) -> f32;
+        fn set_draw_chance(&self, value: f32);
     }
 }

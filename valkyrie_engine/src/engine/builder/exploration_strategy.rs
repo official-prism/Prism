@@ -34,26 +34,10 @@
     documentation.
 */
 
-use crate::{
-    Engine,
-    engine::{
-        StrategyParams,
-        builder::EngineConfig,
-        structures::SearchStats,
-        tree::payload::QScore,
-    },
-};
+use crate::prelude::*;
 
 register_strategy!(puct);
 
-pub trait ExplorationStrategy: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-
-    fn execute<C: EngineConfig>(
-        params: &Self::Params,
-        engine: &Engine<C>,
-        search_stats: &SearchStats,
-    )
-    where
-        C::EdgePayload: QScore;
+pub trait ExplorationStrategy<C: EngineConfig>: Strategy {
+    fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);
 }

@@ -34,17 +34,35 @@
     documentation.
 */
 
-pub(crate) use crate::engine::{
-    LoggerTrait,
-    tree::payload::QScore,
-    builder::{
-        BestMoveStrategy,
-        EngineConfig,
-        ExplorationStrategy,
-        SearchStrategy,
-        BackpropagateStrategy,
-        ExpansionStrategy,
-        node_strategy::NodeStrategy,
-        time_manager_strategy::TimeManagerStrategy,
-    },
+pub use crate::engine::Engine;
+
+pub use crate::engine::builder::{
+    BackpropagateStrategy, BestMoveStrategy, EngineBuilder, EngineConfig, EngineParams,
+    ExpansionStrategy, ExplorationStrategy, GeneralParams, SearchStrategy, Strategy,
+    TimeManagerStrategy, Unspecified,
 };
+
+pub use crate::engine::builder::backpropagate_strategy::ClassicBackpropagate;
+pub use crate::engine::builder::best_move_strategy::MaxQ;
+pub use crate::engine::builder::expansion_strategy::ClassicExpansion;
+pub use crate::engine::builder::exploration_strategy::Puct;
+pub use crate::engine::builder::search_strategy::Classical;
+pub use crate::engine::builder::time_manager_strategy::SimpleTimeManager;
+
+pub use crate::engine::{
+    EmptyParams, LoggerTrait, NoLogger, OptionError, SearchLimits, SearchStats, StrategyParams,
+    UciOptionType,
+};
+
+pub use crate::engine::tree::{AtomicNodeIndex, NodeIndex, Tree};
+
+pub use crate::engine::tree::components::{
+    AtomicGameState, ChildLink, EdgeType, GameState, HasChild, HasEdges, HasGameState, HasMove,
+    HasPolicy, HasQScore, HasVisits, MoveField, NodeType, PolicyPrior, ScoreSum, TotalVisits,
+    VisitCount,
+};
+
+pub use crate::engine::tree::edges::{AvgScoreEdge, BasicEdge};
+pub use crate::engine::tree::nodes::ClassicNode;
+
+pub use valkyrie_chess::Move;

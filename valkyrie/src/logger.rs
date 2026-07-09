@@ -34,8 +34,7 @@
     documentation.
 */
 
-use valkyrie_chess::Move;
-use valkyrie_engine::{EngineConfig, SearchStats, engine::Engine};
+use valkyrie_engine::prelude::*;
 
 valkyrie_engine::define_strategy_params! {
     LoggerParams {
@@ -45,19 +44,21 @@ valkyrie_engine::define_strategy_params! {
     }
 }
 
-#[allow(unused)]
 #[derive(Debug)]
 pub struct Logger;
-impl valkyrie_engine::LoggerTrait for Logger {
-    type Params = LoggerParams;
 
+impl Strategy for Logger {
+    type Params = LoggerParams;
+}
+
+impl<C: EngineConfig> LoggerTrait<C> for Logger {
     #[allow(unused_variables)]
-    fn print<C: EngineConfig>(msg: &str, _params: &Self::Params, _engine: &Engine<C>) {
+    fn print(msg: &str, _params: &Self::Params, _engine: &Engine<C>) {
         #[cfg(feature = "debug")]
         println!("info string {msg}")
     }
 
-    fn search_report<C: EngineConfig>(
+    fn search_report(
         time_passed: u64,
         search_stats: &SearchStats,
         params: &Self::Params,
@@ -87,10 +88,10 @@ impl valkyrie_engine::LoggerTrait for Logger {
         )
     }
 
-    fn best_move<C: EngineConfig>(mv: Move, _params: &Self::Params, engine: &Engine<C>) {
+    fn best_move(mv: Move, _params: &Self::Params, engine: &Engine<C>) {
         println!(
             "bestmove {}",
-            mv.to_string(engine.params().general().ches960())
+            mv.to_string(engine.params().general().chess960())
         )
     }
 }

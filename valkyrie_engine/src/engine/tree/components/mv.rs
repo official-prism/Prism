@@ -34,12 +34,26 @@
     documentation.
 */
 
-use crate::engine::{StrategyParams, tree::payload::PayloadType};
+use std::sync::atomic::{AtomicU16, Ordering};
 
-register_strategy!(avg_score_node);
+use valkyrie_chess::Move;
 
-pub trait NodeStrategy: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-    type NodePayload: PayloadType;
-    type EdgePayload: PayloadType;
+pub trait HasMove {
+    fn mv(&self) -> Move;
+    fn set_mv(&self, mv: Move);
+}
+
+#[derive(Debug, Default)]
+pub struct MoveField(AtomicU16);
+
+impl HasMove for MoveField {
+    #[inline]
+    fn mv(&self) -> Move {
+        Move::from(self.0.load(Ordering::Relaxed))
+    }
+
+    #[inline]
+    fn set_mv(&self, mv: Move) {
+        self.0.store(u16::from(mv), Ordering::Relaxed);
+    }
 }

@@ -34,31 +34,12 @@
     documentation.
 */
 
-use crate::{
-    Engine, SearchLimits,
-    engine::{StrategyParams, builder::EngineConfig},
-};
+use crate::prelude::*;
 
 register_strategy!(simple_time_manager);
 
-pub trait TimeManagerStrategy: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-
-    fn new<C: EngineConfig>(
-        limits: &SearchLimits,
-        params: &Self::Params,
-        engine: &crate::Engine<C>,
-    ) -> Self;
-    fn soft_limit<C: EngineConfig>(
-        &self,
-        time_passed: u64,
-        params: &Self::Params,
-        engine: &Engine<C>,
-    ) -> bool;
-    fn hard_limit<C: EngineConfig>(
-        &self,
-        time_passed: u64,
-        params: &Self::Params,
-        engine: &Engine<C>,
-    ) -> bool;
+pub trait TimeManagerStrategy<C: EngineConfig>: Strategy {
+    fn new(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> Self;
+    fn soft_limit(&self, time_passed: u64, params: &Self::Params, engine: &Engine<C>) -> bool;
+    fn hard_limit(&self, time_passed: u64, params: &Self::Params, engine: &Engine<C>) -> bool;
 }

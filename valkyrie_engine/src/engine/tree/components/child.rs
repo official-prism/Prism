@@ -34,41 +34,29 @@
     documentation.
 */
 
-mod command_processors;
-mod input_wrapper;
-mod logger;
+use crate::engine::tree::node_index::{AtomicNodeIndex, NodeIndex};
 
-use std::sync::atomic::{AtomicBool, Ordering};
+pub trait HasChild {
+    fn child(&self) -> NodeIndex;
+    fn set_child(&self, index: NodeIndex);
 
-use command_processors::misc_processor::MiscProcessor;
-use command_processors::uci_processor::UciProcessor;
-use input_wrapper::InputWrapper;
-use valkyrie_engine::prelude::*;
+    #[inline]
+    fn has_child(&self) -> bool {
+        self.child() != NodeIndex::NULL
+    }
+}
 
-fn main() {
-    let mut engine = EngineBuilder::new()
-        .best_move::<MaxQ>()
-        .exploration::<Puct>()
-        .expansion::<ClassicExpansion>()
-        .backpropagation::<ClassicBackpropagate>()
-        .search::<Classical>()
-        .time_manager::<SimpleTimeManager>()
-        .node::<ClassicNode<AvgScoreEdge>>()
-        .logger::<crate::logger::Logger>()
-        .build();
+#[derive(Debug, Default)]
+pub struct ChildLink(AtomicNodeIndex);
 
-    let shutdown_token = AtomicBool::new(false);
-    let mut input_wrapper = InputWrapper::new();
+impl HasChild for ChildLink {
+    #[inline]
+    fn child(&self) -> NodeIndex {
+        self.0.load()
+    }
 
-    while !shutdown_token.load(Ordering::SeqCst) {
-        let cmd = match input_wrapper.get_input() {
-            Some(cmd) => cmd,
-            None => break,
-        };
-
-        let cmd = cmd.trim();
-
-        let _ = MiscProcessor::execute(cmd, &engine)
-            || UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper, &mut engine);
+    #[inline]
+    fn set_child(&self, index: NodeIndex) {
+        self.0.store(index);
     }
 }

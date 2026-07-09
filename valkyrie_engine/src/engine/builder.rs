@@ -34,45 +34,45 @@
     documentation.
 */
 
-#[macro_use]
-mod macros;
-
-pub mod best_move_strategy;
-pub mod exploration_strategy;
-pub mod expansion_strategy;
 pub mod backpropagate_strategy;
-pub mod node_strategy;
+pub mod best_move_strategy;
+pub mod expansion_strategy;
+pub mod exploration_strategy;
 pub mod search_strategy;
 pub mod time_manager_strategy;
 
-pub use self::best_move_strategy::BestMoveStrategy;
-pub use self::exploration_strategy::ExplorationStrategy;
-pub use self::expansion_strategy::ExpansionStrategy;
 pub use self::backpropagate_strategy::BackpropagateStrategy;
-pub use self::node_strategy::NodeStrategy;
+pub use self::best_move_strategy::BestMoveStrategy;
+pub use self::expansion_strategy::ExpansionStrategy;
+pub use self::exploration_strategy::ExplorationStrategy;
 pub use self::search_strategy::SearchStrategy;
 pub use self::time_manager_strategy::TimeManagerStrategy;
 
 use crate::engine::logger::{LoggerTrait, NoLogger};
+use crate::engine::strategy_params::StrategyParams;
 
 pub struct Unspecified;
+
+pub trait Strategy: std::fmt::Debug + Send + Sync + 'static {
+    type Params: StrategyParams + Send + Sync;
+}
 
 crate::define_strategy_params! {
     GeneralParams {
         Options {
             ["Hash"] hash: i32 => 1024, 1, 524288;
-            ["UCI_Chess960"] ches960: bool => false;
+            ["UCI_Chess960"] chess960: bool => false;
             ["ItersAsNodes"] iters_as_nodes: bool => false;
         }
         Buttons {
-            "Clear",
+            "ClearHash",
         }
     }
 }
 
 define_engine_config! {
     general: GeneralParams,
-    with_params {
+    strategies {
         //Type           Trait                   Field/Name        Default Value
         BestMove:        BestMoveStrategy      | best_move       | Unspecified,
         Exploration:     ExplorationStrategy   | exploration     | Unspecified,
@@ -81,8 +81,5 @@ define_engine_config! {
         Search:          SearchStrategy        | search          | Unspecified,
         TimeManager:     TimeManagerStrategy   | time_manager    | Unspecified,
         Logger:          LoggerTrait           | logger          | NoLogger,
-    }
-    without_params {
-        Node:   NodeStrategy | node   | Unspecified,
     }
 }

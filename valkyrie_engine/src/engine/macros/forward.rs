@@ -34,49 +34,20 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
-
-use crate::engine::tree::payload::QScore;
-
-#[derive(Debug, Default)]
-pub struct AvgScoreEdgePayload {
-    score: AtomicU64,
-    draw_chance: AtomicU32,
-}
-
-impl QScore for AvgScoreEdgePayload {
-    #[inline]
-    fn total_score(&self) -> f64 {
-        f64::from_bits(self.score.load(Ordering::Relaxed))
-    }
-
-    #[inline]
-    fn set_score(&self, value: f64) {
-        self.score.store(value.to_bits(), Ordering::Relaxed);
-    }
-
-    #[inline]
-    fn add_score(&self, value: f64) {
-        loop {
-            let current = self.score.load(Ordering::Relaxed);
-            let new = (f64::from_bits(current) + value).to_bits();
-            if self
-                .score
-                .compare_exchange_weak(current, new, Ordering::Relaxed, Ordering::Relaxed)
-                .is_ok()
-            {
-                break;
-            }
+#[macro_export]
+macro_rules! forward {
+    (
+        impl$([$($gen:tt)*])? $trait_:ident for $ty:ty => self.$field:ident {
+            $( fn $method:ident(&self $(, $arg:ident : $arg_ty:ty)* $(,)?) $(-> $ret:ty)?; )*
         }
-    }
-
-    #[inline]
-    fn draw_chance(&self) -> f32 {
-        f32::from_bits(self.draw_chance.load(Ordering::Relaxed))
-    }
-
-    #[inline]
-    fn set_draw_chance(&self, value: f32) {
-        self.draw_chance.store(value.to_bits(), Ordering::Relaxed);
-    }
+    ) => {
+        impl$(<$($gen)*>)? $trait_ for $ty {
+            $(
+                #[inline]
+                fn $method(&self $(, $arg: $arg_ty)*) $(-> $ret)? {
+                    self.$field.$method($($arg),*)
+                }
+            )*
+        }
+    };
 }

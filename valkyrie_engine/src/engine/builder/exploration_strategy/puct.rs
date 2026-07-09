@@ -34,7 +34,7 @@
     documentation.
 */
 
-use crate::{Engine, engine::structures::SearchStats, prelude::*};
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub struct Puct;
@@ -51,13 +51,13 @@ crate::define_strategy_params! {
     }
 }
 
-impl ExplorationStrategy for Puct {
+impl Strategy for Puct {
     type Params = PuctParams;
+}
 
-    fn execute<C: EngineConfig>(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats)
-    where
-        C::EdgePayload: QScore,
-    {
-
-    }
+impl<C: EngineConfig> ExplorationStrategy<C> for Puct
+where
+    C::Edge: HasVisits + HasPolicy + HasQScore,
+{
+    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {}
 }

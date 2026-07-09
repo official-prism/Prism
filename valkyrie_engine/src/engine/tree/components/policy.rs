@@ -34,29 +34,24 @@
     documentation.
 */
 
-pub trait StrategyParams: std::fmt::Debug + Clone + Send + Sync {
-    fn new() -> Self;
-    fn set_option(&mut self, name: &str, value: &str) -> std::result::Result<(), String>;
-    fn print_options(&self);
-    fn print_tunables(&self);
+use std::sync::atomic::{AtomicU32, Ordering};
+
+pub trait HasPolicy {
+    fn policy(&self) -> f32;
+    fn set_policy(&self, value: f32);
 }
 
-/// Shared parameter type for strategies that expose no options, tunables or
-/// variables. Use `type Params = EmptyParams;` instead of declaring a fresh
-/// empty struct per strategy.
-#[derive(Debug, Clone)]
-pub struct EmptyParams;
+#[derive(Debug, Default)]
+pub struct PolicyPrior(AtomicU32);
 
-impl StrategyParams for EmptyParams {
-    fn new() -> Self {
-        Self
+impl HasPolicy for PolicyPrior {
+    #[inline]
+    fn policy(&self) -> f32 {
+        f32::from_bits(self.0.load(Ordering::Relaxed))
     }
 
-    fn set_option(&mut self, name: &str, _value: &str) -> std::result::Result<(), String> {
-        Err(format!("Unknown option '{}'", name))
+    #[inline]
+    fn set_policy(&self, value: f32) {
+        self.0.store(value.to_bits(), Ordering::Relaxed);
     }
-
-    fn print_options(&self) {}
-
-    fn print_tunables(&self) {}
 }

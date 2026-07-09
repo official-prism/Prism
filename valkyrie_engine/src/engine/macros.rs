@@ -34,42 +34,12 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU64, Ordering};
+#[macro_use]
+mod engine_config;
+#[macro_use]
+mod register;
 
-pub struct SearchStats {
-    max_depth: AtomicU64,
-    cumulative_depth: AtomicU64,
-    iterations: AtomicU64,
-}
-
-impl SearchStats {
-    pub fn new() -> Self {
-        Self {
-            max_depth: AtomicU64::new(0),
-            cumulative_depth: AtomicU64::new(0),
-            iterations: AtomicU64::new(0),
-        }
-    }
-
-    pub fn max_depth(&self) -> u64 {
-        self.max_depth.load(Ordering::Relaxed)
-    }
-
-    pub fn cumulative_depth(&self) -> u64 {
-        self.cumulative_depth.load(Ordering::Relaxed)
-    }
-
-    pub fn iterations(&self) -> u64 {
-        self.iterations.load(Ordering::Relaxed)
-    }
-
-    pub fn avg_depth(&self) -> u64 {
-        self.cumulative_depth() / self.iterations().max(1)
-    }
-
-    pub fn add_iteration(&self, depth: u64) {
-        self.max_depth.fetch_max(depth, Ordering::Relaxed);
-        self.cumulative_depth.fetch_add(depth, Ordering::Relaxed);
-        self.iterations.fetch_add(1, Ordering::Relaxed);
-    }
-}
+mod compound_params;
+mod forward;
+mod params_common;
+mod strategy_params;

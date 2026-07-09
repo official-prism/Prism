@@ -34,6 +34,11 @@
     documentation.
 */
 
-mod avg_score_edge_payload;
-
-pub use avg_score_edge_payload::AvgScoreEdgePayload;
+macro_rules! register_strategy {
+    ($( $mod_name:ident ),+ $(,)?) => {
+        $(
+            pub mod $mod_name;
+            pub use self::$mod_name::*;
+        )+
+    };
+}

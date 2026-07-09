@@ -36,9 +36,7 @@
 
 use std::time::Instant;
 
-use valkyrie_chess::Move;
-
-use crate::{SearchLimits, SearchStats, prelude::*};
+use crate::prelude::*;
 
 pub(crate) struct IterationStats {
     depth: u64,
@@ -67,10 +65,16 @@ crate::define_strategy_params! {
     }
 }
 
-impl SearchStrategy for Classical {
+impl Strategy for Classical {
     type Params = ClassicalSearchParams;
+}
 
-    fn execute<C: crate::EngineConfig>(limits: &SearchLimits, params: &Self::Params, engine: &crate::Engine<C>) -> SearchStats {
+impl<C: EngineConfig> SearchStrategy<C> for Classical
+where
+    C::TimeManager: TimeManagerStrategy<C>,
+    C::Logger: LoggerTrait<C>,
+{
+    fn execute(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> SearchStats {
         let search_stats = SearchStats::new();
         let search_time = Instant::now();
 
@@ -81,7 +85,7 @@ impl SearchStrategy for Classical {
             &search_stats,
             engine.params().logger(),
             engine,
-            true
+            true,
         );
         C::Logger::best_move(Move::NULL, engine.params().logger(), engine);
 
@@ -89,16 +93,18 @@ impl SearchStrategy for Classical {
     }
 }
 
-type Params = <Classical as SearchStrategy>::Params;
 impl Classical {
-    fn main_thread_search<C: crate::EngineConfig>(
+    fn main_thread_search<C: EngineConfig>(
         limits: &SearchLimits,
         stats: &SearchStats,
         search_time: &Instant,
-        params: &Params,
-        engine: &crate::Engine<C>
-    ) {
-        let mut last_raport_time = Instant::now();
+        params: &ClassicalSearchParams,
+        engine: &Engine<C>,
+    ) where
+        C::TimeManager: TimeManagerStrategy<C>,
+        C::Logger: LoggerTrait<C>,
+    {
+        let mut last_report_time = Instant::now();
 
         let time_manager = C::TimeManager::new(limits, engine.params().time_manager(), engine);
         let mut main_thread_iters = 0u64;
@@ -115,20 +121,19 @@ impl Classical {
             if stats.avg_depth() > avg_depth
                 || stats.max_depth() > max_depth
                 || (main_thread_iters.is_multiple_of(128) //todo: maybe remove that
-                    && last_raport_time.elapsed().as_millis() >= 1000)
+                    && last_report_time.elapsed().as_millis() >= 1000)
             {
                 let time_passed = search_time.elapsed().as_millis() as u64;
-                C::Logger::search_report(time_passed, stats, engine.params().logger(), &engine, false);
-                last_raport_time = Instant::now();
+                C::Logger::search_report(time_passed, stats, engine.params().logger(), engine, false);
+                last_report_time = Instant::now();
             }
 
-            if limits.check_limits(&stats, &engine) {
+            if limits.check_limits(stats, engine) {
                 engine.set_interruption_token(true);
                 break;
             }
 
-            let hash_size = engine.params().general().hash() as usize;
-            if engine.tree().tree_full(hash_size) {
+            if engine.tree().is_full() {
                 engine.set_interruption_token(true);
                 break;
             }
@@ -157,9 +162,9 @@ impl Classical {
         }
     }
 
-    fn search_step<C: crate::EngineConfig>(
-        _params: &Params,
-        _engine: &crate::Engine<C>
+    fn search_step<C: EngineConfig>(
+        _params: &ClassicalSearchParams,
+        _engine: &Engine<C>,
     ) -> IterationStats {
         let mut x = IterationStats::new();
         x.add_depth();

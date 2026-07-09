@@ -34,19 +34,10 @@
     documentation.
 */
 
-use crate::{
-    Engine, EngineConfig,
-    engine::{StrategyParams, structures::SearchStats},
-};
+use crate::prelude::*;
 
 register_strategy!(classic_expansion);
 
-pub trait ExpansionStrategy: std::fmt::Debug + Send + Sync {
-    type Params: StrategyParams + Send + Sync;
-
-    fn execute<C: EngineConfig>(
-        params: &Self::Params,
-        engine: &Engine<C>,
-        search_stats: &SearchStats,
-    );
+pub trait ExpansionStrategy<C: EngineConfig>: Strategy {
+    fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);
 }

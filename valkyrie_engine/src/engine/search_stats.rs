@@ -34,41 +34,43 @@
     documentation.
 */
 
-mod command_processors;
-mod input_wrapper;
-mod logger;
+use std::sync::atomic::{AtomicU64, Ordering};
 
-use std::sync::atomic::{AtomicBool, Ordering};
+#[derive(Debug, Default)]
+pub struct SearchStats {
+    max_depth: AtomicU64,
+    cumulative_depth: AtomicU64,
+    iterations: AtomicU64,
+}
 
-use command_processors::misc_processor::MiscProcessor;
-use command_processors::uci_processor::UciProcessor;
-use input_wrapper::InputWrapper;
-use valkyrie_engine::prelude::*;
+impl SearchStats {
+    pub fn new() -> Self {
+        Self {
+            max_depth: AtomicU64::new(0),
+            cumulative_depth: AtomicU64::new(0),
+            iterations: AtomicU64::new(0),
+        }
+    }
 
-fn main() {
-    let mut engine = EngineBuilder::new()
-        .best_move::<MaxQ>()
-        .exploration::<Puct>()
-        .expansion::<ClassicExpansion>()
-        .backpropagation::<ClassicBackpropagate>()
-        .search::<Classical>()
-        .time_manager::<SimpleTimeManager>()
-        .node::<ClassicNode<AvgScoreEdge>>()
-        .logger::<crate::logger::Logger>()
-        .build();
+    pub fn max_depth(&self) -> u64 {
+        self.max_depth.load(Ordering::Relaxed)
+    }
 
-    let shutdown_token = AtomicBool::new(false);
-    let mut input_wrapper = InputWrapper::new();
+    pub fn cumulative_depth(&self) -> u64 {
+        self.cumulative_depth.load(Ordering::Relaxed)
+    }
 
-    while !shutdown_token.load(Ordering::SeqCst) {
-        let cmd = match input_wrapper.get_input() {
-            Some(cmd) => cmd,
-            None => break,
-        };
+    pub fn iterations(&self) -> u64 {
+        self.iterations.load(Ordering::Relaxed)
+    }
 
-        let cmd = cmd.trim();
+    pub fn avg_depth(&self) -> u64 {
+        self.cumulative_depth() / self.iterations().max(1)
+    }
 
-        let _ = MiscProcessor::execute(cmd, &engine)
-            || UciProcessor::execute(cmd, &shutdown_token, &mut input_wrapper, &mut engine);
+    pub fn add_iteration(&self, depth: u64) {
+        self.max_depth.fetch_max(depth, Ordering::Relaxed);
+        self.cumulative_depth.fetch_add(depth, Ordering::Relaxed);
+        self.iterations.fetch_add(1, Ordering::Relaxed);
     }
 }

@@ -34,16 +34,30 @@
     documentation.
 */
 
-// Capability traits and concrete payloads are kept apart, one item per file:
-//   `traits/` — capability traits a strategy can require (e.g. `QScore`)
-//   `impls/`  — concrete payload structs, named after the node strategy that
-//               selects them; each implements whatever traits its set needs.
-mod impls;
-mod traits;
+mod child;
+mod edges;
+mod game_state;
+mod mv;
+mod policy;
+mod q_score;
+mod visits;
 
-pub use impls::AvgScoreEdgePayload;
-pub use traits::QScore;
+pub use child::{ChildLink, HasChild};
+pub use edges::{HasEdges, TotalVisits};
+pub use game_state::{AtomicGameState, GameState, HasGameState};
+pub use mv::{HasMove, MoveField};
+pub use policy::{HasPolicy, PolicyPrior};
+pub use q_score::{HasQScore, ScoreSum};
+pub use visits::{HasVisits, VisitCount};
 
-/// Marker bound every node/edge payload must satisfy. `()` is a valid payload.
-pub trait PayloadType: Default + std::fmt::Debug + Send + Sync + 'static {}
-impl<T: Default + std::fmt::Debug + Send + Sync + 'static> PayloadType for T {}
+pub trait EdgeType: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild {}
+impl<T: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild> EdgeType for T {}
+
+pub trait NodeType:
+    Default + std::fmt::Debug + Send + Sync + 'static + HasGameState + HasEdges
+{
+}
+impl<T: Default + std::fmt::Debug + Send + Sync + 'static + HasGameState + HasEdges> NodeType
+    for T
+{
+}

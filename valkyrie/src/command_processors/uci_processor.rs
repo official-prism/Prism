@@ -38,7 +38,7 @@ use core::str;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use valkyrie_chess::{ChessBoard, ChessPosition, FEN, Side};
-use valkyrie_engine::{Engine, EngineConfig, SearchLimits};
+use valkyrie_engine::prelude::*;
 
 use crate::input_wrapper::InputWrapper;
 
@@ -49,7 +49,11 @@ impl UciProcessor {
         shutdown_token: &AtomicBool,
         input_wrapper: &mut InputWrapper,
         engine: &mut Engine<C>,
-    ) -> bool {
+    ) -> bool
+    where
+        C::Search: SearchStrategy<C>,
+        C::Logger: LoggerTrait<C>,
+    {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
 
         match tokens[0] {
@@ -103,7 +107,7 @@ impl UciProcessor {
             for &mv_str in &args[idx..] {
                 let mut legal_move = false;
                 chess_position.board().clone().map_legal_moves(|legal_mv| {
-                    legal_move = mv_str == legal_mv.to_string(engine.params().general().ches960());
+                    legal_move = mv_str == legal_mv.to_string(engine.params().general().chess960());
                     if legal_move {
                         chess_position.make_move_no_mask(legal_mv);
                     }
@@ -147,14 +151,22 @@ impl UciProcessor {
         let name_str = name.join(" ");
         let value_str = value.join(" ");
 
+        let old_hash = engine.params().general().hash();
+
         if let Err(msg) = engine.params_mut().set_option(&name_str, &value_str) {
             println!("info string {msg}");
             return;
         }
 
-        if name_str.to_lowercase() == "hash" {
-            let hash_size = engine.params().general().hash() as usize;
-            engine.tree_mut().resize(hash_size);
+        if name_str.eq_ignore_ascii_case("hash") {
+            let hash_size = engine.params().general().hash();
+            if hash_size != old_hash {
+                engine.tree_mut().resize(hash_size as usize);
+            }
+        }
+
+        if name_str.eq_ignore_ascii_case("clearhash") {
+            engine.tree_mut().clear();
         }
 
         if is_value {
@@ -169,7 +181,10 @@ impl UciProcessor {
         engine: &Engine<C>,
         input_wrapper: &mut InputWrapper,
         shutdown_token: &AtomicBool,
-    ) {
+    ) where
+        C::Search: SearchStrategy<C>,
+        C::Logger: LoggerTrait<C>,
+    {
         let limits = args_to_search_limits(args, engine.position().board().side());
 
         engine.set_interruption_token(false);

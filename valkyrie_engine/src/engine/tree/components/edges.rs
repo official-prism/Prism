@@ -34,6 +34,31 @@
     documentation.
 */
 
-mod q_score;
+use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 
-pub use q_score::QScore;
+use super::{EdgeType, HasVisits};
+
+pub trait HasEdges {
+    type Edge: EdgeType;
+
+    fn edges(&self) -> RwLockReadGuard<'_, Vec<Self::Edge>>;
+    fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<Self::Edge>>;
+
+    #[inline]
+    fn edge_count(&self) -> usize {
+        self.edges().len()
+    }
+}
+
+pub trait TotalVisits {
+    fn total_visits(&self) -> u64;
+}
+
+impl<N: HasEdges> TotalVisits for N
+where
+    N::Edge: HasVisits,
+{
+    fn total_visits(&self) -> u64 {
+        self.edges().iter().map(HasVisits::visits).sum()
+    }
+}

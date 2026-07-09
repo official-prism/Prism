@@ -34,11 +34,11 @@
     documentation.
 */
 
-use crate::{SearchLimits, prelude::*};
+use crate::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct SimpleTimeManager {
-    hard_limit: Option<u64>
+    hard_limit: Option<u64>,
 }
 
 crate::define_strategy_params! {
@@ -49,13 +49,13 @@ crate::define_strategy_params! {
     }
 }
 
-impl TimeManagerStrategy for SimpleTimeManager {
+impl Strategy for SimpleTimeManager {
     type Params = TimeManagerParams;
+}
 
-    fn new<C: crate::EngineConfig>(limits: &SearchLimits, params: &Self::Params, _engine: &crate::Engine<C>) -> Self {
-        let mut time_manager = Self {
-            hard_limit: None
-        };
+impl<C: EngineConfig> TimeManagerStrategy<C> for SimpleTimeManager {
+    fn new(limits: &SearchLimits, params: &Self::Params, _engine: &Engine<C>) -> Self {
+        let mut time_manager = Self { hard_limit: None };
 
         if let Some(move_time) = limits.move_time() {
             time_manager.hard_limit = Some(move_time);
@@ -78,15 +78,14 @@ impl TimeManagerStrategy for SimpleTimeManager {
         time_manager
     }
 
-    fn soft_limit<C: crate::EngineConfig>(&self, _time_passed: u64, _params: &Self::Params, _engine: &crate::Engine<C>) -> bool {
+    fn soft_limit(&self, _time_passed: u64, _params: &Self::Params, _engine: &Engine<C>) -> bool {
         false
     }
 
-    fn hard_limit<C: crate::EngineConfig>(&self, time_passed: u64, _params: &Self::Params, _engine: &crate::Engine<C>) -> bool {
-        if self.hard_limit.is_none() {
-            return false;
+    fn hard_limit(&self, time_passed: u64, _params: &Self::Params, _engine: &Engine<C>) -> bool {
+        match self.hard_limit {
+            Some(limit) => time_passed >= limit,
+            None => false,
         }
-
-        time_passed >= self.hard_limit.unwrap()
     }
 }

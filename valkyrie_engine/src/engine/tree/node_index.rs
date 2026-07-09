@@ -36,11 +36,11 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct NodeIndex(u64);
 
 impl NodeIndex {
-    pub const NULL: Self = Self(0);
+    pub const NULL: Self = Self(u64::MAX);
 
     #[inline]
     pub fn new(value: u64) -> Self {
@@ -50,6 +50,12 @@ impl NodeIndex {
     #[inline]
     pub fn raw(&self) -> u64 {
         self.0
+    }
+}
+
+impl Default for NodeIndex {
+    fn default() -> Self {
+        Self::NULL
     }
 }
 
@@ -78,7 +84,7 @@ impl AtomicNodeIndex {
 
     #[inline]
     pub fn null() -> Self {
-        Self(AtomicU64::new(0))
+        Self(AtomicU64::new(NodeIndex::NULL.raw()))
     }
 
     #[inline]
