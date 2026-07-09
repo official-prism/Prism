@@ -45,7 +45,7 @@ impl Strategy for ClassicBackpropagate {
 
 impl<C: EngineConfig> BackpropagateStrategy<C> for ClassicBackpropagate
 where
-    C::Edge: HasQScore + HasVisits,
+    C::Edge: HasScoreSum + HasDrawChance + HasVisits,
 {
     fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {}
 }

@@ -54,7 +54,7 @@ impl Strategy for MaxQ {
 
 impl<C: EngineConfig> BestMoveStrategy<C> for MaxQ
 where
-    C::Edge: HasQScore + HasVisits,
+    C::Edge: HasQ + HasVisits,
 {
     fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {}
 }

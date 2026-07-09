@@ -34,11 +34,25 @@
     documentation.
 */
 
-use crate::engine::tree::components::{ChildStore, MoveStore};
+#[macro_export]
+macro_rules! compose {
+    (
+        $vis:vis struct $name:ident {
+            $( $field:ident : $store:ty ),* $(,)?
+        }
+    ) => {
+        #[derive(Debug, Default)]
+        $vis struct $name {
+            $( $field: $store, )*
+        }
 
-crate::compose! {
-    pub struct BasicEdge {
-        mv: MoveStore,
-        child: ChildStore,
-    }
+        $(
+            impl $crate::engine::tree::components::HasComponent<$store> for $name {
+                #[inline]
+                fn component(&self) -> &$store {
+                    &self.$field
+                }
+            }
+        )*
+    };
 }

@@ -219,6 +219,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "valkyrie_telemetry"
+version = "0.1.0"
+
+[[package]]
 name = "wasm-bindgen"
 version = "0.2.115"
 source = "registry+https://github.com/rust-lang/crates.io-index"

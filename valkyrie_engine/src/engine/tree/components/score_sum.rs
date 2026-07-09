@@ -34,20 +34,42 @@
     documentation.
 */
 
-#[macro_export]
-macro_rules! forward {
-    (
-        impl$([$($gen:tt)*])? $trait_:ident for $ty:ty => self.$field:ident {
-            $( fn $method:ident(&self $(, $arg:ident : $arg_ty:ty)* $(,)?) $(-> $ret:ty)?; )*
+use std::sync::atomic::{AtomicU64, Ordering};
+
+use super::HasComponent;
+
+#[derive(Debug, Default)]
+pub struct ScoreSumStore(AtomicU64);
+
+pub trait HasScoreSum {
+    fn total_score(&self) -> f64;
+    fn set_score(&self, value: f64);
+    fn add_score(&self, value: f64);
+}
+
+impl<T: HasComponent<ScoreSumStore>> HasScoreSum for T {
+    #[inline]
+    fn total_score(&self) -> f64 {
+        f64::from_bits(self.component().0.load(Ordering::Relaxed))
+    }
+
+    #[inline]
+    fn set_score(&self, value: f64) {
+        self.component().0.store(value.to_bits(), Ordering::Relaxed);
+    }
+
+    #[inline]
+    fn add_score(&self, value: f64) {
+        let score = &self.component().0;
+        loop {
+            let current = score.load(Ordering::Relaxed);
+            let new = (f64::from_bits(current) + value).to_bits();
+            if score
+                .compare_exchange_weak(current, new, Ordering::Relaxed, Ordering::Relaxed)
+                .is_ok()
+            {
+                break;
+            }
         }
-    ) => {
-        impl$(<$($gen)*>)? $trait_ for $ty {
-            $(
-                #[inline]
-                fn $method(&self $(, $arg: $arg_ty)*) $(-> $ret)? {
-                    self.$field.$method($($arg),*)
-                }
-            )*
-        }
-    };
+    }
 }

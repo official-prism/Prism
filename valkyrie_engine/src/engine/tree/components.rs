@@ -35,20 +35,35 @@
 */
 
 mod child;
+mod draw;
 mod edges;
 mod game_state;
 mod mv;
 mod policy;
-mod q_score;
+mod q;
+mod score_sum;
 mod visits;
 
-pub use child::{ChildLink, HasChild};
+pub use child::{ChildStore, HasChild};
+pub use draw::{DrawStore, HasDrawChance};
 pub use edges::{HasEdges, TotalVisits};
-pub use game_state::{AtomicGameState, GameState, HasGameState};
-pub use mv::{HasMove, MoveField};
-pub use policy::{HasPolicy, PolicyPrior};
-pub use q_score::{HasQScore, ScoreSum};
-pub use visits::{HasVisits, VisitCount};
+pub use game_state::{GameState, GameStateStore, HasGameState};
+pub use mv::{HasMove, MoveStore};
+pub use policy::{HasPolicy, PolicyStore};
+pub use q::HasQ;
+pub use score_sum::{HasScoreSum, ScoreSumStore};
+pub use visits::{HasVisits, VisitsStore};
+
+pub trait HasComponent<C> {
+    fn component(&self) -> &C;
+}
+
+impl<C> HasComponent<C> for C {
+    #[inline]
+    fn component(&self) -> &C {
+        self
+    }
+}
 
 pub trait EdgeType: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild {}
 impl<T: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild> EdgeType for T {}

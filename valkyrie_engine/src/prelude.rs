@@ -57,9 +57,9 @@ pub use crate::engine::{
 pub use crate::engine::tree::{AtomicNodeIndex, NodeIndex, Tree};
 
 pub use crate::engine::tree::components::{
-    AtomicGameState, ChildLink, EdgeType, GameState, HasChild, HasEdges, HasGameState, HasMove,
-    HasPolicy, HasQScore, HasVisits, MoveField, NodeType, PolicyPrior, ScoreSum, TotalVisits,
-    VisitCount,
+    ChildStore, DrawStore, EdgeType, GameState, GameStateStore, HasChild, HasComponent,
+    HasDrawChance, HasEdges, HasGameState, HasMove, HasPolicy, HasQ, HasScoreSum, HasVisits,
+    MoveStore, NodeType, PolicyStore, ScoreSumStore, TotalVisits, VisitsStore,
 };
 
 pub use crate::engine::tree::edges::{AvgScoreEdge, BasicEdge};

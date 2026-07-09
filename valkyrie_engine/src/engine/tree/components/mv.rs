@@ -38,22 +38,24 @@ use std::sync::atomic::{AtomicU16, Ordering};
 
 use valkyrie_chess::Move;
 
+use super::HasComponent;
+
+#[derive(Debug, Default)]
+pub struct MoveStore(AtomicU16);
+
 pub trait HasMove {
     fn mv(&self) -> Move;
     fn set_mv(&self, mv: Move);
 }
 
-#[derive(Debug, Default)]
-pub struct MoveField(AtomicU16);
-
-impl HasMove for MoveField {
+impl<T: HasComponent<MoveStore>> HasMove for T {
     #[inline]
     fn mv(&self) -> Move {
-        Move::from(self.0.load(Ordering::Relaxed))
+        Move::from(self.component().0.load(Ordering::Relaxed))
     }
 
     #[inline]
     fn set_mv(&self, mv: Move) {
-        self.0.store(u16::from(mv), Ordering::Relaxed);
+        self.component().0.store(u16::from(mv), Ordering::Relaxed);
     }
 }

@@ -39,7 +39,7 @@ mod engine_config;
 #[macro_use]
 mod register;
 
+mod compose;
 mod compound_params;
-mod forward;
 mod params_common;
 mod strategy_params;

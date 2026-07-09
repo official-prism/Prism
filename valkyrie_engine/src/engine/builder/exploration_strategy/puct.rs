@@ -57,7 +57,7 @@ impl Strategy for Puct {
 
 impl<C: EngineConfig> ExplorationStrategy<C> for Puct
 where
-    C::Edge: HasVisits + HasPolicy + HasQScore,
+    C::Edge: HasVisits + HasPolicy + HasQ + HasDrawChance,
 {
     fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {}
 }

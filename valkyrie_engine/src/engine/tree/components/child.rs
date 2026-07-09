@@ -36,6 +36,11 @@
 
 use crate::engine::tree::node_index::{AtomicNodeIndex, NodeIndex};
 
+use super::HasComponent;
+
+#[derive(Debug, Default)]
+pub struct ChildStore(AtomicNodeIndex);
+
 pub trait HasChild {
     fn child(&self) -> NodeIndex;
     fn set_child(&self, index: NodeIndex);
@@ -46,17 +51,14 @@ pub trait HasChild {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct ChildLink(AtomicNodeIndex);
-
-impl HasChild for ChildLink {
+impl<T: HasComponent<ChildStore>> HasChild for T {
     #[inline]
     fn child(&self) -> NodeIndex {
-        self.0.load()
+        self.component().0.load()
     }
 
     #[inline]
     fn set_child(&self, index: NodeIndex) {
-        self.0.store(index);
+        self.component().0.store(index);
     }
 }

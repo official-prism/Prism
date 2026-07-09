@@ -36,6 +36,11 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use super::HasComponent;
+
+#[derive(Debug, Default)]
+pub struct VisitsStore(AtomicU64);
+
 pub trait HasVisits {
     fn visits(&self) -> u64;
     fn add_visits(&self, count: u64);
@@ -46,17 +51,14 @@ pub trait HasVisits {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct VisitCount(AtomicU64);
-
-impl HasVisits for VisitCount {
+impl<T: HasComponent<VisitsStore>> HasVisits for T {
     #[inline]
     fn visits(&self) -> u64 {
-        self.0.load(Ordering::Relaxed)
+        self.component().0.load(Ordering::Relaxed)
     }
 
     #[inline]
     fn add_visits(&self, count: u64) {
-        self.0.fetch_add(count, Ordering::Relaxed);
+        self.component().0.fetch_add(count, Ordering::Relaxed);
     }
 }

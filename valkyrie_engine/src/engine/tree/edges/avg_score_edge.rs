@@ -34,57 +34,30 @@
     documentation.
 */
 
-use valkyrie_chess::Move;
-
-use crate::engine::tree::NodeIndex;
 use crate::engine::tree::components::{
-    ChildLink, HasChild, HasMove, HasPolicy, HasQScore, HasVisits, MoveField, PolicyPrior,
-    ScoreSum, VisitCount,
+    ChildStore, DrawStore, HasQ, HasScoreSum, HasVisits, MoveStore, PolicyStore, ScoreSumStore,
+    VisitsStore,
 };
 
-#[derive(Debug, Default)]
-pub struct AvgScoreEdge {
-    mv: MoveField,
-    child: ChildLink,
-    visits: VisitCount,
-    policy: PolicyPrior,
-    q: ScoreSum,
-}
-
-crate::forward! {
-    impl HasMove for AvgScoreEdge => self.mv {
-        fn mv(&self) -> Move;
-        fn set_mv(&self, mv: Move);
+crate::compose! {
+    pub struct AvgScoreEdge {
+        mv: MoveStore,
+        child: ChildStore,
+        visits: VisitsStore,
+        policy: PolicyStore,
+        score: ScoreSumStore,
+        draw: DrawStore,
     }
 }
 
-crate::forward! {
-    impl HasChild for AvgScoreEdge => self.child {
-        fn child(&self) -> NodeIndex;
-        fn set_child(&self, index: NodeIndex);
-    }
-}
-
-crate::forward! {
-    impl HasVisits for AvgScoreEdge => self.visits {
-        fn visits(&self) -> u64;
-        fn add_visits(&self, count: u64);
-    }
-}
-
-crate::forward! {
-    impl HasPolicy for AvgScoreEdge => self.policy {
-        fn policy(&self) -> f32;
-        fn set_policy(&self, value: f32);
-    }
-}
-
-crate::forward! {
-    impl HasQScore for AvgScoreEdge => self.q {
-        fn total_score(&self) -> f64;
-        fn set_score(&self, value: f64);
-        fn add_score(&self, value: f64);
-        fn draw_chance(&self) -> f32;
-        fn set_draw_chance(&self, value: f32);
+impl HasQ for AvgScoreEdge {
+    #[inline]
+    fn q(&self) -> f64 {
+        let visits = self.visits.visits();
+        if visits == 0 {
+            0.0
+        } else {
+            self.score.total_score() / visits as f64
+        }
     }
 }

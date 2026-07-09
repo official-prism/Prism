@@ -36,6 +36,8 @@
 
 use std::sync::atomic::{AtomicU8, Ordering};
 
+use super::HasComponent;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameState {
     #[default]
@@ -43,6 +45,21 @@ pub enum GameState {
     Won(u8),
     Lost(u8),
     Drew,
+}
+
+#[derive(Debug, Default)]
+pub struct GameStateStore(AtomicU8);
+
+impl GameStateStore {
+    #[inline]
+    fn pack(state: GameState) -> u8 {
+        match state {
+            GameState::Ongoing => 0,
+            GameState::Won(dtm) => 1 << 6 | (dtm & 0x3F),
+            GameState::Lost(dtm) => 2 << 6 | (dtm & 0x3F),
+            GameState::Drew => 3 << 6,
+        }
+    }
 }
 
 pub trait HasGameState {
@@ -55,30 +72,10 @@ pub trait HasGameState {
     }
 }
 
-#[derive(Debug)]
-pub struct AtomicGameState(AtomicU8);
-
-impl AtomicGameState {
-    #[inline]
-    pub fn new(state: GameState) -> Self {
-        Self(AtomicU8::new(Self::pack(state)))
-    }
-
-    #[inline]
-    fn pack(state: GameState) -> u8 {
-        match state {
-            GameState::Ongoing => 0,
-            GameState::Won(dtm) => 1 << 6 | (dtm & 0x3F),
-            GameState::Lost(dtm) => 2 << 6 | (dtm & 0x3F),
-            GameState::Drew => 3 << 6,
-        }
-    }
-}
-
-impl HasGameState for AtomicGameState {
+impl<T: HasComponent<GameStateStore>> HasGameState for T {
     #[inline]
     fn game_state(&self) -> GameState {
-        let value = self.0.load(Ordering::Relaxed);
+        let value = self.component().0.load(Ordering::Relaxed);
         let tag = value >> 6;
         let payload = value & 0x3F;
         match tag {
@@ -92,12 +89,8 @@ impl HasGameState for AtomicGameState {
 
     #[inline]
     fn set_game_state(&self, state: GameState) {
-        self.0.store(Self::pack(state), Ordering::Relaxed);
-    }
-}
-
-impl Default for AtomicGameState {
-    fn default() -> Self {
-        Self::new(GameState::Ongoing)
+        self.component()
+            .0
+            .store(GameStateStore::pack(state), Ordering::Relaxed);
     }
 }

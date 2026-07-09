@@ -36,21 +36,19 @@
 
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use crate::engine::tree::components::{
-    AtomicGameState, EdgeType, GameState, HasEdges, HasGameState,
-};
+use crate::engine::tree::components::{EdgeType, GameStateStore, HasComponent, HasEdges};
 use crate::engine::tree::edges::AvgScoreEdge;
 
 #[derive(Debug, Default)]
 pub struct ClassicNode<E: EdgeType = AvgScoreEdge> {
-    state: AtomicGameState,
+    state: GameStateStore,
     edges: RwLock<Vec<E>>,
 }
 
-crate::forward! {
-    impl[E: EdgeType] HasGameState for ClassicNode<E> => self.state {
-        fn game_state(&self) -> GameState;
-        fn set_game_state(&self, state: GameState);
+impl<E: EdgeType> HasComponent<GameStateStore> for ClassicNode<E> {
+    #[inline]
+    fn component(&self) -> &GameStateStore {
+        &self.state
     }
 }
 

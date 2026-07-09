@@ -36,22 +36,24 @@
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
+use super::HasComponent;
+
+#[derive(Debug, Default)]
+pub struct PolicyStore(AtomicU32);
+
 pub trait HasPolicy {
     fn policy(&self) -> f32;
     fn set_policy(&self, value: f32);
 }
 
-#[derive(Debug, Default)]
-pub struct PolicyPrior(AtomicU32);
-
-impl HasPolicy for PolicyPrior {
+impl<T: HasComponent<PolicyStore>> HasPolicy for T {
     #[inline]
     fn policy(&self) -> f32 {
-        f32::from_bits(self.0.load(Ordering::Relaxed))
+        f32::from_bits(self.component().0.load(Ordering::Relaxed))
     }
 
     #[inline]
     fn set_policy(&self, value: f32) {
-        self.0.store(value.to_bits(), Ordering::Relaxed);
+        self.component().0.store(value.to_bits(), Ordering::Relaxed);
     }
 }

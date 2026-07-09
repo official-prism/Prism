@@ -34,11 +34,26 @@
     documentation.
 */
 
-use crate::engine::tree::components::{ChildStore, MoveStore};
+use std::sync::atomic::{AtomicU32, Ordering};
 
-crate::compose! {
-    pub struct BasicEdge {
-        mv: MoveStore,
-        child: ChildStore,
+use super::HasComponent;
+
+#[derive(Debug, Default)]
+pub struct DrawStore(AtomicU32);
+
+pub trait HasDrawChance {
+    fn draw_chance(&self) -> f32;
+    fn set_draw_chance(&self, value: f32);
+}
+
+impl<T: HasComponent<DrawStore>> HasDrawChance for T {
+    #[inline]
+    fn draw_chance(&self) -> f32 {
+        f32::from_bits(self.component().0.load(Ordering::Relaxed))
+    }
+
+    #[inline]
+    fn set_draw_chance(&self, value: f32) {
+        self.component().0.store(value.to_bits(), Ordering::Relaxed);
     }
 }
