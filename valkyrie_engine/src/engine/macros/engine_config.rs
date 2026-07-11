@@ -34,6 +34,7 @@
     documentation.
 */
 
+#[macro_export]
 macro_rules! define_engine_config {
     (
         general: $general_ty:ty,
@@ -66,7 +67,7 @@ macro_rules! define_engine_config {
             }
         }
 
-        define_engine_config!(@setters
+        $crate::define_engine_config!(@setters
             []
             [ $( $s_assoc | $s_method ),+ ]
         );
@@ -192,7 +193,7 @@ macro_rules! define_engine_config {
             }
         }
 
-        define_engine_config!(@setters
+        $crate::define_engine_config!(@setters
             [ $( $b_assoc | $b_method, )* $cur_assoc | $cur_method, ]
             [ $( $r_assoc | $r_method ),* ]
         );

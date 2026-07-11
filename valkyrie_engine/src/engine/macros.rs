@@ -34,12 +34,9 @@
     documentation.
 */
 
-#[macro_use]
-mod engine_config;
-#[macro_use]
-mod register;
-
 mod compose;
+mod engine_config;
 mod compound_params;
 mod params_common;
+mod register;
 mod strategy_params;

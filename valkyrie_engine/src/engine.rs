@@ -34,7 +34,6 @@
     documentation.
 */
 
-#[macro_use]
 mod macros;
 
 pub mod builder;

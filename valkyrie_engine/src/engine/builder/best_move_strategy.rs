@@ -36,7 +36,7 @@
 
 use crate::prelude::*;
 
-register_strategy!(max_q);
+crate::register_strategy!(max_q);
 
 pub trait BestMoveStrategy<C: EngineConfig>: Strategy {
     fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);

@@ -34,6 +34,7 @@
     documentation.
 */
 
+#[macro_export]
 macro_rules! register_strategy {
     ($( $mod_name:ident ),+ $(,)?) => {
         $(

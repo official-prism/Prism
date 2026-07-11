@@ -36,7 +36,7 @@
 
 use crate::prelude::*;
 
-register_strategy!(puct);
+crate::register_strategy!(puct);
 
 pub trait ExplorationStrategy<C: EngineConfig>: Strategy {
     fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);

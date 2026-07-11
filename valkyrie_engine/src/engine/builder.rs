@@ -70,7 +70,7 @@ crate::define_strategy_params! {
     }
 }
 
-define_engine_config! {
+crate::define_engine_config! {
     general: GeneralParams,
     strategies {
         //Type           Trait                   Field/Name        Default Value

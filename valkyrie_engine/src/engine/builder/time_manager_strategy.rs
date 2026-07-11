@@ -36,7 +36,7 @@
 
 use crate::prelude::*;
 
-register_strategy!(simple_time_manager);
+crate::register_strategy!(simple_time_manager);
 
 pub trait TimeManagerStrategy<C: EngineConfig>: Strategy {
     fn new(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> Self;

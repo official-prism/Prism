@@ -55,8 +55,8 @@ impl GameStateStore {
     fn pack(state: GameState) -> u8 {
         match state {
             GameState::Ongoing => 0,
-            GameState::Won(dtm) => 1 << 6 | (dtm & 0x3F),
-            GameState::Lost(dtm) => 2 << 6 | (dtm & 0x3F),
+            GameState::Won(x) => 1 << 6 | x.min(0x3F),
+            GameState::Lost(x) => 2 << 6 | x.min(0x3F),
             GameState::Drew => 3 << 6,
         }
     }

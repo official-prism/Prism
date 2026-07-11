@@ -36,7 +36,7 @@
 
 use crate::prelude::*;
 
-register_strategy!(classic_expansion);
+crate::register_strategy!(classic_expansion);
 
 pub trait ExpansionStrategy<C: EngineConfig>: Strategy {
     fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);
