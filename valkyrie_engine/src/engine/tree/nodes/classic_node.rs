@@ -34,34 +34,11 @@
     documentation.
 */
 
-use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use crate::engine::tree::components::{GameStateStore, VisitsStore};
 
-use crate::engine::tree::components::{EdgeType, GameStateStore, HasComponent, HasEdges};
-use crate::engine::tree::edges::AvgScoreEdge;
-
-#[derive(Debug, Default)]
-pub struct ClassicNode<E: EdgeType = AvgScoreEdge> {
-    state: GameStateStore,
-    edges: RwLock<Vec<E>>,
-}
-
-impl<E: EdgeType> HasComponent<GameStateStore> for ClassicNode<E> {
-    #[inline]
-    fn component(&self) -> &GameStateStore {
-        &self.state
-    }
-}
-
-impl<E: EdgeType> HasEdges for ClassicNode<E> {
-    type Edge = E;
-
-    #[inline]
-    fn edges(&self) -> RwLockReadGuard<'_, Vec<E>> {
-        self.edges.read().unwrap()
-    }
-
-    #[inline]
-    fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<E>> {
-        self.edges.write().unwrap()
+crate::compose_node! {
+    pub struct ClassicNode {
+        state: GameStateStore,
+        visits: VisitsStore,
     }
 }

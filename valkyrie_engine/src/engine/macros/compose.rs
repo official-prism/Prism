@@ -35,7 +35,7 @@
 */
 
 #[macro_export]
-macro_rules! compose {
+macro_rules! compose_edge {
     (
         $vis:vis struct $name:ident {
             $( $field:ident : $store:ty ),* $(,)?
@@ -54,5 +54,33 @@ macro_rules! compose {
                 }
             }
         )*
+    };
+}
+
+#[macro_export]
+macro_rules! compose_node {
+    (
+        $vis:vis struct $name:ident {
+            $( $field:ident : $store:ty ),* $(,)?
+        }
+    ) => {
+        #[derive(Debug, Default)]
+        $vis struct $name<E: $crate::engine::tree::components::EdgeType = $crate::engine::tree::edges::AvgScoreEdge> {
+            $( $field: $store, )*
+            edges: $crate::engine::tree::edge_storage::EdgesStore<E>,
+        }
+
+        $(
+            impl<E: $crate::engine::tree::components::EdgeType>
+                $crate::engine::tree::components::HasComponent<$store> for $name<E>
+            {
+                #[inline]
+                fn component(&self) -> &$store {
+                    &self.$field
+                }
+            }
+        )*
+
+        $crate::connect_edges!($name);
     };
 }

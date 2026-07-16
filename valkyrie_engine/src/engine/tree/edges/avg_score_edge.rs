@@ -39,7 +39,7 @@ use crate::engine::tree::components::{
     VisitsStore,
 };
 
-crate::compose! {
+crate::compose_edge! {
     pub struct AvgScoreEdge {
         mv: MoveStore,
         child: ChildStore,

@@ -34,9 +34,10 @@
     documentation.
 */
 
+use std::sync::{RwLockReadGuard, RwLockWriteGuard};
+
 mod child;
 mod draw;
-mod edges;
 mod game_state;
 mod mv;
 mod policy;
@@ -46,7 +47,6 @@ mod visits;
 
 pub use child::{ChildStore, HasChild};
 pub use draw::{DrawStore, HasDrawChance};
-pub use edges::{HasEdges, TotalVisits};
 pub use game_state::{GameState, GameStateStore, HasGameState};
 pub use mv::{HasMove, MoveStore};
 pub use policy::{HasPolicy, PolicyStore};
@@ -68,11 +68,14 @@ impl<C> HasComponent<C> for C {
 pub trait EdgeType: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild {}
 impl<T: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild> EdgeType for T {}
 
-pub trait NodeType:
-    Default + std::fmt::Debug + Send + Sync + 'static + HasGameState + HasEdges
-{
-}
-impl<T: Default + std::fmt::Debug + Send + Sync + 'static + HasGameState + HasEdges> NodeType
-    for T
-{
+pub trait NodeType: Default + std::fmt::Debug + Send + Sync + 'static + HasGameState {
+    type Edge: EdgeType;
+
+    fn edges(&self) -> RwLockReadGuard<'_, Vec<Self::Edge>>;
+    fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<Self::Edge>>;
+
+    #[inline]
+    fn edge_count(&self) -> usize {
+        self.edges().len()
+    }
 }

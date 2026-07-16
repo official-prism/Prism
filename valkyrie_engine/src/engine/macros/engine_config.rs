@@ -44,8 +44,8 @@ macro_rules! define_engine_config {
     ) => {
         pub trait EngineConfig: Send + Sync + Sized + 'static {
             $( type $s_assoc: Strategy; )+
-            type Node: $crate::engine::tree::components::NodeType;
             type Edge: $crate::engine::tree::components::EdgeType;
+            type Node: $crate::engine::tree::components::NodeType<Edge = Self::Edge>;
         }
 
         pub struct EngineBuilder<
@@ -89,7 +89,7 @@ macro_rules! define_engine_config {
         {
             $( type $s_assoc = $s_assoc; )+
             type Node = NodeSlot;
-            type Edge = <NodeSlot as $crate::engine::tree::components::HasEdges>::Edge;
+            type Edge = <NodeSlot as $crate::engine::tree::components::NodeType>::Edge;
         }
 
         #[doc(hidden)]

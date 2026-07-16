@@ -34,30 +34,33 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::{AtomicU16, Ordering};
 
 use super::HasComponent;
+
+const PAYLOAD_OFFSET: u16 = 14;
+const PAYLOAD_MASK: u16 = 0x3FFF;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameState {
     #[default]
     Ongoing,
-    Won(u8),
-    Lost(u8),
+    Won(u16),
+    Lost(u16),
     Drew,
 }
 
 #[derive(Debug, Default)]
-pub struct GameStateStore(AtomicU8);
+pub struct GameStateStore(AtomicU16);
 
 impl GameStateStore {
     #[inline]
-    fn pack(state: GameState) -> u8 {
+    fn pack(state: GameState) -> u16 {
         match state {
             GameState::Ongoing => 0,
-            GameState::Won(x) => 1 << 6 | x.min(0x3F),
-            GameState::Lost(x) => 2 << 6 | x.min(0x3F),
-            GameState::Drew => 3 << 6,
+            GameState::Won(x) => 1 << PAYLOAD_OFFSET | x.min(PAYLOAD_MASK),
+            GameState::Lost(x) => 2 << PAYLOAD_OFFSET | x.min(PAYLOAD_MASK),
+            GameState::Drew => 3 << PAYLOAD_OFFSET,
         }
     }
 }
@@ -76,8 +79,8 @@ impl<T: HasComponent<GameStateStore>> HasGameState for T {
     #[inline]
     fn game_state(&self) -> GameState {
         let value = self.component().0.load(Ordering::Relaxed);
-        let tag = value >> 6;
-        let payload = value & 0x3F;
+        let tag = value >> PAYLOAD_OFFSET;
+        let payload = value & PAYLOAD_MASK;
         match tag {
             0 => GameState::Ongoing,
             1 => GameState::Won(payload),

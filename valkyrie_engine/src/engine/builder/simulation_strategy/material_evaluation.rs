@@ -34,63 +34,18 @@
     documentation.
 */
 
-use crate::prelude::*;
+use crate::{engine::builder::SimulationStrategy, prelude::*};
 
-crate::register_strategy!(puct);
+#[derive(Debug)]
+pub struct MaterialEvaluation;
 
-pub trait ExplorationStrategy<C: EngineConfig>: Strategy {
-    fn execute(node: &C::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution;
+impl Strategy for MaterialEvaluation {
+    type Params = EmptyParams;
 }
 
-#[derive(Clone)]
-pub struct VisitDistribution {
-    values: [VisitDistributionEntry; 64],
-    len: usize,
-}
-
-#[derive(Clone, Copy, Default)]
-pub struct VisitDistributionEntry {
-    edge_idx: usize,
-    visits: u64,
-}
-
-impl VisitDistributionEntry {
-    pub fn edge_index(&self) -> usize {
-        self.edge_idx
-    }
-
-    pub fn vists(&self) -> u64 {
-        self.visits
-    }
-}
-
-impl VisitDistribution {
-    fn new() -> Self {
-        Self { 
-            values: [VisitDistributionEntry::default(); 64], 
-            len: 0 
-        }
-    }
-
-    fn push(&mut self, edge_idx: usize, visits: u64) {
-        self.values[self.len] = VisitDistributionEntry { edge_idx, visits };
-        self.len = self.len + 1;
-    }
-
-    pub fn as_slice(&self) -> &[VisitDistributionEntry] {
-        &self.values[..self.len]
-    }
-
-    pub fn iter(&self) -> std::slice::Iter<'_, VisitDistributionEntry> {
-        self.as_slice().iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a VisitDistribution {
-    type Item = &'a VisitDistributionEntry;
-    type IntoIter = std::slice::Iter<'a, VisitDistributionEntry>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.as_slice().iter()
+impl<C: EngineConfig> SimulationStrategy<C> for MaterialEvaluation
+{
+    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) -> (f64, f32) {
+        (0.5, 1.0)
     }
 }

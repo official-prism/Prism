@@ -34,17 +34,19 @@
     documentation.
 */
 
-pub mod backpropagate_strategy;
 pub mod best_move_strategy;
 pub mod expansion_strategy;
 pub mod exploration_strategy;
+pub mod backpropagation_strategy;
+pub mod simulation_strategy;
 pub mod search_strategy;
 pub mod time_manager_strategy;
 
-pub use self::backpropagate_strategy::BackpropagateStrategy;
 pub use self::best_move_strategy::BestMoveStrategy;
 pub use self::expansion_strategy::ExpansionStrategy;
 pub use self::exploration_strategy::ExplorationStrategy;
+pub use self::simulation_strategy::SimulationStrategy;
+pub use self::backpropagation_strategy::BackpropagationStrategy;
 pub use self::search_strategy::SearchStrategy;
 pub use self::time_manager_strategy::TimeManagerStrategy;
 
@@ -77,7 +79,8 @@ crate::define_engine_config! {
         BestMove:        BestMoveStrategy      | best_move       | Unspecified,
         Exploration:     ExplorationStrategy   | exploration     | Unspecified,
         Expansion:       ExpansionStrategy     | expansion       | Unspecified,
-        Backpropagation: BackpropagateStrategy | backpropagation | Unspecified,
+        Simulation:      SimulationStrategy    | simulation      | Unspecified,
+        Backpropagation: BackpropagationStrategy | backpropagation | Unspecified,
         Search:          SearchStrategy        | search          | Unspecified,
         TimeManager:     TimeManagerStrategy   | time_manager    | Unspecified,
         Logger:          LoggerTrait           | logger          | NoLogger,

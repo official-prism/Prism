@@ -34,19 +34,15 @@
     documentation.
 */
 
-use crate::prelude::*;
+use crate::{engine::builder::exploration_strategy::VisitDistribution, prelude::*};
 
 #[derive(Debug)]
 pub struct Puct;
 
 crate::define_strategy_params! {
     PuctParams {
-        Options {
-            ["Puct_Log"] log: bool => true;
-        }
         Tunables {
             cpuct: f64 => 1.41, 0.1, 5.0, 0.1, 0.1;
-            puct_fPU: f64 => 0.5, 0.0, 1.0, 0.1, 0.1;
         }
     }
 }
@@ -57,7 +53,24 @@ impl Strategy for Puct {
 
 impl<C: EngineConfig> ExplorationStrategy<C> for Puct
 where
-    C::Edge: HasVisits + HasPolicy + HasQ + HasDrawChance,
+    C::Node: HasVisits,
+    C::Edge: HasVisits + HasPolicy + HasQ,
 {
-    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {}
+    fn execute(node: &<C as EngineConfig>::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution {
+        let distribution = VisitDistribution::new();
+
+        let parent_visits = node.visits();
+
+        //base puct factors
+
+        //loop over children
+        for edge in node.edges().iter() {
+            let score = edge.q();
+            let child_visits = edge.visits();
+        }
+
+        //return child with highest puct
+
+        distribution
+    }
 }

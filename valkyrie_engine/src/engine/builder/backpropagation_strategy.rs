@@ -36,8 +36,8 @@
 
 use crate::prelude::*;
 
-crate::register_strategy!(classic_backpropagate);
+crate::register_strategy!(classic_backpropagation);
 
-pub trait BackpropagateStrategy<C: EngineConfig>: Strategy {
+pub trait BackpropagationStrategy<C: EngineConfig>: Strategy {
     fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);
 }

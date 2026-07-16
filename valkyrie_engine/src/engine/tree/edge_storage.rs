@@ -34,31 +34,42 @@
     documentation.
 */
 
-use std::sync::{RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use super::{EdgeType, HasVisits};
+use super::components::EdgeType;
 
-pub trait HasEdges {
-    type Edge: EdgeType;
+#[derive(Debug, Default)]
+pub struct EdgesStore<E: EdgeType>(RwLock<Vec<E>>);
 
-    fn edges(&self) -> RwLockReadGuard<'_, Vec<Self::Edge>>;
-    fn edges_mut(&self) -> RwLockWriteGuard<'_, Vec<Self::Edge>>;
+impl<E: EdgeType> EdgesStore<E> {
+    #[inline]
+    pub fn read(&self) -> RwLockReadGuard<'_, Vec<E>> {
+        self.0.read().unwrap()
+    }
 
     #[inline]
-    fn edge_count(&self) -> usize {
-        self.edges().len()
+    pub fn write(&self) -> RwLockWriteGuard<'_, Vec<E>> {
+        self.0.write().unwrap()
     }
 }
 
-pub trait TotalVisits {
-    fn total_visits(&self) -> u64;
-}
+#[macro_export]
+macro_rules! connect_edges {
+    ($name:ident) => {
+        impl<E: $crate::engine::tree::components::EdgeType>
+            $crate::engine::tree::components::NodeType for $name<E>
+        {
+            type Edge = E;
 
-impl<N: HasEdges> TotalVisits for N
-where
-    N::Edge: HasVisits,
-{
-    fn total_visits(&self) -> u64 {
-        self.edges().iter().map(HasVisits::visits).sum()
-    }
+            #[inline]
+            fn edges(&self) -> ::std::sync::RwLockReadGuard<'_, ::std::vec::Vec<E>> {
+                self.edges.read()
+            }
+
+            #[inline]
+            fn edges_mut(&self) -> ::std::sync::RwLockWriteGuard<'_, ::std::vec::Vec<E>> {
+                self.edges.write()
+            }
+        }
+    };
 }

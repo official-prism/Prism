@@ -36,7 +36,7 @@
 
 use crate::prelude::*;
 
-crate::register_strategy!(classical);
+crate::register_strategy!(basic_mcts);
 
 pub trait SearchStrategy<C: EngineConfig>: Strategy {
     fn execute(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> SearchStats;

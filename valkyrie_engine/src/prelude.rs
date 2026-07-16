@@ -37,29 +37,22 @@
 pub use crate::engine::Engine;
 
 pub use crate::engine::builder::{
-    BackpropagateStrategy, BestMoveStrategy, EngineBuilder, EngineConfig, EngineParams,
+    BackpropagationStrategy, BestMoveStrategy, EngineBuilder, EngineConfig, EngineParams,
     ExpansionStrategy, ExplorationStrategy, GeneralParams, SearchStrategy, Strategy,
     TimeManagerStrategy, Unspecified,
 };
-
-pub use crate::engine::builder::backpropagate_strategy::ClassicBackpropagate;
-pub use crate::engine::builder::best_move_strategy::MaxQ;
-pub use crate::engine::builder::expansion_strategy::ClassicExpansion;
-pub use crate::engine::builder::exploration_strategy::Puct;
-pub use crate::engine::builder::search_strategy::Classical;
-pub use crate::engine::builder::time_manager_strategy::SimpleTimeManager;
 
 pub use crate::engine::{
     EmptyParams, LoggerTrait, NoLogger, OptionError, SearchLimits, SearchStats, StrategyParams,
     UciOptionType,
 };
 
-pub use crate::engine::tree::{AtomicNodeIndex, NodeIndex, Tree};
+pub use crate::engine::tree::{AtomicNodeIndex, EdgesStore, NodeIndex, Tree};
 
 pub use crate::engine::tree::components::{
     ChildStore, DrawStore, EdgeType, GameState, GameStateStore, HasChild, HasComponent,
-    HasDrawChance, HasEdges, HasGameState, HasMove, HasPolicy, HasQ, HasScoreSum, HasVisits,
-    MoveStore, NodeType, PolicyStore, ScoreSumStore, TotalVisits, VisitsStore,
+    HasDrawChance, HasGameState, HasMove, HasPolicy, HasQ, HasScoreSum, HasVisits,
+    MoveStore, NodeType, PolicyStore, ScoreSumStore, VisitsStore,
 };
 
 pub use crate::engine::tree::edges::{AvgScoreEdge, BasicEdge};

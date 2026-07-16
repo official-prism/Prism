@@ -43,7 +43,7 @@ impl Strategy for ClassicBackpropagate {
     type Params = EmptyParams;
 }
 
-impl<C: EngineConfig> BackpropagateStrategy<C> for ClassicBackpropagate
+impl<C: EngineConfig> BackpropagationStrategy<C> for ClassicBackpropagate
 where
     C::Edge: HasScoreSum + HasDrawChance + HasVisits,
 {

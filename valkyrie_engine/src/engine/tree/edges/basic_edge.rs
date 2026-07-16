@@ -36,7 +36,7 @@
 
 use crate::engine::tree::components::{ChildStore, MoveStore};
 
-crate::compose! {
+crate::compose_edge! {
     pub struct BasicEdge {
         mv: MoveStore,
         child: ChildStore,

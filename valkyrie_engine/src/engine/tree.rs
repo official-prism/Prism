@@ -35,11 +35,13 @@
 */
 
 pub mod components;
+pub mod edge_storage;
 pub mod edges;
 pub mod nodes;
 
 pub(crate) mod node_index;
 
+pub use edge_storage::EdgesStore;
 pub use node_index::{AtomicNodeIndex, NodeIndex};
 
 #[derive(Debug)]
