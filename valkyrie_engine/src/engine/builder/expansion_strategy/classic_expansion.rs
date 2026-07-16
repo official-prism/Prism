@@ -34,7 +34,10 @@
     documentation.
 */
 
-use crate::prelude::*;
+use crate::{
+    engine::tree::components::HasPolicy,
+    prelude::*,
+};
 
 #[derive(Debug)]
 pub struct ClassicExpansion;

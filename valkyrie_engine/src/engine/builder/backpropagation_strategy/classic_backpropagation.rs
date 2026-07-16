@@ -34,7 +34,10 @@
     documentation.
 */
 
-use crate::prelude::*;
+use crate::{
+    engine::tree::components::{HasDrawChance, HasScoreSum, HasVisits},
+    prelude::*,
+};
 
 #[derive(Debug)]
 pub struct ClassicBackpropagate;

@@ -49,13 +49,6 @@ pub use crate::engine::{
 
 pub use crate::engine::tree::{AtomicNodeIndex, EdgesStore, NodeIndex, Tree};
 
-pub use crate::engine::tree::components::{
-    ChildStore, DrawStore, EdgeType, GameState, GameStateStore, HasChild, HasComponent,
-    HasDrawChance, HasGameState, HasMove, HasPolicy, HasQ, HasScoreSum, HasVisits,
-    MoveStore, NodeType, PolicyStore, ScoreSumStore, VisitsStore,
-};
-
-pub use crate::engine::tree::edges::{AvgScoreEdge, BasicEdge};
-pub use crate::engine::tree::nodes::ClassicNode;
+pub use crate::engine::tree::components::{EdgeType, HasComponent, NodeType};
 
 pub use valkyrie_chess::Move;

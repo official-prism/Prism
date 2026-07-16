@@ -34,7 +34,13 @@
     documentation.
 */
 
-use crate::{engine::builder::exploration_strategy::VisitDistribution, prelude::*};
+use crate::{
+    engine::{
+        builder::exploration_strategy::VisitDistribution, 
+        tree::components::{HasPolicy, HasQ, HasVisits}
+    }, 
+    prelude::*
+};
 
 #[derive(Debug)]
 pub struct Puct;
@@ -59,9 +65,9 @@ where
     fn execute(node: &<C as EngineConfig>::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution {
         let distribution = VisitDistribution::new();
 
-        let parent_visits = node.visits();
-
         //base puct factors
+        let parent_visits = node.visits();
+        let cpuct = params.cpuct();
 
         //loop over children
         for edge in node.edges().iter() {

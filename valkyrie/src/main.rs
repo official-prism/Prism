@@ -50,6 +50,8 @@ use valkyrie_engine::engine::builder::exploration_strategy::Puct;
 use valkyrie_engine::engine::builder::search_strategy::BasicMCTS;
 use valkyrie_engine::engine::builder::simulation_strategy::MaterialEvaluation;
 use valkyrie_engine::engine::builder::time_manager_strategy::SimpleTimeManager;
+use valkyrie_engine::engine::tree::edges::AvgScoreEdge;
+use valkyrie_engine::engine::tree::nodes::ClassicNode;
 use valkyrie_engine::prelude::*;
 
 fn main() {
