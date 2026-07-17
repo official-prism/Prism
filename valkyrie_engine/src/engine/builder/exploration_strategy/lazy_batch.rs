@@ -34,26 +34,52 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::marker::PhantomData;
 
-use super::HasComponent;
+use crate::{
+    engine::{builder::exploration_strategy::VisitDistribution, tree::components::HasVisits}, prelude::*,
+};
 
-#[derive(Debug, Default)]
-pub struct DrawStore(AtomicU32);
+#[deprecated(note = "LazyBatch is development module to test single selection formulas a batch selectors. It assumes total virtual loss and was not made with multithreading in mind.")]
+#[derive(Debug)]
+pub struct LazyBatch<S>(PhantomData<S>);
 
-pub trait HasDrawChance {
-    fn draw_chance(&self) -> f32;
-    fn set_draw_chance(&self, value: f32);
+#[allow(deprecated)]
+impl<S: Strategy> Strategy for LazyBatch<S> {
+    type Params = S::Params;
 }
 
-impl<T: HasComponent<DrawStore>> HasDrawChance for T {
-    #[inline]
-    fn draw_chance(&self) -> f32 {
-        f32::from_bits(self.component().0.load(Ordering::Relaxed))
-    }
+#[allow(deprecated)]
+impl<C, S> ExplorationStrategy<C> for LazyBatch<S>
+where
+    C: EngineConfig,
+    S: ExplorationStrategy<C>,
+    C::Node: HasVisits,
+    C::Edge: HasVisits
+{
+    fn execute(node: &<C as EngineConfig>::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution {
+        assert!(node.edge_count() > 0);
+        
+        let mut distribution = VisitDistribution::new();
 
-    #[inline]
-    fn set_draw_chance(&self, value: f32) {
-        self.component().0.store(value.to_bits(), Ordering::Relaxed);
+        let node_clone = node.clone();
+
+        let mut counts = vec![0u64; node_clone.edge_count()];
+
+        for _ in 0..budget {
+            let step = S::execute(&node_clone, 1, params, engine).as_slice()[0];
+            let edge_idx = step.edge_index();
+            counts[edge_idx] += step.vists();
+            node_clone.add_visit();
+            node_clone.edges()[edge_idx].add_visit();
+        }
+
+        for (idx, &visits) in counts.iter().enumerate() {
+            if visits > 0 {
+                distribution.push(idx, visits);
+            }
+        }
+
+        distribution
     }
 }

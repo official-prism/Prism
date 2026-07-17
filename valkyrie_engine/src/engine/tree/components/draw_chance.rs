@@ -34,35 +34,33 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU16, Ordering};
-
-use valkyrie_chess::Move;
+use std::sync::atomic::{AtomicU32, Ordering};
 
 use super::HasComponent;
 
 #[derive(Debug, Default)]
-pub struct MoveStore(AtomicU16);
+pub struct DrawStore(AtomicU32);
 
-impl Clone for MoveStore {
+impl Clone for DrawStore {
     #[inline]
     fn clone(&self) -> Self {
-        Self(AtomicU16::new(self.0.load(Ordering::Relaxed)))
+        Self(AtomicU32::new(self.0.load(Ordering::Relaxed)))
     }
 }
 
-pub trait HasMove {
-    fn mv(&self) -> Move;
-    fn set_mv(&self, mv: Move);
+pub trait HasDrawChance {
+    fn draw_chance(&self) -> f32;
+    fn set_draw_chance(&self, value: f32);
 }
 
-impl<T: HasComponent<MoveStore>> HasMove for T {
+impl<T: HasComponent<DrawStore>> HasDrawChance for T {
     #[inline]
-    fn mv(&self) -> Move {
-        Move::from(self.component().0.load(Ordering::Relaxed))
+    fn draw_chance(&self) -> f32 {
+        f32::from_bits(self.component().0.load(Ordering::Relaxed))
     }
 
     #[inline]
-    fn set_mv(&self, mv: Move) {
-        self.component().0.store(u16::from(mv), Ordering::Relaxed);
+    fn set_draw_chance(&self, value: f32) {
+        self.component().0.store(value.to_bits(), Ordering::Relaxed);
     }
 }

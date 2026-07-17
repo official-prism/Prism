@@ -53,6 +53,13 @@ pub enum GameState {
 #[derive(Debug, Default)]
 pub struct GameStateStore(AtomicU16);
 
+impl Clone for GameStateStore {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self(AtomicU16::new(self.0.load(Ordering::Relaxed)))
+    }
+}
+
 impl GameStateStore {
     #[inline]
     fn pack(state: GameState) -> u16 {

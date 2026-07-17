@@ -41,6 +41,13 @@ use super::HasComponent;
 #[derive(Debug, Default)]
 pub struct PolicyStore(AtomicU32);
 
+impl Clone for PolicyStore {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self(AtomicU32::new(self.0.load(Ordering::Relaxed)))
+    }
+}
+
 pub trait HasPolicy {
     fn policy(&self) -> f32;
     fn set_policy(&self, value: f32);

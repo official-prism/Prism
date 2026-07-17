@@ -62,21 +62,51 @@ where
     C::Node: HasVisits,
     C::Edge: HasVisits + HasPolicy + HasQ,
 {
-    fn execute(node: &<C as EngineConfig>::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution {
-        let distribution = VisitDistribution::new();
+    fn execute(node: &<C as EngineConfig>::Node, _budget: u64, params: &Self::Params, _engine: &Engine<C>) -> VisitDistribution {
+        assert!(node.edge_count() > 0);
+        
+        let mut distribution = VisitDistribution::new();
 
-        //base puct factors
+        let cpuct = cpuct::<C>(node, params);
         let parent_visits = node.visits();
-        let cpuct = params.cpuct();
 
-        //loop over children
-        for edge in node.edges().iter() {
-            let score = edge.q();
+        let mut edge_idx = usize::MAX;
+        let mut best_puct = f64::NEG_INFINITY;
+
+        for (idx, edge) in node.edges().iter().enumerate() {
             let child_visits = edge.visits();
+            let score = if child_visits > 0 {
+                edge.q()
+            } else {
+                0.5
+            };
+
+            let expl_score = exploration_score(parent_visits, child_visits);
+
+            let puct = score + cpuct * (edge.policy() as f64) * expl_score;
+
+            if puct > best_puct {
+                best_puct = puct;
+                edge_idx = idx;
+            } 
         }
 
-        //return child with highest puct
+        assert_ne!(edge_idx, usize::MAX);
+
+        distribution.push(edge_idx, 1);
 
         distribution
     }
+}
+
+fn cpuct<C: EngineConfig>(_parent_node: &<C as EngineConfig>::Node, params: &PuctParams) -> f64
+where
+    C::Node: HasVisits,
+    C::Edge: HasVisits + HasPolicy + HasQ, 
+{
+    params.cpuct()
+}
+
+fn exploration_score(parent_visits: u64, child_visits: u64) -> f64 {
+    (parent_visits as f64).sqrt().max(1.0) / (child_visits as f64 + 1.0)
 }

@@ -37,7 +37,7 @@
 use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 mod child;
-mod draw;
+mod draw_chance;
 mod game_state;
 mod mv;
 mod policy;
@@ -46,7 +46,7 @@ mod score_sum;
 mod visits;
 
 pub use child::{ChildStore, HasChild};
-pub use draw::{DrawStore, HasDrawChance};
+pub use draw_chance::{DrawStore, HasDrawChance};
 pub use game_state::{GameState, GameStateStore, HasGameState};
 pub use mv::{HasMove, MoveStore};
 pub use policy::{HasPolicy, PolicyStore};
@@ -65,10 +65,10 @@ impl<C> HasComponent<C> for C {
     }
 }
 
-pub trait EdgeType: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild {}
-impl<T: Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild> EdgeType for T {}
+pub trait EdgeType: Clone + Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild {}
+impl<T: Clone + Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild> EdgeType for T {}
 
-pub trait NodeType: Default + std::fmt::Debug + Send + Sync + 'static + HasGameState {
+pub trait NodeType: Clone + Default + std::fmt::Debug + Send + Sync + 'static + HasGameState {
     type Edge: EdgeType;
 
     fn edges(&self) -> RwLockReadGuard<'_, Vec<Self::Edge>>;

@@ -103,3 +103,10 @@ impl Default for AtomicNodeIndex {
         Self::null()
     }
 }
+
+impl Clone for AtomicNodeIndex {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self::new(self.load())
+    }
+}

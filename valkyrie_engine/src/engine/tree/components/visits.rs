@@ -41,6 +41,13 @@ use super::HasComponent;
 #[derive(Debug, Default)]
 pub struct VisitsStore(AtomicU64);
 
+impl Clone for VisitsStore {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self(AtomicU64::new(self.0.load(Ordering::Relaxed)))
+    }
+}
+
 pub trait HasVisits {
     fn visits(&self) -> u64;
     fn add_visits(&self, count: u64);

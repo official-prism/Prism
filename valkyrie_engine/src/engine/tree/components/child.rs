@@ -38,7 +38,7 @@ use crate::engine::tree::node_index::{AtomicNodeIndex, NodeIndex};
 
 use super::HasComponent;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct ChildStore(AtomicNodeIndex);
 
 pub trait HasChild {

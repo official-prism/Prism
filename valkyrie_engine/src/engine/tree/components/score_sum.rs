@@ -41,6 +41,13 @@ use super::HasComponent;
 #[derive(Debug, Default)]
 pub struct ScoreSumStore(AtomicU64);
 
+impl Clone for ScoreSumStore {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self(AtomicU64::new(self.0.load(Ordering::Relaxed)))
+    }
+}
+
 pub trait HasScoreSum {
     fn total_score(&self) -> f64;
     fn set_score(&self, value: f64);

@@ -37,6 +37,7 @@
 use crate::prelude::*;
 
 crate::register_strategy!(puct);
+crate::register_strategy!(lazy_batch);
 
 pub trait ExplorationStrategy<C: EngineConfig>: Strategy {
     fn execute(node: &C::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution;
@@ -44,7 +45,7 @@ pub trait ExplorationStrategy<C: EngineConfig>: Strategy {
 
 #[derive(Clone)]
 pub struct VisitDistribution {
-    values: [VisitDistributionEntry; 64],
+    values: [VisitDistributionEntry; 256],
     len: usize,
 }
 
@@ -67,12 +68,12 @@ impl VisitDistributionEntry {
 impl VisitDistribution {
     fn new() -> Self {
         Self { 
-            values: [VisitDistributionEntry::default(); 64], 
+            values: [VisitDistributionEntry::default(); 256], 
             len: 0 
         }
     }
 
-    fn push(&mut self, edge_idx: usize, visits: u64) {
+    pub fn push(&mut self, edge_idx: usize, visits: u64) {
         self.values[self.len] = VisitDistributionEntry { edge_idx, visits };
         self.len = self.len + 1;
     }
