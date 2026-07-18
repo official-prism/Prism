@@ -34,7 +34,13 @@
     documentation.
 */
 
-use crate::{engine::builder::SimulationStrategy, prelude::*};
+use crate::{
+    engine::builder::{
+        HasScalarScore,
+        SimulationStrategy,
+    },
+    prelude::*,
+};
 
 #[derive(Debug)]
 pub struct MaterialEvaluation;
@@ -45,7 +51,15 @@ impl Strategy for MaterialEvaluation {
 
 impl<C: EngineConfig> SimulationStrategy<C> for MaterialEvaluation
 {
-    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) -> (f64, f32) {
+    type Output = (f64, f32);
+
+    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) -> Self::Output {
         (0.5, 1.0)
+    }
+}
+
+impl HasScalarScore for (f64, f32) {
+    fn score(&self) -> f64 {
+        self.0
     }
 }

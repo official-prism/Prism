@@ -38,7 +38,7 @@ use std::time::Instant;
 
 use valkyrie_chess::ChessPosition;
 
-use crate::{engine::builder::SimulationStrategy, prelude::*};
+use crate::{engine::{builder::SimulationStrategy, tree::components::HasVisits}, prelude::*};
 
 #[derive(Debug)]
 pub struct BasicMCTS;
@@ -64,6 +64,7 @@ where
     C::Expansion: ExpansionStrategy<C>,
     C::Simulation: SimulationStrategy<C>,
     C::Backpropagation: BackpropagationStrategy<C>,
+    C::Node: HasVisits,
 {
     fn execute(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> SearchStats {
         let search_stats = SearchStats::new();
@@ -98,6 +99,7 @@ impl BasicMCTS {
         C::Expansion: ExpansionStrategy<C>,
         C::Simulation: SimulationStrategy<C>,
         C::Backpropagation: BackpropagationStrategy<C>,
+        C::Node: HasVisits,
     {
         let mut last_report_time = Instant::now();
 
@@ -108,7 +110,7 @@ impl BasicMCTS {
             let position = engine.position().clone();
             let mut depth = 0;
 
-            Self::search_step(position, params, engine, &mut depth);
+            Self::search_step::<_, true>(engine.tree().root_index(), position, params, stats, engine, &mut depth);
 
             let prev_avg_depth = stats.avg_depth();
             let prev_max_depth = stats.max_depth();
@@ -129,25 +131,38 @@ impl BasicMCTS {
         }
     }
 
-    fn search_step<C: EngineConfig>(
+    fn search_step<C: EngineConfig, const ROOT: bool>(
+        current_node_idx: NodeIndex,
         mut position: ChessPosition,
         params: &ClassicalSearchParams,
+        stats: &SearchStats,
         engine: &Engine<C>,
         depth: &mut u64,
-    ) -> f64 
+    ) -> <C::Backpropagation as BackpropagationStrategy<C>>::Payload
     where
         C::Exploration: ExplorationStrategy<C>,
         C::Expansion: ExpansionStrategy<C>,
         C::Simulation: SimulationStrategy<C>,
         C::Backpropagation: BackpropagationStrategy<C>,
+        C::Node: HasVisits,
     {
-        *depth = depth.saturating_add(1);
+        let current_node = &engine.tree()[current_node_idx];
 
-        if *depth < 50  {
-            Self::search_step(position, params, engine, depth);
-        }
+        let payload = if current_node.visits() == 0 {
+            //simulate & expand
+            let evaluation = C::Simulation::execute(engine.params().simulation(), engine, stats);
+            C::Backpropagation::build_payload(evaluation, engine)
+        } else {
+            //select until leaf
 
-        0.5
+            *depth = depth.saturating_add(1);
+            Self::search_step::<_, false>(current_node_idx, position, params, stats, engine, depth)
+        };
+
+        //backpropagate
+        C::Backpropagation::execute(&payload, engine.params().backpropagation(), engine);
+
+        payload
     }
 }
 
@@ -166,9 +181,9 @@ fn should_stop<C: EngineConfig>(
         return true;
     }
 
-    if engine.tree().is_full() {
-        return true;
-    }
+    // if engine.tree().is_full() {
+    //     return true;
+    // }
 
     if iterations.is_multiple_of(HARD_LIMIT_CHECK_THRESHOLD)
         && time_manager.hard_limit(

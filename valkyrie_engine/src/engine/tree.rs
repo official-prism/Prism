@@ -41,61 +41,38 @@ pub mod nodes;
 
 pub(crate) mod node_index;
 
+use std::ops::Index;
+
 pub use edge_storage::EdgesStore;
 pub use node_index::{AtomicNodeIndex, NodeIndex};
 
 #[derive(Debug)]
 pub struct Tree<N> {
     nodes: Vec<N>,
-    capacity: usize,
+    root_idx: AtomicNodeIndex,
 }
 
 impl<N> Tree<N> {
     pub fn new(size_in_mb: usize) -> Self {
-        let capacity = Self::capacity_for(size_in_mb);
-        Self {
-            nodes: Vec::with_capacity(capacity),
-            capacity,
+        Self { 
+            nodes:Vec::new(), 
+            root_idx: AtomicNodeIndex::new(NodeIndex::NULL) 
         }
     }
 
-    fn capacity_for(size_in_mb: usize) -> usize {
-        let bytes = size_in_mb * 1024 * 1024;
-        bytes / std::mem::size_of::<N>().max(1)
-    }
-
     pub fn resize(&mut self, size_in_mb: usize) {
-        *self = Self::new(size_in_mb);
+        *self = Self::new(size_in_mb)
     }
 
-    pub fn clear(&mut self) {
-        self.nodes.clear();
+    pub fn root_index(&self) -> NodeIndex {
+        self.root_idx.load()
     }
+}
 
-    #[inline]
-    pub fn get(&self, index: NodeIndex) -> Option<&N> {
-        self.nodes.get(index.raw() as usize)
-    }
+impl<N> Index<NodeIndex> for Tree<N>  {
+    type Output = N;
 
-    #[inline]
-    pub fn push(&mut self, node: N) -> NodeIndex {
-        let index = NodeIndex::new(self.nodes.len() as u64);
-        self.nodes.push(node);
-        index
-    }
-
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.nodes.len()
-    }
-
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
-    }
-
-    #[inline]
-    pub fn is_full(&self) -> bool {
-        self.nodes.len() >= self.capacity
+    fn index(&self, index: NodeIndex) -> &Self::Output {
+        self.nodes.get(index.raw() as usize).unwrap()
     }
 }

@@ -39,5 +39,11 @@ use crate::prelude::*;
 crate::register_strategy!(material_evaluation);
 
 pub trait SimulationStrategy<C: EngineConfig>: Strategy {
-    fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats) -> (f64, f32); //TODO: I need better and dynamic signature of this (and likely other) signatures
+    type Output;
+
+    fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats) -> Self::Output;
+}
+
+pub trait HasScalarScore {
+    fn score(&self) -> f64;
 }
