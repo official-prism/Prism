@@ -35,10 +35,7 @@
 */
 
 use crate::{
-    engine::builder::{
-        HasScalarScore,
-        SimulationStrategy,
-    },
+    engine::builder::SimulationStrategy,
     prelude::*,
 };
 
@@ -51,15 +48,19 @@ impl Strategy for MaterialEvaluation {
 
 impl<C: EngineConfig> SimulationStrategy<C> for MaterialEvaluation
 {
-    type Output = (f64, f32);
+    type Output = f64;
 
     fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) -> Self::Output {
-        (0.5, 1.0)
+        0.5
     }
 }
 
-impl HasScalarScore for (f64, f32) {
-    fn score(&self) -> f64 {
-        self.0
+impl Flippable for f64 {
+    fn flip(&mut self) {
+        *self = 1.0 - *self;
+    }
+
+    fn flipped(&self) -> Self {
+        1.0 - *self
     }
 }

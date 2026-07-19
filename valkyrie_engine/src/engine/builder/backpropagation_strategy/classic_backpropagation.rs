@@ -35,13 +35,7 @@
 */
 
 use crate::{
-    engine::{
-        builder::{
-            HasScalarScore,
-            SimulationStrategy,
-        },
-        tree::components::{HasDrawChance, HasScoreSum, HasVisits},
-    },
+    engine::tree::components::{HasDrawChance, HasScoreSum, HasVisits},
     prelude::*,
 };
 
@@ -54,23 +48,10 @@ impl Strategy for ClassicBackpropagate {
 
 impl<C: EngineConfig> BackpropagationStrategy<C> for ClassicBackpropagate
 where
+    C::Simulation: SimulationStrategy<C, Output = f64>,
     C::Edge: HasScoreSum + HasDrawChance + HasVisits,
-    C::Simulation: SimulationStrategy<C>,
-    <C::Simulation as SimulationStrategy<C>>::Output: HasScalarScore,
 {
-    type Payload = f64;
-
-    fn build_payload(
-        evaluation: <C::Simulation as SimulationStrategy<C>>::Output,
-        _engine: &Engine<C>,
-    ) -> Self::Payload
-    where
-        C::Simulation: SimulationStrategy<C>,
-    {
-        evaluation.score()
-    }
-
-    fn execute(_payload: &Self::Payload, _params: &Self::Params, _engine: &Engine<C>) {
+    fn execute(_payload: &f64, _params: &Self::Params, _engine: &Engine<C>) {
 
     }
 }

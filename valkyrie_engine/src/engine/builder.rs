@@ -45,7 +45,7 @@ pub mod time_manager_strategy;
 pub use self::best_move_strategy::BestMoveStrategy;
 pub use self::expansion_strategy::ExpansionStrategy;
 pub use self::exploration_strategy::ExplorationStrategy;
-pub use self::simulation_strategy::{HasScalarScore, SimulationStrategy};
+pub use self::simulation_strategy::{Flippable, SimulationStrategy};
 pub use self::backpropagation_strategy::BackpropagationStrategy;
 pub use self::search_strategy::SearchStrategy;
 pub use self::time_manager_strategy::TimeManagerStrategy;

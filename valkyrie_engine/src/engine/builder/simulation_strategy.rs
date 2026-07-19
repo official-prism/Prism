@@ -39,11 +39,12 @@ use crate::prelude::*;
 crate::register_strategy!(material_evaluation);
 
 pub trait SimulationStrategy<C: EngineConfig>: Strategy {
-    type Output;
+    type Output: Flippable;
 
     fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats) -> Self::Output;
 }
 
-pub trait HasScalarScore {
-    fn score(&self) -> f64;
+pub trait Flippable: Sized {
+    fn flip(&mut self);
+    fn flipped(&self) -> Self;
 }

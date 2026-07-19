@@ -50,18 +50,24 @@ pub use node_index::{AtomicNodeIndex, NodeIndex};
 pub struct Tree<N> {
     nodes: Vec<N>,
     root_idx: AtomicNodeIndex,
+    size_in_mb: usize,
 }
 
 impl<N> Tree<N> {
     pub fn new(size_in_mb: usize) -> Self {
         Self { 
             nodes:Vec::new(), 
-            root_idx: AtomicNodeIndex::new(NodeIndex::NULL) 
+            root_idx: AtomicNodeIndex::new(NodeIndex::NULL),
+            size_in_mb
         }
     }
 
     pub fn resize(&mut self, size_in_mb: usize) {
         *self = Self::new(size_in_mb)
+    }
+
+    pub fn clear(&mut self) {
+        *self = Self::new(self.size_in_mb)
     }
 
     pub fn root_index(&self) -> NodeIndex {

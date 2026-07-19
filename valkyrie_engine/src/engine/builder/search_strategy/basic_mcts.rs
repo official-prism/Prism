@@ -138,7 +138,7 @@ impl BasicMCTS {
         stats: &SearchStats,
         engine: &Engine<C>,
         depth: &mut u64,
-    ) -> <C::Backpropagation as BackpropagationStrategy<C>>::Payload
+    ) -> <C::Simulation as SimulationStrategy<C>>::Output
     where
         C::Exploration: ExplorationStrategy<C>,
         C::Expansion: ExpansionStrategy<C>,
@@ -150,8 +150,7 @@ impl BasicMCTS {
 
         let payload = if current_node.visits() == 0 {
             //simulate & expand
-            let evaluation = C::Simulation::execute(engine.params().simulation(), engine, stats);
-            C::Backpropagation::build_payload(evaluation, engine)
+            C::Simulation::execute(engine.params().simulation(), engine, stats)
         } else {
             //select until leaf
 
@@ -162,7 +161,7 @@ impl BasicMCTS {
         //backpropagate
         C::Backpropagation::execute(&payload, engine.params().backpropagation(), engine);
 
-        payload
+        payload.flipped()
     }
 }
 

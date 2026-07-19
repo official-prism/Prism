@@ -34,22 +34,16 @@
     documentation.
 */
 
-use crate::{
-    engine::builder::SimulationStrategy,
-    prelude::*,
-};
+use crate::prelude::*;
 
 crate::register_strategy!(classic_backpropagation);
 
 pub trait BackpropagationStrategy<C: EngineConfig>: Strategy {
-    type Payload;
-
-    fn build_payload(
-        evaluation: <C::Simulation as SimulationStrategy<C>>::Output,
+    fn execute(
+        payload: &<C::Simulation as SimulationStrategy<C>>::Output,
+        params: &Self::Params,
         engine: &Engine<C>,
-    ) -> Self::Payload
+    )
     where
         C::Simulation: SimulationStrategy<C>;
-
-    fn execute(payload: &Self::Payload, params: &Self::Params, engine: &Engine<C>);
 }
