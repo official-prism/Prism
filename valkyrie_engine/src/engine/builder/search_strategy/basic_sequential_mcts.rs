@@ -38,10 +38,10 @@ use std::time::Instant;
 
 use valkyrie_chess::ChessPosition;
 
-use crate::{engine::{builder::SimulationStrategy, tree::components::HasVisits}, prelude::*};
+use crate::{engine::{builder::SimulationStrategy, policy_entry::PolicyEntry, tree::components::{HasChild, HasGameState, HasMove, HasVisits}}, prelude::*};
 
 #[derive(Debug)]
-pub struct BasicMCTS;
+pub struct BasicSequentialMCTS;
 
 const SOFT_LIMIT_CHECK_THRESHOLD: u64 = 4096;
 const HARD_LIMIT_CHECK_THRESHOLD: u64 = 128;
@@ -52,11 +52,11 @@ crate::define_strategy_params! {
     ClassicalSearchParams { }
 }
 
-impl Strategy for BasicMCTS {
+impl Strategy for BasicSequentialMCTS {
     type Params = ClassicalSearchParams;
 }
 
-impl<C: EngineConfig> SearchStrategy<C> for BasicMCTS
+impl<C: EngineConfig> SearchStrategy<C> for BasicSequentialMCTS
 where
     C::TimeManager: TimeManagerStrategy<C>,
     C::Logger: LoggerTrait<C>,
@@ -64,11 +64,16 @@ where
     C::Expansion: ExpansionStrategy<C>,
     C::Simulation: SimulationStrategy<C>,
     C::Backpropagation: BackpropagationStrategy<C>,
+    C::BestMove: BestMoveStrategy<C>,
     C::Node: HasVisits,
 {
     fn execute(limits: &SearchLimits, params: &Self::Params, engine: &Engine<C>) -> SearchStats {
         let search_stats = SearchStats::new();
         let search_time = Instant::now();
+
+        if engine.tree()[engine.tree().root_index()].edge_count() == 0 {
+            Self::expand_node(&engine.tree()[engine.tree().root_index()], engine.position(), engine);
+        }
 
         Self::main_thread_search(limits, &search_stats, search_time, params, engine);
 
@@ -79,13 +84,15 @@ where
             engine,
             true,
         );
-        C::Logger::best_move(Move::NULL, engine.params().logger(), engine);
+
+        let (best_move, _) = C::BestMove::execute(0, engine.params().best_move(), engine);
+        C::Logger::best_move(best_move, engine.params().logger(), engine);
 
         search_stats
     }
 }
 
-impl BasicMCTS {
+impl BasicSequentialMCTS {
     fn main_thread_search<C: EngineConfig>(
         limits: &SearchLimits,
         stats: &SearchStats,
@@ -110,7 +117,10 @@ impl BasicMCTS {
             let position = engine.position().clone();
             let mut depth = 0;
 
-            Self::search_step::<_, true>(engine.tree().root_index(), position, params, stats, engine, &mut depth);
+            if Self::search_step::<_, true>(engine.tree().root_index(), position, params, stats, engine, &mut depth).is_none() {
+                engine.set_interruption_token(true);
+                break;
+            }
 
             let prev_avg_depth = stats.avg_depth();
             let prev_max_depth = stats.max_depth();
@@ -131,14 +141,26 @@ impl BasicMCTS {
         }
     }
 
+    fn expand_node<C: EngineConfig>(node: &C::Node, position: &ChessPosition, engine: &Engine<C>)
+    where
+        C::Expansion: ExpansionStrategy<C>,
+    {
+        let mut policy_distribution = Vec::with_capacity(35);
+        position.board().map_legal_moves(|mv| {
+            policy_distribution.push(PolicyEntry::new(mv, 1.0));
+        });
+
+        C::Expansion::execute(&mut policy_distribution, node, engine.params().expansion(), engine);
+    }
+
     fn search_step<C: EngineConfig, const ROOT: bool>(
         current_node_idx: NodeIndex,
-        mut position: ChessPosition,
+        position: ChessPosition,
         params: &ClassicalSearchParams,
         stats: &SearchStats,
         engine: &Engine<C>,
         depth: &mut u64,
-    ) -> <C::Simulation as SimulationStrategy<C>>::Output
+    ) -> Option<<C::Simulation as SimulationStrategy<C>>::Output>
     where
         C::Exploration: ExplorationStrategy<C>,
         C::Expansion: ExpansionStrategy<C>,
@@ -148,20 +170,49 @@ impl BasicMCTS {
     {
         let current_node = &engine.tree()[current_node_idx];
 
-        let payload = if current_node.visits() == 0 {
-            //simulate & expand
-            C::Simulation::execute(engine.params().simulation(), engine, stats)
+        let payload = if !ROOT &&
+            (current_node.visits() == 0 || current_node.edge_count() == 0 || current_node.is_terminal()) {
+            if current_node.visits() == 0 {
+                Self::expand_node(current_node, &position, engine);
+            }
+
+            C::Simulation::execute(&[], &position, engine.params().simulation(), engine) //TODO
         } else {
-            //select until leaf
+            let distrib = C::Exploration::execute(current_node, 1, engine.params().exploration(), engine);
+            let edge_idx = distrib.as_slice()[0].edge_index();
+
+            let (mv, child_idx) = {
+                let edges_lock = current_node.edges();
+                let edge = edges_lock.get(edge_idx).unwrap();
+
+                let child_idx = if edge.has_child() {
+                    edge.child()
+                } else {
+                    let new_node_idx = engine.tree().create_node()?;
+                    edge.set_child(new_node_idx);
+                    new_node_idx
+                };
+
+                (edge.mv(), child_idx)
+            };
+
+            let mut position_clone = position.clone();
+            position_clone.make_move_no_mask(mv);
 
             *depth = depth.saturating_add(1);
-            Self::search_step::<_, false>(current_node_idx, position, params, stats, engine, depth)
+
+            let payload_opt = Self::search_step::<_, false>(child_idx, position_clone, params, stats, engine, depth);
+
+            let payload = payload_opt?;
+
+            C::Backpropagation::execute(&payload, current_node, edge_idx, engine.params().backpropagation(), engine);
+
+            payload
         };
 
-        //backpropagate
-        C::Backpropagation::execute(&payload, engine.params().backpropagation(), engine);
+        current_node.add_visit();
 
-        payload.flipped()
+        Some(payload.flipped())
     }
 }
 
@@ -180,9 +231,9 @@ fn should_stop<C: EngineConfig>(
         return true;
     }
 
-    // if engine.tree().is_full() {
-    //     return true;
-    // }
+    if engine.tree().is_full() {
+        return true;
+    }
 
     if iterations.is_multiple_of(HARD_LIMIT_CHECK_THRESHOLD)
         && time_manager.hard_limit(

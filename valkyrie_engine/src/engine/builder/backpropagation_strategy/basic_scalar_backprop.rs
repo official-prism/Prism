@@ -35,23 +35,31 @@
 */
 
 use crate::{
-    engine::tree::components::{HasDrawChance, HasScoreSum, HasVisits},
+    engine::tree::components::{
+        HasScoreSum,
+        HasVisits,
+    },
     prelude::*,
 };
 
 #[derive(Debug)]
-pub struct ClassicBackpropagate;
+pub struct BasicScalarBackpropagate;
 
-impl Strategy for ClassicBackpropagate {
+impl Strategy for BasicScalarBackpropagate {
     type Params = EmptyParams;
 }
 
-impl<C: EngineConfig> BackpropagationStrategy<C> for ClassicBackpropagate
+impl<C: EngineConfig> BackpropagationStrategy<C> for BasicScalarBackpropagate
 where
-    C::Simulation: SimulationStrategy<C, Output = f64>,
-    C::Edge: HasScoreSum + HasDrawChance + HasVisits,
+    C::Simulation: SimulationStrategy<C, Output = f32>,
+    C::Edge: HasScoreSum + HasVisits,
+    C::Node: HasVisits
 {
-    fn execute(_payload: &f64, _params: &Self::Params, _engine: &Engine<C>) {
+    fn execute(payload: &f32, node: &C::Node, edge_idx: usize, _params: &Self::Params, _engine: &Engine<C>) {
+        node.add_visit();
 
+        let edges = node.edges();
+        edges[edge_idx].add_visit();
+        edges[edge_idx].add_score(*payload);
     }
 }

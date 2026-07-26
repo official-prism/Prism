@@ -36,7 +36,7 @@
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use super::HasComponent;
+use super::{Clear, HasComponent};
 
 #[derive(Debug, Default)]
 pub struct PolicyStore(AtomicU32);
@@ -45,6 +45,13 @@ impl Clone for PolicyStore {
     #[inline]
     fn clone(&self) -> Self {
         Self(AtomicU32::new(self.0.load(Ordering::Relaxed)))
+    }
+}
+
+impl Clear for PolicyStore {
+    #[inline]
+    fn clear(&self) {
+        self.0.store(0, Ordering::Relaxed);
     }
 }
 

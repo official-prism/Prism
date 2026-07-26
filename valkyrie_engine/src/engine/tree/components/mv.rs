@@ -38,7 +38,7 @@ use std::sync::atomic::{AtomicU16, Ordering};
 
 use valkyrie_chess::Move;
 
-use super::HasComponent;
+use super::{Clear, HasComponent};
 
 #[derive(Debug, Default)]
 pub struct MoveStore(AtomicU16);
@@ -47,6 +47,13 @@ impl Clone for MoveStore {
     #[inline]
     fn clone(&self) -> Self {
         Self(AtomicU16::new(self.0.load(Ordering::Relaxed)))
+    }
+}
+
+impl Clear for MoveStore {
+    #[inline]
+    fn clear(&self) {
+        self.0.store(0, Ordering::Relaxed);
     }
 }
 

@@ -41,25 +41,50 @@ pub mod nodes;
 
 pub(crate) mod node_index;
 
-use std::ops::Index;
+use std::{
+    ops::Index,
+    sync::atomic::{
+        AtomicUsize,
+        Ordering,
+    },
+};
+
+use components::NodeType;
 
 pub use edge_storage::EdgesStore;
-pub use node_index::{AtomicNodeIndex, NodeIndex};
+pub use node_index::{
+    AtomicNodeIndex,
+    NodeIndex,
+};
+
+const AVERAGE_EDGES_PER_NODE: usize = 30;
 
 #[derive(Debug)]
 pub struct Tree<N> {
     nodes: Vec<N>,
     root_idx: AtomicNodeIndex,
     size_in_mb: usize,
+    current_len: AtomicUsize,
 }
 
-impl<N> Tree<N> {
+impl<N: NodeType> Tree<N> {
     pub fn new(size_in_mb: usize) -> Self {
-        Self { 
-            nodes:Vec::new(), 
+        let bytes = size_in_mb * 1024 * 1024;
+        let node_size = size_of::<N>() + size_of::<N::Edge>() * AVERAGE_EDGES_PER_NODE;
+        let size = bytes / node_size;
+
+        let tree = Self {
+            nodes: vec![N::default(); size],
             root_idx: AtomicNodeIndex::new(NodeIndex::NULL),
-            size_in_mb
+            size_in_mb,
+            current_len: AtomicUsize::new(0),
+        };
+
+        if let Some(root_idx) = tree.create_node() {
+            tree.root_idx.store(root_idx);
         }
+
+        tree
     }
 
     pub fn resize(&mut self, size_in_mb: usize) {
@@ -72,6 +97,38 @@ impl<N> Tree<N> {
 
     pub fn root_index(&self) -> NodeIndex {
         self.root_idx.load()
+    }
+
+    pub fn root_node(&self) -> &N {
+        &self[self.root_index()]
+    }
+
+    pub fn len(&self) -> usize {
+        self.current_len.load(Ordering::Relaxed)
+    }
+    
+    pub fn capacity(&self) -> usize {
+        self.nodes.len()
+    }
+    
+    pub fn size_in_mb(&self) -> usize {
+        self.size_in_mb
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.len() >= self.capacity()
+    }
+
+    pub fn create_node(&self) -> Option<NodeIndex> {
+        let node_idx = self
+            .current_len
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |len| {
+                (len < self.capacity()).then_some(len + 1)
+            })
+            .ok()?;
+
+        self.nodes[node_idx].clear();
+        Some(NodeIndex::new(node_idx))
     }
 }
 

@@ -34,21 +34,21 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct NodeIndex(u64);
+pub struct NodeIndex(usize);
 
 impl NodeIndex {
-    pub const NULL: Self = Self(u64::MAX);
+    pub const NULL: Self = Self(usize::MAX);
 
     #[inline]
-    pub fn new(value: u64) -> Self {
+    pub fn new(value: usize) -> Self {
         Self(value)
     }
 
     #[inline]
-    pub fn raw(&self) -> u64 {
+    pub fn raw(&self) -> usize {
         self.0
     }
 }
@@ -59,14 +59,14 @@ impl Default for NodeIndex {
     }
 }
 
-impl From<u64> for NodeIndex {
+impl From<usize> for NodeIndex {
     #[inline]
-    fn from(value: u64) -> Self {
+    fn from(value: usize) -> Self {
         Self(value)
     }
 }
 
-impl From<NodeIndex> for u64 {
+impl From<NodeIndex> for usize {
     #[inline]
     fn from(value: NodeIndex) -> Self {
         value.0
@@ -74,17 +74,17 @@ impl From<NodeIndex> for u64 {
 }
 
 #[derive(Debug)]
-pub struct AtomicNodeIndex(AtomicU64);
+pub struct AtomicNodeIndex(AtomicUsize);
 
 impl AtomicNodeIndex {
     #[inline]
     pub fn new(index: NodeIndex) -> Self {
-        Self(AtomicU64::new(index.raw()))
+        Self(AtomicUsize::new(index.raw()))
     }
 
     #[inline]
     pub fn null() -> Self {
-        Self(AtomicU64::new(NodeIndex::NULL.raw()))
+        Self(AtomicUsize::new(NodeIndex::NULL.raw()))
     }
 
     #[inline]

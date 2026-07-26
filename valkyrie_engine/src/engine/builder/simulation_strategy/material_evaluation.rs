@@ -34,10 +34,18 @@
     documentation.
 */
 
+use valkyrie_chess::{
+    ChessPosition,
+    Piece,
+};
+
 use crate::{
     engine::builder::SimulationStrategy,
     prelude::*,
 };
+
+const PIECE_VALUES: [i32; 5] = [100, 300, 330, 500, 900];
+const EVAL_SCALE: f32 = 400.0;
 
 #[derive(Debug)]
 pub struct MaterialEvaluation;
@@ -46,16 +54,31 @@ impl Strategy for MaterialEvaluation {
     type Params = EmptyParams;
 }
 
-impl<C: EngineConfig> SimulationStrategy<C> for MaterialEvaluation
-{
-    type Output = f64;
+impl<C: EngineConfig> SimulationStrategy<C> for MaterialEvaluation {
+    type Output = f32;
 
-    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) -> Self::Output {
-        0.5
+    fn execute(_raw_eval: &[f32], position: &ChessPosition, _params: &Self::Params, _engine: &Engine<C>) -> Self::Output {
+        let board = position.board();
+        let side = board.side();
+
+        let mut score = 0i32;
+        for (index, value) in PIECE_VALUES.iter().enumerate() {
+            let piece = Piece::from(index);
+            let own = board.piece_mask_for_side(piece, side).pop_count() as i32;
+            let opponent = board.piece_mask_for_side(piece, side.flipped()).pop_count() as i32;
+
+            score += (own - opponent) * value;
+        }
+
+        sigmoid(score as f32)
     }
 }
 
-impl Flippable for f64 {
+fn sigmoid(score: f32) -> f32 {
+    1.0 / (1.0 + (-score / EVAL_SCALE).exp())
+}
+
+impl Flippable for f32 {
     fn flip(&mut self) {
         *self = 1.0 - *self;
     }

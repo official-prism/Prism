@@ -35,5 +35,5 @@
 */
 
 pub trait HasQ {
-    fn q(&self) -> f64;
+    fn q(&self) -> f32;
 }

@@ -35,7 +35,7 @@
 */
 
 use crate::engine::tree::components::{
-    ChildStore, DrawStore, HasQ, HasScoreSum, HasVisits, MoveStore, PolicyStore, ScoreSumStore,
+    ChildStore, HasQ, HasScoreSum, HasVisits, MoveStore, PolicyStore, ScoreSumStore,
     VisitsStore,
 };
 
@@ -46,18 +46,17 @@ crate::compose_edge! {
         visits: VisitsStore,
         policy: PolicyStore,
         score: ScoreSumStore,
-        draw: DrawStore,
     }
 }
 
 impl HasQ for AvgScoreEdge {
     #[inline]
-    fn q(&self) -> f64 {
+    fn q(&self) -> f32 {
         let visits = self.visits.visits();
         if visits == 0 {
             0.0
         } else {
-            self.score.total_score() / visits as f64
+            self.score.total_score() / visits as f32
         }
     }
 }

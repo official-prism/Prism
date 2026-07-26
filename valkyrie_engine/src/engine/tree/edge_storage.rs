@@ -36,10 +36,17 @@
 
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use super::components::EdgeType;
+use super::components::{Clear, EdgeType};
 
 #[derive(Debug, Default)]
 pub struct EdgesStore<E: EdgeType>(RwLock<Vec<E>>);
+
+impl<E: EdgeType> Clear for EdgesStore<E> {
+    #[inline]
+    fn clear(&self) {
+        self.write().clear();
+    }
+}
 
 impl<E: EdgeType> EdgesStore<E> {
     #[inline]

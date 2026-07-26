@@ -34,19 +34,27 @@
     documentation.
 */
 
-use valkyrie_chess::ChessPosition;
+use valkyrie_chess::Move;
 
-use crate::prelude::*;
-
-crate::register_strategy!(material_evaluation);
-
-pub trait SimulationStrategy<C: EngineConfig>: Strategy {
-    type Output: Flippable;
-
-    fn execute(raw_eval: &[f32], position: &ChessPosition, params: &Self::Params, engine: &Engine<C>) -> Self::Output;
+pub struct PolicyEntry {
+    mv: Move,
+    policy: f32,
 }
 
-pub trait Flippable: Sized {
-    fn flip(&mut self);
-    fn flipped(&self) -> Self;
+impl PolicyEntry {
+    pub fn new(mv: Move, policy: f32) -> Self {
+        Self { mv, policy }
+    }
+
+    pub fn mv(&self) -> Move {
+        self.mv
+    }
+
+    pub fn policy(&self) -> f32 {
+        self.policy
+    }
+
+    pub fn set_policy(&mut self, value: f32) {
+        self.policy = value;
+    }
 }

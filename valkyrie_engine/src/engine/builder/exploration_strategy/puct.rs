@@ -48,7 +48,7 @@ pub struct Puct;
 crate::define_strategy_params! {
     PuctParams {
         Tunables {
-            cpuct: f64 => 1.41, 0.1, 5.0, 0.1, 0.1;
+            cpuct: f32 => 1.41, 0.1, 5.0, 0.1, 0.1;
         }
     }
 }
@@ -71,7 +71,7 @@ where
         let parent_visits = node.visits();
 
         let mut edge_idx = usize::MAX;
-        let mut best_puct = f64::NEG_INFINITY;
+        let mut best_puct = f32::NEG_INFINITY;
 
         for (idx, edge) in node.edges().iter().enumerate() {
             let child_visits = edge.visits();
@@ -83,7 +83,7 @@ where
 
             let expl_score = exploration_score(parent_visits, child_visits);
 
-            let puct = score + cpuct * (edge.policy() as f64) * expl_score;
+            let puct = score + cpuct * edge.policy() * expl_score;
 
             if puct > best_puct {
                 best_puct = puct;
@@ -99,7 +99,7 @@ where
     }
 }
 
-fn cpuct<C: EngineConfig>(_parent_node: &<C as EngineConfig>::Node, params: &PuctParams) -> f64
+fn cpuct<C: EngineConfig>(_parent_node: &<C as EngineConfig>::Node, params: &PuctParams) -> f32
 where
     C::Node: HasVisits,
     C::Edge: HasVisits + HasPolicy + HasQ, 
@@ -107,6 +107,6 @@ where
     params.cpuct()
 }
 
-fn exploration_score(parent_visits: u64, child_visits: u64) -> f64 {
-    (parent_visits as f64).sqrt().max(1.0) / (child_visits as f64 + 1.0)
+fn exploration_score(parent_visits: u64, child_visits: u64) -> f32 {
+    (parent_visits as f32).sqrt().max(1.0) / (child_visits as f32 + 1.0)
 }

@@ -70,6 +70,16 @@ macro_rules! compose_node {
             edges: $crate::engine::tree::edge_storage::EdgesStore<E>,
         }
 
+        impl<E: $crate::engine::tree::components::EdgeType>
+            $crate::engine::tree::components::Clear for $name<E>
+        {
+            #[inline]
+            fn clear(&self) {
+                $( $crate::engine::tree::components::Clear::clear(&self.$field); )*
+                $crate::engine::tree::components::Clear::clear(&self.edges);
+            }
+        }
+
         $(
             impl<E: $crate::engine::tree::components::EdgeType>
                 $crate::engine::tree::components::HasComponent<$store> for $name<E>

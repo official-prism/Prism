@@ -36,11 +36,13 @@
 
 use crate::prelude::*;
 
-crate::register_strategy!(classic_backpropagation);
+crate::register_strategy!(basic_scalar_backprop);
 
 pub trait BackpropagationStrategy<C: EngineConfig>: Strategy {
     fn execute(
         payload: &<C::Simulation as SimulationStrategy<C>>::Output,
+        node: &C::Node,
+        edge_idx: usize,
         params: &Self::Params,
         engine: &Engine<C>,
     )

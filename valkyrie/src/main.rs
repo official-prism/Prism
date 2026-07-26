@@ -43,11 +43,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use command_processors::misc_processor::MiscProcessor;
 use command_processors::uci_processor::UciProcessor;
 use input_wrapper::InputWrapper;
-use valkyrie_engine::engine::builder::backpropagation_strategy::ClassicBackpropagate;
+use valkyrie_engine::engine::builder::backpropagation_strategy::BasicScalarBackpropagate;
 use valkyrie_engine::engine::builder::best_move_strategy::MaxQ;
 use valkyrie_engine::engine::builder::expansion_strategy::ClassicExpansion;
 use valkyrie_engine::engine::builder::exploration_strategy::Puct;
-use valkyrie_engine::engine::builder::search_strategy::BasicMCTS;
+use valkyrie_engine::engine::builder::search_strategy::BasicSequentialMCTS;
 use valkyrie_engine::engine::builder::simulation_strategy::MaterialEvaluation;
 use valkyrie_engine::engine::builder::time_manager_strategy::SimpleTimeManager;
 use valkyrie_engine::engine::tree::edges::AvgScoreEdge;
@@ -60,8 +60,8 @@ fn main() {
         .exploration::<Puct>()
         .expansion::<ClassicExpansion>()
         .simulation::<MaterialEvaluation>()
-        .backpropagation::<ClassicBackpropagate>()
-        .search::<BasicMCTS>()
+        .backpropagation::<BasicScalarBackpropagate>()
+        .search::<BasicSequentialMCTS>()
         .time_manager::<SimpleTimeManager>()
         .node::<ClassicNode<AvgScoreEdge>>()
         .logger::<crate::logger::Logger>()

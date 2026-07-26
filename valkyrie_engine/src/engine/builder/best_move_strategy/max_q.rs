@@ -35,29 +35,50 @@
 */
 
 use crate::{
-    engine::tree::components::{HasQ, HasVisits},
+    engine::tree::components::{
+        HasMove,
+        HasQ,
+        HasVisits,
+    },
     prelude::*,
 };
 
 #[derive(Debug)]
 pub struct MaxQ;
 
-crate::define_strategy_params! {
-    MaxQParams {
-        Options {
-            ["MaxQ_Depth"] depth: i32 => 10, 1, 100;
-            ["MaxQ_Verbose"] verbose: bool => false;
-        }
-    }
-}
+const EVAL_SCALE: f32 = 400.0;
+const SCORE_EPSILON: f32 = 0.0001;
 
 impl Strategy for MaxQ {
-    type Params = MaxQParams;
+    type Params = EmptyParams;
 }
 
 impl<C: EngineConfig> BestMoveStrategy<C> for MaxQ
 where
     C::Edge: HasQ + HasVisits,
 {
-    fn execute(_params: &Self::Params, _engine: &Engine<C>, _search_stats: &SearchStats) {}
+    fn execute(line_idx: usize, _params: &Self::Params, engine: &Engine<C>) -> (Move, i32) {
+        let edges = engine.tree().root_node().edges();
+
+        let mut ranking: Vec<usize> = (0..edges.len()).collect();
+        ranking.sort_unstable_by(|&lhs, &rhs| {
+            let (lhs, rhs) = (&edges[lhs], &edges[rhs]);
+            rhs.q()
+                .total_cmp(&lhs.q())
+                .then(rhs.visits().cmp(&lhs.visits()))
+        });
+
+        let Some(&edge_idx) = ranking.get(line_idx) else {
+            return (Move::NULL, 0);
+        };
+
+        let edge = &edges[edge_idx];
+
+        (edge.mv(), score_to_cp(edge.q()))
+    }
+}
+
+fn score_to_cp(score: f32) -> i32 {
+    let score = score.clamp(SCORE_EPSILON, 1.0 - SCORE_EPSILON);
+    (-EVAL_SCALE * (1.0 / score - 1.0).ln()) as i32
 }

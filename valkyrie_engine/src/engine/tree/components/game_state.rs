@@ -36,7 +36,7 @@
 
 use std::sync::atomic::{AtomicU16, Ordering};
 
-use super::HasComponent;
+use super::{Clear, HasComponent};
 
 const PAYLOAD_OFFSET: u16 = 14;
 const PAYLOAD_MASK: u16 = 0x3FFF;
@@ -57,6 +57,13 @@ impl Clone for GameStateStore {
     #[inline]
     fn clone(&self) -> Self {
         Self(AtomicU16::new(self.0.load(Ordering::Relaxed)))
+    }
+}
+
+impl Clear for GameStateStore {
+    #[inline]
+    fn clear(&self) {
+        self.0.store(Self::pack(GameState::Ongoing), Ordering::Relaxed);
     }
 }
 

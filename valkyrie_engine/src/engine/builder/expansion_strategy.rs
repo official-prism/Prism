@@ -34,10 +34,10 @@
     documentation.
 */
 
-use crate::prelude::*;
+use crate::{engine::policy_entry::PolicyEntry, prelude::*};
 
 crate::register_strategy!(classic_expansion);
 
 pub trait ExpansionStrategy<C: EngineConfig>: Strategy {
-    fn execute(params: &Self::Params, engine: &Engine<C>, search_stats: &SearchStats);
+    fn execute(policy_distribution: &mut [PolicyEntry], node: &C::Node, params: &Self::Params, engine: &Engine<C>);
 }

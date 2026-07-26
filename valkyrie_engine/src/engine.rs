@@ -43,6 +43,7 @@ mod logger;
 mod search_limits;
 mod search_stats;
 mod strategy_params;
+mod policy_entry;
 
 pub use builder::{EngineBuilder, EngineConfig, EngineParams, GeneralParams, SearchStrategy};
 pub use logger::{LoggerTrait, NoLogger};

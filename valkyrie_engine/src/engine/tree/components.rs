@@ -65,10 +65,14 @@ impl<C> HasComponent<C> for C {
     }
 }
 
+pub trait Clear {
+    fn clear(&self);
+}
+
 pub trait EdgeType: Clone + Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild {}
 impl<T: Clone + Default + std::fmt::Debug + Send + Sync + 'static + HasMove + HasChild> EdgeType for T {}
 
-pub trait NodeType: Clone + Default + std::fmt::Debug + Send + Sync + 'static + HasGameState {
+pub trait NodeType: Clone + Default + std::fmt::Debug + Send + Sync + 'static + HasGameState + Clear {
     type Edge: EdgeType;
 
     fn edges(&self) -> RwLockReadGuard<'_, Vec<Self::Edge>>;

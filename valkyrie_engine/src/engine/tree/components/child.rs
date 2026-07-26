@@ -36,10 +36,17 @@
 
 use crate::engine::tree::node_index::{AtomicNodeIndex, NodeIndex};
 
-use super::HasComponent;
+use super::{Clear, HasComponent};
 
 #[derive(Clone, Debug, Default)]
 pub struct ChildStore(AtomicNodeIndex);
+
+impl Clear for ChildStore {
+    #[inline]
+    fn clear(&self) {
+        self.0.store(NodeIndex::NULL);
+    }
+}
 
 pub trait HasChild {
     fn child(&self) -> NodeIndex;
