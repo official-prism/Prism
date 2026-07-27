@@ -49,13 +49,20 @@ use std::{
     },
 };
 
-use components::NodeType;
+use components::{
+    HasChild,
+    HasMove,
+    NodeType,
+};
 
 pub use edge_storage::EdgesStore;
 pub use node_index::{
     AtomicNodeIndex,
     NodeIndex,
 };
+use valkyrie_chess::Move;
+
+use crate::{Engine, EngineConfig, engine::builder::BestMoveStrategy};
 
 const AVERAGE_EDGES_PER_NODE: usize = 30;
 
@@ -129,6 +136,50 @@ impl<N: NodeType> Tree<N> {
 
         self.nodes[node_idx].clear();
         Some(NodeIndex::new(node_idx))
+    }
+
+    pub fn get_best_move<C: EngineConfig>(&self, engine: &Engine<C>) -> Move
+        where C::BestMove: BestMoveStrategy<C> 
+    {
+        let (mv, _) = C::BestMove::execute(self.root_index(), 0, engine.params().best_move(), engine);
+        mv
+    }
+
+    pub fn get_pv<C: EngineConfig>(&self, pv_idx: usize, engine: &Engine<C>) -> (i32, Vec<Move>)
+        where C::BestMove: BestMoveStrategy<C>
+    {
+        let mut pv = Vec::new();
+        let mut score = 0;
+        let mut node_idx = self.root_index();
+        let mut line_idx = pv_idx;
+
+        while self[node_idx].edge_count() > 0 {
+            let (mv, cp) = C::BestMove::execute(node_idx, line_idx, engine.params().best_move(), engine);
+
+            if mv == Move::NULL {
+                break;
+            }
+
+            if pv.is_empty() {
+                score = cp;
+            }
+
+            pv.push(mv);
+            line_idx = 0;
+
+            let child_idx = self[node_idx]
+                .edges()
+                .iter()
+                .find(|edge| edge.mv() == mv && edge.has_child())
+                .map(|edge| edge.child());
+
+            match child_idx {
+                Some(child_idx) => node_idx = child_idx,
+                None => break,
+            }
+        }
+
+        (score, pv)
     }
 }
 

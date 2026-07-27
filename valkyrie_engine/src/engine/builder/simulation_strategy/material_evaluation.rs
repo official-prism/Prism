@@ -77,13 +77,3 @@ impl<C: EngineConfig> SimulationStrategy<C> for MaterialEvaluation {
 fn sigmoid(score: f32) -> f32 {
     1.0 / (1.0 + (-score / EVAL_SCALE).exp())
 }
-
-impl Flippable for f32 {
-    fn flip(&mut self) {
-        *self = 1.0 - *self;
-    }
-
-    fn flipped(&self) -> Self {
-        1.0 - *self
-    }
-}

@@ -38,7 +38,20 @@ use std::time::Instant;
 
 use valkyrie_chess::ChessPosition;
 
-use crate::{engine::{builder::SimulationStrategy, policy_entry::PolicyEntry, tree::components::{HasChild, HasGameState, HasMove, HasVisits}}, prelude::*};
+use crate::{
+    engine::{
+        builder::SimulationStrategy,
+        policy_entry::PolicyEntry,
+        tree::components::{
+            GameState,
+            HasChild,
+            HasGameState,
+            HasMove,
+            HasVisits,
+        },
+    },
+    prelude::*,
+};
 
 #[derive(Debug)]
 pub struct BasicSequentialMCTS;
@@ -71,11 +84,19 @@ where
         let search_stats = SearchStats::new();
         let search_time = Instant::now();
 
-        if engine.tree()[engine.tree().root_index()].edge_count() == 0 {
-            Self::expand_node(&engine.tree()[engine.tree().root_index()], engine.position(), engine);
+        let root_node = &engine.tree()[engine.tree().root_index()];
+
+        if root_node.edge_count() == 0 {
+            root_node.set_game_state(node_state(engine.position(), engine));
+
+            if !root_node.is_terminal() {
+                Self::expand_node(root_node, engine.position(), engine);
+            }
         }
 
-        Self::main_thread_search(limits, &search_stats, search_time, params, engine);
+        if root_node.edge_count() > 0 {
+            Self::main_thread_search(limits, &search_stats, search_time, params, engine);
+        }
 
         C::Logger::search_report(
             search_time.elapsed().as_millis() as u64,
@@ -85,7 +106,7 @@ where
             true,
         );
 
-        let (best_move, _) = C::BestMove::execute(0, engine.params().best_move(), engine);
+        let best_move = engine.tree().get_best_move(engine);
         C::Logger::best_move(best_move, engine.params().logger(), engine);
 
         search_stats
@@ -141,18 +162,6 @@ impl BasicSequentialMCTS {
         }
     }
 
-    fn expand_node<C: EngineConfig>(node: &C::Node, position: &ChessPosition, engine: &Engine<C>)
-    where
-        C::Expansion: ExpansionStrategy<C>,
-    {
-        let mut policy_distribution = Vec::with_capacity(35);
-        position.board().map_legal_moves(|mv| {
-            policy_distribution.push(PolicyEntry::new(mv, 1.0));
-        });
-
-        C::Expansion::execute(&mut policy_distribution, node, engine.params().expansion(), engine);
-    }
-
     fn search_step<C: EngineConfig, const ROOT: bool>(
         current_node_idx: NodeIndex,
         position: ChessPosition,
@@ -172,11 +181,13 @@ impl BasicSequentialMCTS {
 
         let payload = if !ROOT &&
             (current_node.visits() == 0 || current_node.edge_count() == 0 || current_node.is_terminal()) {
-            if current_node.visits() == 0 {
+            let payload = Self::simulate_node(&[], current_node, &position, engine);
+
+            if current_node.visits() == 0 && !current_node.is_terminal() {
                 Self::expand_node(current_node, &position, engine);
             }
 
-            C::Simulation::execute(&[], &position, engine.params().simulation(), engine) //TODO
+            payload
         } else {
             let distrib = C::Exploration::execute(current_node, 1, engine.params().exploration(), engine);
             let edge_idx = distrib.as_slice()[0].edge_index();
@@ -214,6 +225,65 @@ impl BasicSequentialMCTS {
 
         Some(payload.flipped())
     }
+
+    fn expand_node<C: EngineConfig>(node: &C::Node, position: &ChessPosition, engine: &Engine<C>)
+    where
+        C::Expansion: ExpansionStrategy<C>,
+    {
+        let mut policy_distribution = Vec::with_capacity(35);
+        position.board().map_legal_moves(|mv| {
+            policy_distribution.push(PolicyEntry::new(mv, 1.0));
+        });
+
+        C::Expansion::execute(&mut policy_distribution, node, engine.params().expansion(), engine);
+    }
+
+    fn simulate_node<C: EngineConfig>(raw_evals: &[f32], node: &C::Node, position: &ChessPosition, engine: &Engine<C>) -> <<C as EngineConfig>::Simulation as SimulationStrategy<C>>::Output
+    where
+        C::Simulation: SimulationStrategy<C>,
+        C::Node: HasVisits,
+    {
+        if node.visits() == 0 {
+            node.set_game_state(node_state(position, engine));
+        }
+
+        match node.game_state() {
+            GameState::Won(_) => Payload::WIN,
+            GameState::Lost(_) => Payload::LOSS,
+            GameState::Drew => Payload::DRAW,
+            GameState::Ongoing => C::Simulation::execute(raw_evals, position, engine.params().simulation(), engine),
+        }
+    }
+
+}
+
+fn node_state<C: EngineConfig>(position: &ChessPosition, engine: &Engine<C>) -> GameState {
+    let mut possible_moves = 0;
+    position.board().map_legal_moves(|_| possible_moves += 1);
+
+    if possible_moves == 0 {
+        if position.board().is_in_check() {
+            GameState::Lost(0)
+        } else {
+            GameState::Drew
+        }
+    } else if is_draw(position, engine) {
+        GameState::Drew
+    } else {
+        GameState::Ongoing
+    }
+}
+
+fn is_draw<C: EngineConfig>(position: &ChessPosition, engine: &Engine<C>) -> bool {
+    if position.board().half_moves() >= 100 || position.board().is_insufficient_material() {
+        return true;
+    }
+
+    let key = position.board().hash();
+    let history_repetitions = engine.position().history().get_repetitions(key);
+    let search_repetitions = position.history().get_repetitions(key) - history_repetitions;
+
+    history_repetitions >= 3 || search_repetitions >= 2 || history_repetitions + search_repetitions >= 3
 }
 
 fn should_stop<C: EngineConfig>(

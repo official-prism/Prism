@@ -39,6 +39,7 @@ macro_rules! register_strategy {
     ($( $mod_name:ident ),+ $(,)?) => {
         $(
             pub mod $mod_name;
+            #[allow(unused_imports)]
             pub use self::$mod_name::*;
         )+
     };

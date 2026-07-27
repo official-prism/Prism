@@ -178,7 +178,7 @@ impl UciProcessor {
 
     fn go<C: EngineConfig>(
         args: &[&str],
-        engine: &Engine<C>,
+        engine: &mut Engine<C>,
         input_wrapper: &mut InputWrapper,
         shutdown_token: &AtomicBool,
     ) where
@@ -187,6 +187,7 @@ impl UciProcessor {
     {
         let limits = args_to_search_limits(args, engine.position().board().side());
 
+        engine.tree_mut().clear();
         engine.set_interruption_token(false);
 
         std::thread::scope(|s| {

@@ -34,14 +34,35 @@
     documentation.
 */
 
-use valkyrie_chess::ChessPosition;
+crate::register_strategy!(scalar);
 
-use crate::prelude::*;
+const EVAL_SCALE: f32 = 400.0;
+const SCORE_EPSILON: f32 = 0.0001;
 
-crate::register_strategy!(material_evaluation);
+pub trait Payload: Sized + Copy + std::fmt::Debug + Send + Sync + 'static {
+    const WIN: Self;
+    const DRAW: Self;
+    const LOSS: Self;
 
-pub trait SimulationStrategy<C: EngineConfig>: Strategy {
-    type Output: Payload;
+    fn as_scalar(&self) -> f32;
+    fn flip(&mut self);
 
-    fn execute(raw_eval: &[f32], position: &ChessPosition, params: &Self::Params, engine: &Engine<C>) -> Self::Output;
+    #[inline]
+    fn flipped(&self) -> Self {
+        let mut result = *self;
+        result.flip();
+        result
+    }
+
+    #[inline]
+    fn as_cp(&self) -> i32 {
+        let score = self.as_scalar().clamp(SCORE_EPSILON, 1.0 - SCORE_EPSILON);
+        (-EVAL_SCALE * (1.0 / score - 1.0).ln()) as i32
+    }
+}
+
+pub trait HasWdl: Payload {
+    fn win_chance(&self) -> f32;
+    fn draw_chance(&self) -> f32;
+    fn loss_chance(&self) -> f32;
 }

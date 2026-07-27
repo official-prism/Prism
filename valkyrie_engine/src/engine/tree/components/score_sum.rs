@@ -34,17 +34,17 @@
     documentation.
 */
 
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use super::{Clear, HasComponent};
 
 #[derive(Debug, Default)]
-pub struct ScoreSumStore(AtomicU32);
+pub struct ScoreSumStore(AtomicU64);
 
 impl Clone for ScoreSumStore {
     #[inline]
     fn clone(&self) -> Self {
-        Self(AtomicU32::new(self.0.load(Ordering::Relaxed)))
+        Self(AtomicU64::new(self.0.load(Ordering::Relaxed)))
     }
 }
 
@@ -56,28 +56,28 @@ impl Clear for ScoreSumStore {
 }
 
 pub trait HasScoreSum {
-    fn total_score(&self) -> f32;
-    fn set_score(&self, value: f32);
-    fn add_score(&self, value: f32);
+    fn total_score(&self) -> f64;
+    fn set_score(&self, value: f64);
+    fn add_score(&self, value: f64);
 }
 
 impl<T: HasComponent<ScoreSumStore>> HasScoreSum for T {
     #[inline]
-    fn total_score(&self) -> f32 {
-        f32::from_bits(self.component().0.load(Ordering::Relaxed))
+    fn total_score(&self) -> f64 {
+        f64::from_bits(self.component().0.load(Ordering::Relaxed))
     }
 
     #[inline]
-    fn set_score(&self, value: f32) {
+    fn set_score(&self, value: f64) {
         self.component().0.store(value.to_bits(), Ordering::Relaxed);
     }
 
     #[inline]
-    fn add_score(&self, value: f32) {
+    fn add_score(&self, value: f64) {
         let score = &self.component().0;
         loop {
             let current = score.load(Ordering::Relaxed);
-            let new = (f32::from_bits(current) + value).to_bits();
+            let new = (f64::from_bits(current) + value).to_bits();
             if score
                 .compare_exchange_weak(current, new, Ordering::Relaxed, Ordering::Relaxed)
                 .is_ok()

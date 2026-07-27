@@ -34,14 +34,20 @@
     documentation.
 */
 
-use valkyrie_chess::ChessPosition;
-
 use crate::prelude::*;
 
-crate::register_strategy!(material_evaluation);
+impl Payload for f32 {
+    const WIN: Self = 1.0;
+    const DRAW: Self = 0.5;
+    const LOSS: Self = 0.0;
 
-pub trait SimulationStrategy<C: EngineConfig>: Strategy {
-    type Output: Payload;
+    #[inline]
+    fn as_scalar(&self) -> f32 {
+        *self
+    }
 
-    fn execute(raw_eval: &[f32], position: &ChessPosition, params: &Self::Params, engine: &Engine<C>) -> Self::Output;
+    #[inline]
+    fn flip(&mut self) {
+        *self = 1.0 - *self;
+    }
 }

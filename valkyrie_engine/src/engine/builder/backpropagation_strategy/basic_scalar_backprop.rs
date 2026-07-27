@@ -51,15 +51,19 @@ impl Strategy for BasicScalarBackpropagate {
 
 impl<C: EngineConfig> BackpropagationStrategy<C> for BasicScalarBackpropagate
 where
-    C::Simulation: SimulationStrategy<C, Output = f32>,
+    C::Simulation: SimulationStrategy<C>,
     C::Edge: HasScoreSum + HasVisits,
     C::Node: HasVisits
 {
-    fn execute(payload: &f32, node: &C::Node, edge_idx: usize, _params: &Self::Params, _engine: &Engine<C>) {
-        node.add_visit();
-
+    fn execute(
+        payload: &<C::Simulation as SimulationStrategy<C>>::Output,
+        node: &C::Node,
+        edge_idx: usize,
+        _params: &Self::Params,
+        _engine: &Engine<C>,
+    ) {
         let edges = node.edges();
         edges[edge_idx].add_visit();
-        edges[edge_idx].add_score(*payload);
+        edges[edge_idx].add_score(f64::from(payload.as_scalar()));
     }
 }

@@ -51,7 +51,9 @@ impl Strategy for Logger {
     type Params = LoggerParams;
 }
 
-impl<C: EngineConfig> LoggerTrait<C> for Logger {
+impl<C: EngineConfig> LoggerTrait<C> for Logger 
+    where C::BestMove: BestMoveStrategy<C>
+{
     #[allow(unused_variables)]
     fn print(msg: &str, _params: &Self::Params, _engine: &Engine<C>) {
         #[cfg(feature = "debug")]
@@ -69,9 +71,10 @@ impl<C: EngineConfig> LoggerTrait<C> for Logger {
             return;
         }
 
+        let (score, pv) = engine.tree().get_pv(0, engine);
+
         let depth = search_stats.avg_depth();
         let max_depth = search_stats.max_depth();
-        let score = 0;
         let nodes = if engine.params().general().iters_as_nodes() {
             search_stats.iterations()
         } else {
@@ -80,11 +83,15 @@ impl<C: EngineConfig> LoggerTrait<C> for Logger {
         let nps = nodes as u128 * 1000 / time_passed.max(1) as u128;
         let hashfull = 0;
         let pv_idx = 1;
-        let pv: Vec<String> = Vec::new();
+        let mut pv_str: Vec<String> = Vec::new();
+
+        for mv in pv {
+            pv_str.push(mv.to_string(engine.params().general().chess960()));
+        }
 
         println!(
             "info depth {depth} seldepth {max_depth} score cp {score} time {time_passed} nodes {nodes} nps {nps} hashfull {hashfull} multipv {pv_idx} pv {}",
-            pv.join(" ")
+            pv_str.join(" ")
         )
     }
 

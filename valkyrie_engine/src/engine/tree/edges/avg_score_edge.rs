@@ -56,7 +56,7 @@ impl HasQ for AvgScoreEdge {
         if visits == 0 {
             0.0
         } else {
-            self.score.total_score() / visits as f32
+            (self.score.total_score() / visits as f64) as f32
         }
     }
 }

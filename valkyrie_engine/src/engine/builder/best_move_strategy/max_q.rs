@@ -46,9 +46,6 @@ use crate::{
 #[derive(Debug)]
 pub struct MaxQ;
 
-const EVAL_SCALE: f32 = 400.0;
-const SCORE_EPSILON: f32 = 0.0001;
-
 impl Strategy for MaxQ {
     type Params = EmptyParams;
 }
@@ -57,8 +54,8 @@ impl<C: EngineConfig> BestMoveStrategy<C> for MaxQ
 where
     C::Edge: HasQ + HasVisits,
 {
-    fn execute(line_idx: usize, _params: &Self::Params, engine: &Engine<C>) -> (Move, i32) {
-        let edges = engine.tree().root_node().edges();
+    fn execute(node_idx: NodeIndex, line_idx: usize, _params: &Self::Params, engine: &Engine<C>) -> (Move, i32) {
+        let edges = engine.tree()[node_idx].edges();
 
         let mut ranking: Vec<usize> = (0..edges.len()).collect();
         ranking.sort_unstable_by(|&lhs, &rhs| {
@@ -74,11 +71,6 @@ where
 
         let edge = &edges[edge_idx];
 
-        (edge.mv(), score_to_cp(edge.q()))
+        (edge.mv(), edge.q().as_cp())
     }
-}
-
-fn score_to_cp(score: f32) -> i32 {
-    let score = score.clamp(SCORE_EPSILON, 1.0 - SCORE_EPSILON);
-    (-EVAL_SCALE * (1.0 / score - 1.0).ln()) as i32
 }

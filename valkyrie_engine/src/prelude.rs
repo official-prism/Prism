@@ -38,7 +38,7 @@ pub use crate::engine::Engine;
 
 pub use crate::engine::builder::{
     BackpropagationStrategy, BestMoveStrategy, EngineBuilder, EngineConfig, EngineParams,
-    ExpansionStrategy, ExplorationStrategy, Flippable, GeneralParams, SearchStrategy,
+    ExpansionStrategy, ExplorationStrategy, GeneralParams, HasWdl, Payload, SearchStrategy,
     SimulationStrategy, Strategy, TimeManagerStrategy, Unspecified,
 };
 
