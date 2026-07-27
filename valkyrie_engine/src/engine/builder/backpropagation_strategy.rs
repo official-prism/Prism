@@ -42,7 +42,7 @@ pub trait BackpropagationStrategy<C: EngineConfig>: Strategy {
     fn execute(
         payload: &<C::Simulation as SimulationStrategy<C>>::Output,
         node: &C::Node,
-        edge_idx: usize,
+        edge_idx: Option<usize>,
         params: &Self::Params,
         engine: &Engine<C>,
     )

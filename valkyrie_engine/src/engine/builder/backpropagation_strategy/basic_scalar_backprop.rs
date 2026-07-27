@@ -58,10 +58,16 @@ where
     fn execute(
         payload: &<C::Simulation as SimulationStrategy<C>>::Output,
         node: &C::Node,
-        edge_idx: usize,
+        edge_idx: Option<usize>,
         _params: &Self::Params,
         _engine: &Engine<C>,
     ) {
+        node.add_visit();
+
+        let Some(edge_idx) = edge_idx else {
+            return;
+        };
+
         let edges = node.edges();
         edges[edge_idx].add_visit();
         edges[edge_idx].add_score(f64::from(payload.as_scalar()));

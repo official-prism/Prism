@@ -179,7 +179,7 @@ impl BasicSequentialMCTS {
     {
         let current_node = &engine.tree()[current_node_idx];
 
-        let payload = if !ROOT &&
+        let (payload, edge_idx) = if !ROOT &&
             (current_node.visits() == 0 || current_node.edge_count() == 0 || current_node.is_terminal()) {
             let payload = Self::simulate_node(&[], current_node, &position, engine);
 
@@ -187,7 +187,7 @@ impl BasicSequentialMCTS {
                 Self::expand_node(current_node, &position, engine);
             }
 
-            payload
+            (payload, None)
         } else {
             let distrib = C::Exploration::execute(current_node, 1, engine.params().exploration(), engine);
             let edge_idx = distrib.as_slice()[0].edge_index();
@@ -216,12 +216,10 @@ impl BasicSequentialMCTS {
 
             let payload = payload_opt?;
 
-            C::Backpropagation::execute(&payload, current_node, edge_idx, engine.params().backpropagation(), engine);
-
-            payload
+            (payload, Some(edge_idx))
         };
 
-        current_node.add_visit();
+        C::Backpropagation::execute(&payload, current_node, edge_idx, engine.params().backpropagation(), engine);
 
         Some(payload.flipped())
     }
