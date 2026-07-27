@@ -44,6 +44,10 @@ impl MiscProcessor {
     pub fn execute<C: EngineConfig>(cmd: &str, engine: &Engine<C>) -> bool {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
 
+        if tokens.len() == 0 {
+            return false;
+        }
+
         match tokens[0] {
             "draw" | "d" => engine.position().board().draw_board(),
             "tunables" => engine.params().print_tunables(),

@@ -56,6 +56,10 @@ impl UciProcessor {
     {
         let tokens: Vec<&str> = cmd.split_whitespace().collect();
 
+        if tokens.len() == 0 {
+            return false;
+        }
+
         match tokens[0] {
             "uci" => Self::uci(engine),
             "isready" => println!("readyok"),
@@ -77,6 +81,11 @@ impl UciProcessor {
     }
 
     fn position<C: EngineConfig>(args: &[&str], engine: &mut Engine<C>) {
+        if args.is_empty() {
+            println!("info string Incorrect command params");
+            return;
+        }
+
         let mut idx = 0;
 
         let fen = if args[idx] == "startpos" {

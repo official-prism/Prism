@@ -74,6 +74,10 @@ impl FEN {
             return false;
         }
 
+        if fen_parts[0].matches('K').count() != 1 || fen_parts[0].matches('k').count() != 1 {
+            return false;
+        }
+
         if fen_parts[1] != "w" && fen_parts[1] != "b" {
             return false;
         }
