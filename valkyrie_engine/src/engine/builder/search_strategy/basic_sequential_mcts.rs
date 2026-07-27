@@ -40,7 +40,10 @@ use valkyrie_chess::ChessPosition;
 
 use crate::{
     engine::{
-        builder::SimulationStrategy,
+        builder::{
+            SimulationStrategy,
+            exploration_strategy::VisitDistribution,
+        },
         policy_entry::PolicyEntry,
         tree::components::{
             GameState,
@@ -133,12 +136,13 @@ impl BasicSequentialMCTS {
 
         let time_manager = C::TimeManager::new(limits, engine.params().time_manager(), engine);
         let mut main_thread_iters = 0u64;
+        let mut distribution = VisitDistribution::new();
 
         while !engine.interruption_token() {
             let position = engine.position().clone();
             let mut depth = 0;
 
-            if Self::search_step::<_, true>(engine.tree().root_index(), position, params, stats, engine, &mut depth).is_none() {
+            if Self::search_step::<_, true>(engine.tree().root_index(), position, params, stats, engine, &mut depth, &mut distribution).is_none() {
                 engine.set_interruption_token(true);
                 break;
             }
@@ -169,6 +173,7 @@ impl BasicSequentialMCTS {
         stats: &SearchStats,
         engine: &Engine<C>,
         depth: &mut u64,
+        distribution: &mut VisitDistribution,
     ) -> Option<<C::Simulation as SimulationStrategy<C>>::Output>
     where
         C::Exploration: ExplorationStrategy<C>,
@@ -189,8 +194,8 @@ impl BasicSequentialMCTS {
 
             (payload, None)
         } else {
-            let distrib = C::Exploration::execute(current_node, 1, engine.params().exploration(), engine);
-            let edge_idx = distrib.as_slice()[0].edge_index();
+            C::Exploration::execute(distribution, current_node, 1, engine.params().exploration(), engine);
+            let edge_idx = distribution.as_slice()[0].edge_index();
 
             let (mv, child_idx) = {
                 let edges_lock = current_node.edges();
@@ -212,7 +217,7 @@ impl BasicSequentialMCTS {
 
             *depth = depth.saturating_add(1);
 
-            let payload_opt = Self::search_step::<_, false>(child_idx, position_clone, params, stats, engine, depth);
+            let payload_opt = Self::search_step::<_, false>(child_idx, position_clone, params, stats, engine, depth, distribution);
 
             let payload = payload_opt?;
 

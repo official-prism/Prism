@@ -62,10 +62,16 @@ where
     C::Node: HasVisits,
     C::Edge: HasVisits + HasPolicy + HasQ,
 {
-    fn execute(node: &<C as EngineConfig>::Node, _budget: u64, params: &Self::Params, _engine: &Engine<C>) -> VisitDistribution {
+    fn execute(
+        distribution: &mut VisitDistribution,
+        node: &<C as EngineConfig>::Node,
+        _budget: u64,
+        params: &Self::Params,
+        _engine: &Engine<C>,
+    ) {
         assert!(node.edge_count() > 0);
-        
-        let mut distribution = VisitDistribution::new();
+
+        distribution.clear();
 
         let cpuct = cpuct::<C>(node, params);
         let parent_visits = node.visits();
@@ -94,8 +100,6 @@ where
         assert_ne!(edge_idx, usize::MAX);
 
         distribution.push(edge_idx, 1);
-
-        distribution
     }
 }
 

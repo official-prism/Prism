@@ -40,7 +40,13 @@ crate::register_strategy!(puct);
 crate::register_strategy!(lazy_batch);
 
 pub trait ExplorationStrategy<C: EngineConfig>: Strategy {
-    fn execute(node: &C::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution;
+    fn execute(
+        distribution: &mut VisitDistribution,
+        node: &C::Node,
+        budget: u64,
+        params: &Self::Params,
+        engine: &Engine<C>,
+    );
 }
 
 #[derive(Clone)]
@@ -65,12 +71,22 @@ impl VisitDistributionEntry {
     }
 }
 
+impl Default for VisitDistribution {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VisitDistribution {
-    fn new() -> Self {
-        Self { 
-            values: [VisitDistributionEntry::default(); 256], 
-            len: 0 
+    pub fn new() -> Self {
+        Self {
+            values: [VisitDistributionEntry::default(); 256],
+            len: 0
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.len = 0;
     }
 
     pub fn push(&mut self, edge_idx: usize, visits: u64) {

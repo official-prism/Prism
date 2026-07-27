@@ -57,17 +57,26 @@ where
     C::Node: HasVisits,
     C::Edge: HasVisits
 {
-    fn execute(node: &<C as EngineConfig>::Node, budget: u64, params: &Self::Params, engine: &Engine<C>) -> VisitDistribution {
+    fn execute(
+        distribution: &mut VisitDistribution,
+        node: &<C as EngineConfig>::Node,
+        budget: u64,
+        params: &Self::Params,
+        engine: &Engine<C>,
+    ) {
         assert!(node.edge_count() > 0);
-        
-        let mut distribution = VisitDistribution::new();
+
+        distribution.clear();
 
         let node_clone = node.clone();
 
         let mut counts = vec![0u64; node_clone.edge_count()];
+        let mut step_distribution = VisitDistribution::new();
 
         for _ in 0..budget {
-            let step = S::execute(&node_clone, 1, params, engine).as_slice()[0];
+            S::execute(&mut step_distribution, &node_clone, 1, params, engine);
+
+            let step = step_distribution.as_slice()[0];
             let edge_idx = step.edge_index();
             counts[edge_idx] += step.vists();
             node_clone.add_visit();
@@ -79,7 +88,5 @@ where
                 distribution.push(idx, visits);
             }
         }
-
-        distribution
     }
 }
